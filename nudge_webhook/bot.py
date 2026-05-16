@@ -402,6 +402,7 @@ def _extract_correction(text: str) -> tuple[str, str] | None:
     field = field_raw.strip().lower().replace("-", "_")
     value = value_raw.strip()
     aliases = {
+        "intent": "intent",
         "amount": "amount_inr",
         "amt": "amount_inr",
         "principal": "amount_inr",
@@ -424,7 +425,16 @@ def _extract_correction(text: str) -> tuple[str, str] | None:
 
 def _apply_correction_to_payload(payload: dict[str, Any], *, field: str, value_text: str) -> dict[str, Any] | None:
     next_payload = dict(payload)
-    if field == "amount_inr":
+    if field == "intent":
+        v = value_text.strip().lower()
+        if v in {"1", "true", "yes", "y"}:
+            next_payload["intent"] = True
+        elif v in {"0", "false", "no", "n"}:
+            next_payload["intent"] = False
+        else:
+            return None
+        next_payload["confidence"] = float(max(float(next_payload.get("confidence") or 0.0), 0.8))
+    elif field == "amount_inr":
         val = _parse_amount_inr(value_text)
         if val is None:
             return None
@@ -479,6 +489,7 @@ def _apply_correction_to_payload(payload: dict[str, Any], *, field: str, value_t
 
 def _has_mfi_districts(conn) -> bool:
     row = conn.execute("SELECT 1 FROM mfi_districts LIMIT 1").fetchone()
+    return row is not None
 
 
 def _nudge_limits_ok(conn, *, user_id: int, cfg: Config, now: datetime) -> bool:
@@ -537,6 +548,7 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
     decision_action: str | None = None
     decision_policy: str | None = None
     limits_blocked = False
+    districts_total_debug: int | None = None
     correction: tuple[str, str] | None = None
 
     conn = connect(db_path)
@@ -762,7 +774,14 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                     page_size=int(page_size),
                 )
             else:
-                reply = "No matching districts found."
+                districts_total_debug = int(total)
+                if int(total) <= 0:
+                    reply = (
+                        "No districts are loaded for this deployment yet.\n"
+                        "If you’re the admin, load your MFI dataset into this deployment’s DB, then try DISTRICTS again."
+                    )
+                else:
+                    reply = "No matching districts found. Try: DISTRICTS <prefix>"
                 _clear_district_paging_state(conn, user_id=user_id)
         elif more_cmd:
             prefix = (session.get("districts_prefix") or None) if session else None
@@ -1095,7 +1114,18 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                         persist_model = result.model
                         needs_policy_decision = bool(loan_policy_enabled)
                     else:
-                        needs_policy_decision = bool(loan_policy_enabled)
+                        if cfg.verbose_replies:
+                            conf = result.payload.get("confidence")
+                            reply = (
+                                "I interpreted your message as not being about taking a loan (intent=false).\n"
+                                f"confidence={conf}\n\n"
+                                "If you ARE discussing a loan, reply:\n"
+                                "CORRECT intent=true\n\n"
+                                "Then resend the loan terms (amount + time + interest)."
+                            )
+                            needs_policy_decision = False
+                        else:
+                            needs_policy_decision = bool(loan_policy_enabled)
 
         if persist_payload is not None and persist_raw_message_id is not None:
             try:
@@ -1213,6 +1243,10 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
             debug_parts.append(f"engine={decision_policy}")
         debug_parts.append(f"parsed={'yes' if parse_saved else ('attempted' if parse_attempted else 'no')}")
         if loan_payload_debug is not None:
+            intent = loan_payload_debug.get("intent")
+            conf = loan_payload_debug.get("confidence")
+            debug_parts.append(f"intent={intent}")
+            debug_parts.append(f"confidence={conf}")
             amt = loan_payload_debug.get("amount_inr")
             tenure = loan_payload_debug.get("tenure_days")
             apr = loan_payload_debug.get("interest_rate_apr")
@@ -1224,6 +1258,8 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
             )
         if loan_missing_debug:
             debug_parts.append("missing=" + ",".join(loan_missing_debug))
+        if districts_total_debug is not None:
+            debug_parts.append(f"districts_total={int(districts_total_debug)}")
         debug_parts.append(f"limits={'blocked' if limits_blocked else 'ok'}")
         base = (reply or "OK").strip() or "OK"
         return (base + "\n\n" + "[status] " + " | ".join(debug_parts)).strip()
