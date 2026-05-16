@@ -1,0 +1,18 @@
+{
+  "AccountSid": "AC00000000000000000000000000000000",
+  "ApiVersion": "2010-04-01",
+  "Body": "START",
+  "From": "whatsapp:+15551230001",
+  "FromCity": "",
+  "FromCountry": "US",
+  "FromState": "",
+  "FromZip": "",
+  "MessageSid": "SM00000000000000000000000000000001",
+  "NumMedia": "0",
+  "NumSegments": "1",
+  "SmsMessageSid": "SM00000000000000000000000000000001",
+  "SmsSid": "SM00000000000000000000000000000001",
+  "SmsStatus": "received",
+  "To": "whatsapp:+15551239999",
+  "WaId": "15551230001"
+}

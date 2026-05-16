@@ -1,0 +1,10 @@
+- [x] WhatsApp webhook persists inbound messages and returns a valid Twilio response
+- [x] START/STOP opt-in/out works end-to-end and is enforced by the policy runtime
+- [x] Claude parsing produces valid structured JSON and stores parsed events with confidence
+- [x] MFI database loads into SQLite and district lookup returns correct regulated alternatives
+- [x] State computation is deterministic given stored events and matches the spec’s feature set
+- [x] Baseline policy respects cooldown/frequency caps and can drive live nudges safely
+- [x] Synthetic trajectory generator produces 10,000 users with calibrated distributions (sanity checks pass)
+- [x] PPO training runs on CPU and evaluation compares PPO vs baseline with saved metrics outputs
+- [x] Policy serving loads a model and safely falls back to baseline when unavailable or invalid
+- [x] Railway deployment boots, initializes DB, and passes a smoke test (health + webhook + send)

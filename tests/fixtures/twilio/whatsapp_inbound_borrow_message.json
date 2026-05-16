@@ -1,0 +1,15 @@
+{
+  "AccountSid": "AC00000000000000000000000000000000",
+  "ApiVersion": "2010-04-01",
+  "Body": "I need 5000 for 30 days, interest 5% monthly, from a local moneylender",
+  "From": "whatsapp:+15551230001",
+  "FromCountry": "US",
+  "MessageSid": "SM00000000000000000000000000000003",
+  "NumMedia": "0",
+  "NumSegments": "1",
+  "SmsMessageSid": "SM00000000000000000000000000000003",
+  "SmsSid": "SM00000000000000000000000000000003",
+  "SmsStatus": "received",
+  "To": "whatsapp:+15551239999",
+  "WaId": "15551230001"
+}
