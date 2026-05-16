@@ -80,6 +80,7 @@ function renderMessage(m) {
 function rebuildThread() {
   elThread.innerHTML = "";
   transcript.forEach(renderMessage);
+  elThread.scrollTop = elThread.scrollHeight;
 }
 
 function setSending(sending) {
@@ -313,4 +314,3 @@ fetch("/health")
     updateSide(d);
   })
   .catch(() => {});
-

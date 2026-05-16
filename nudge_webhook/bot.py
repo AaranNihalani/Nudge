@@ -373,6 +373,38 @@ def _parse_interest_rate_apr(text: str) -> float | None:
     return None
 
 
+def _infer_lender_type_from_text(text: str) -> str | None:
+    raw = (text or "").strip().lower()
+    if raw == "":
+        return None
+    if "moneylender" in raw or "money lender" in raw or "sahukar" in raw or "mahajan" in raw:
+        return "moneylender"
+    if "microfinance" in raw or re.search(r"\bmfi\b", raw):
+        return "mfi"
+    if re.search(r"\bnbfc\b", raw):
+        return "nbfc"
+    if "bank" in raw:
+        return "bank"
+    if "cooperative" in raw or "co-operative" in raw or "society" in raw:
+        return "cooperative"
+    if "friend" in raw or "family" in raw or "relative" in raw:
+        return "friend_family"
+    if "shopkeeper" in raw or "kirana" in raw or "store" in raw:
+        return "shopkeeper"
+    if "informal" in raw:
+        return "informal"
+    return None
+
+
+def _apply_text_heuristics(payload: dict[str, Any], *, text: str) -> dict[str, Any]:
+    next_payload = dict(payload)
+    if next_payload.get("lender_type") in {None, "", "unknown"}:
+        inferred = _infer_lender_type_from_text(text)
+        if inferred:
+            next_payload["lender_type"] = inferred
+    return validate_borrow_intent_payload(next_payload)
+
+
 def _extract_correction(text: str) -> tuple[str, str] | None:
     raw = (text or "").strip()
     lower = raw.lower()
@@ -1050,6 +1082,10 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                     if updated_validated is None:
                         reply = "Sorry — I couldn’t understand that. Please reply with the missing loan detail."
                     else:
+                        try:
+                            updated_validated = _apply_text_heuristics(updated_validated, text=loan_text)
+                        except Exception:
+                            updated_validated = updated_validated
                         loan_payload_debug = updated_validated
                         loan_missing_debug = _missing_borrow_fields(updated_validated)
                         if loan_missing_debug:
@@ -1118,7 +1154,10 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                 else:
                     needs_policy_decision = bool(loan_policy_enabled)
             else:
-                loan_payload_debug = result.payload
+                try:
+                    loan_payload_debug = _apply_text_heuristics(result.payload, text=loan_text)
+                except Exception:
+                    loan_payload_debug = result.payload
                 loan_missing_debug = _missing_borrow_fields(result.payload)
                 if bool(result.payload.get("intent")) and loan_missing_debug:
                     conn = connect(db_path)
@@ -1140,7 +1179,7 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                     reply = _clarifying_question(loan_missing_debug[0])
                 else:
                     if bool(result.payload.get("intent")):
-                        persist_payload = result.payload
+                        persist_payload = loan_payload_debug
                         persist_raw_message_id = loan_raw_message_id
                         persist_model = result.model
                         needs_policy_decision = bool(loan_policy_enabled)
@@ -1204,15 +1243,22 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                         amt = loan_payload_debug.get("amount_inr")
                         tenure = loan_payload_debug.get("tenure_days")
                         apr = loan_payload_debug.get("interest_rate_apr")
+                        lender_type = loan_payload_debug.get("lender_type")
+                        lender_name = loan_payload_debug.get("lender_name")
+                        stage = loan_payload_debug.get("negotiation_stage")
                         echo = (
                             "Parsed loan:\n"
                             + f"- amount_inr: {amt if amt is not None else 'null'}\n"
                             + f"- tenure_days: {tenure if tenure is not None else 'null'}\n"
                             + f"- interest_rate_apr: {apr if apr is not None else 'null'}\n"
+                            + f"- lender_type: {lender_type if lender_type is not None else 'null'}\n"
+                            + f"- lender_name: {lender_name if lender_name is not None else 'null'}\n"
+                            + f"- negotiation_stage: {stage if stage is not None else 'null'}\n"
                             + "If anything is wrong, reply for example:\n"
                             + "CORRECT amount=6000\n"
                             + "CORRECT tenure=45 days\n"
                             + "CORRECT rate=5% monthly\n"
+                            + "CORRECT lender_type=moneylender\n"
                         ).strip()
                     base_reply = (echo + "\n\n" + decision.content).strip() if echo else decision.content
                     reply = (reply_prefix + base_reply).strip() if reply_prefix else base_reply
