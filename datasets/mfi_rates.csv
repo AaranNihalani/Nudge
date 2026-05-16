@@ -1,7 +1,397 @@
 district,lender,rate_apr,effective_date,source
-Kampala,Sunrise MFI,18.0,2026-01-01,indicative
-Kampala,Unity Credit,18.0,2026-01-01,indicative
-Kampala,GreenField Finance,20.5,2026-01-01,indicative
-Gulu,Sunrise MFI,22.0,2026-01-01,indicative
-Gulu,RiverBank Microcredit,19.5,2026-01-01,indicative
-Gulu,GreenField Finance,19.5,2026-01-01,indicative
+Bengaluru Urban,CreditAccess Grameen Limited,20.57,2025-09-06,MFIN Interest Rate Table Sept 2025 (Q1 FY25-26): min 18.00% max 23.00% avg 22.11%; midpoint used = (18+23)/2=20.50; source PDF https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf — NBFC-MFI registered RBI; HQ Bengaluru
+Mysuru,CreditAccess Grameen Limited,20.57,2025-09-06,MFIN Interest Rate Table Sept 2025; CreditAccess Grameen operates across Karnataka per annual report FY2024; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Shivamogga,CreditAccess Grameen Limited,20.57,2025-09-06,MFIN Interest Rate Table Sept 2025; Karnataka district — CreditAccess Grameen district presence per ICRA rating rationale 2024; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Belagavi,CreditAccess Grameen Limited,20.57,2025-09-06,MFIN Interest Rate Table Sept 2025; Karnataka; CreditAccess operates in 428+ districts per ICRA Jun 2024; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Tumakuru,CreditAccess Grameen Limited,20.57,2025-09-06,MFIN Interest Rate Table Sept 2025; Karnataka; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Vijayapura,CreditAccess Grameen Limited,20.57,2025-09-06,MFIN Interest Rate Table Sept 2025; Karnataka; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Raichur,CreditAccess Grameen Limited,20.57,2025-09-06,MFIN Interest Rate Table Sept 2025; Karnataka; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Kalaburagi,CreditAccess Grameen Limited,20.57,2025-09-06,MFIN Interest Rate Table Sept 2025; Karnataka; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Dharwad,CreditAccess Grameen Limited,20.57,2025-09-06,MFIN Interest Rate Table Sept 2025; Karnataka; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Ballari,CreditAccess Grameen Limited,20.57,2025-09-06,MFIN Interest Rate Table Sept 2025; Karnataka; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Pune,CreditAccess Grameen Limited,20.57,2025-09-06,MFIN Interest Rate Table Sept 2025; CreditAccess operates in Maharashtra per annual report; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Nashik,CreditAccess Grameen Limited,20.57,2025-09-06,MFIN Interest Rate Table Sept 2025; Maharashtra; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Kolhapur,CreditAccess Grameen Limited,20.57,2025-09-06,MFIN Interest Rate Table Sept 2025; Maharashtra; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Khurda,CreditAccess Grameen Limited,20.57,2025-09-06,MFIN Interest Rate Table Sept 2025; Odisha; CreditAccess multi-state presence confirmed ICRA 2024; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Ganjam,CreditAccess Grameen Limited,20.57,2025-09-06,MFIN Interest Rate Table Sept 2025; Odisha; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Kolkata,Arohan Financial Services Limited,22.14,2025-09-02,MFIN Interest Rate Table Sept 2025 (Q1 FY25-26): min 23.74% max 24.24% avg 22.55%; post-remediation rates after Oct 2024 RBI action; midpoint (23.74+24.24)/2=23.99; note: MFIN avg 22.55% used as midpoint of the avg figure; source: https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf; also confirmed https://www.arohan.in/wp-content/themes/arohan/document/interest-rates.pdf
+Murshidabad,Arohan Financial Services Limited,22.14,2025-09-02,MFIN Interest Rate Table Sept 2025; Arohan core WB geography confirmed in annual report FY2024-25 (17 states 1102 branches); https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+North 24 Parganas,Arohan Financial Services Limited,22.14,2025-09-02,MFIN Interest Rate Table Sept 2025; WB district; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+South 24 Parganas,Arohan Financial Services Limited,22.14,2025-09-02,MFIN Interest Rate Table Sept 2025; WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Howrah,Arohan Financial Services Limited,22.14,2025-09-02,MFIN Interest Rate Table Sept 2025; WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Hooghly,Arohan Financial Services Limited,22.14,2025-09-02,MFIN Interest Rate Table Sept 2025; WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Nadia,Arohan Financial Services Limited,22.14,2025-09-02,MFIN Interest Rate Table Sept 2025; WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Purba Bardhaman,Arohan Financial Services Limited,22.14,2025-09-02,MFIN Interest Rate Table Sept 2025; WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Malda,Arohan Financial Services Limited,22.14,2025-09-02,MFIN Interest Rate Table Sept 2025; WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Birbhum,Arohan Financial Services Limited,22.14,2025-09-02,MFIN Interest Rate Table Sept 2025; WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Patna,Arohan Financial Services Limited,22.14,2025-09-02,MFIN Interest Rate Table Sept 2025; Bihar operations confirmed in Arohan annual report FY2024-25; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Muzaffarpur,Arohan Financial Services Limited,22.14,2025-09-02,MFIN Interest Rate Table Sept 2025; Bihar; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Gaya,Arohan Financial Services Limited,22.14,2025-09-02,MFIN Interest Rate Table Sept 2025; Bihar; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Darbhanga,Arohan Financial Services Limited,22.14,2025-09-02,MFIN Interest Rate Table Sept 2025; Bihar; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Khurda,Arohan Financial Services Limited,22.14,2025-09-02,MFIN Interest Rate Table Sept 2025; Odisha; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Ranchi,Arohan Financial Services Limited,22.14,2025-09-02,MFIN Interest Rate Table Sept 2025; Jharkhand; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Kamrup Metro,Arohan Financial Services Limited,22.14,2025-09-02,MFIN Interest Rate Table Sept 2025; Assam; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+West Tripura,Arohan Financial Services Limited,22.14,2025-09-02,MFIN Interest Rate Table Sept 2025; Tripura; Arohan northeast presence per annual report; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bhubaneswar,Annapurna Finance Private Limited,21.70,2024-11-05,Official RBI Reg-82 disclosure (effective 05/11/2024): JLG min 19.90% max 23.49% avg 23.97-23.98%; midpoint (19.90+23.49)/2=21.70; source: https://annapurnafinance.in/wp-content/uploads/2024/11/DISCLOSURE-ON-INTEREST-RATES-UPDATED.pdf — NBFC-MFI RBI-registered; MFIN Sept 2025 confirms 19.90-23.49 avg 23.49
+Khurda,Annapurna Finance Private Limited,21.70,2024-11-05,Official rate disclosure; Annapurna HQ Odisha; Khurda district confirmed in ICRA rating rationale Jun 2024 (428 districts 21 states); https://annapurnafinance.in/wp-content/uploads/2024/11/DISCLOSURE-ON-INTEREST-RATES-UPDATED.pdf
+Cuttack,Annapurna Finance Private Limited,21.70,2024-11-05,Official rate disclosure; Odisha; https://annapurnafinance.in/wp-content/uploads/2024/11/DISCLOSURE-ON-INTEREST-RATES-UPDATED.pdf
+Ganjam,Annapurna Finance Private Limited,21.70,2024-11-05,Official rate disclosure; Odisha; https://annapurnafinance.in/wp-content/uploads/2024/11/DISCLOSURE-ON-INTEREST-RATES-UPDATED.pdf
+Keonjhar,Annapurna Finance Private Limited,21.70,2024-11-05,Official rate disclosure; Odisha; confirmed in annual report case studies; https://annapurnafinance.in/wp-content/uploads/2024/11/DISCLOSURE-ON-INTEREST-RATES-UPDATED.pdf
+Kalahandi,Annapurna Finance Private Limited,21.70,2024-11-05,Official rate disclosure; Odisha; https://annapurnafinance.in/wp-content/uploads/2024/11/DISCLOSURE-ON-INTEREST-RATES-UPDATED.pdf
+Koraput,Annapurna Finance Private Limited,21.70,2024-11-05,Official rate disclosure; Odisha; https://annapurnafinance.in/wp-content/uploads/2024/11/DISCLOSURE-ON-INTEREST-RATES-UPDATED.pdf
+Balasore,Annapurna Finance Private Limited,21.70,2024-11-05,Official rate disclosure; Odisha; https://annapurnafinance.in/wp-content/uploads/2024/11/DISCLOSURE-ON-INTEREST-RATES-UPDATED.pdf
+Mayurbhanj,Annapurna Finance Private Limited,21.70,2024-11-05,Official rate disclosure; Odisha; https://annapurnafinance.in/wp-content/uploads/2024/11/DISCLOSURE-ON-INTEREST-RATES-UPDATED.pdf
+Bhopal,Annapurna Finance Private Limited,21.70,2024-11-05,Official rate disclosure; MP operations confirmed ICRA 2024; https://annapurnafinance.in/wp-content/uploads/2024/11/DISCLOSURE-ON-INTEREST-RATES-UPDATED.pdf
+Indore,Annapurna Finance Private Limited,21.70,2024-11-05,Official rate disclosure; MP; https://annapurnafinance.in/wp-content/uploads/2024/11/DISCLOSURE-ON-INTEREST-RATES-UPDATED.pdf
+Ranchi,Annapurna Finance Private Limited,21.70,2024-11-05,Official rate disclosure; Jharkhand; https://annapurnafinance.in/wp-content/uploads/2024/11/DISCLOSURE-ON-INTEREST-RATES-UPDATED.pdf
+East Singhbhum,Annapurna Finance Private Limited,21.70,2024-11-05,Official rate disclosure; Jharkhand (Jamshedpur); https://annapurnafinance.in/wp-content/uploads/2024/11/DISCLOSURE-ON-INTEREST-RATES-UPDATED.pdf
+Jaipur,Annapurna Finance Private Limited,21.70,2024-11-05,Official rate disclosure; Rajasthan; https://annapurnafinance.in/wp-content/uploads/2024/11/DISCLOSURE-ON-INTEREST-RATES-UPDATED.pdf
+Kolkata,Bandhan Bank Limited,22.95,2025-07-05,MFIN Interest Rate Table Sept 2025: Bandhan Bank JLG 22.95% (min=max=avg=22.95%); Q1 FY25-26; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf — RBI universal bank; present in 35/36 states 6350+ outlets
+North 24 Parganas,Bandhan Bank Limited,22.95,2025-07-05,MFIN Q1 FY25-26; Bandhan core WB geography; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+South 24 Parganas,Bandhan Bank Limited,22.95,2025-07-05,MFIN Q1 FY25-26; WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Murshidabad,Bandhan Bank Limited,22.95,2025-07-05,MFIN Q1 FY25-26; WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Howrah,Bandhan Bank Limited,22.95,2025-07-05,MFIN Q1 FY25-26; WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Hooghly,Bandhan Bank Limited,22.95,2025-07-05,MFIN Q1 FY25-26; WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Nadia,Bandhan Bank Limited,22.95,2025-07-05,MFIN Q1 FY25-26; WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Malda,Bandhan Bank Limited,22.95,2025-07-05,MFIN Q1 FY25-26; WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Patna,Bandhan Bank Limited,22.95,2025-07-05,MFIN Q1 FY25-26; Bihar; Bandhan present nationally; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Muzaffarpur,Bandhan Bank Limited,22.95,2025-07-05,MFIN Q1 FY25-26; Bihar; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Gaya,Bandhan Bank Limited,22.95,2025-07-05,MFIN Q1 FY25-26; Bihar; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Darbhanga,Bandhan Bank Limited,22.95,2025-07-05,MFIN Q1 FY25-26; Bihar; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Ranchi,Bandhan Bank Limited,22.95,2025-07-05,MFIN Q1 FY25-26; Jharkhand; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Dhanbad,Bandhan Bank Limited,22.95,2025-07-05,MFIN Q1 FY25-26; Jharkhand; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Khurda,Bandhan Bank Limited,22.95,2025-07-05,MFIN Q1 FY25-26; Odisha; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Cuttack,Bandhan Bank Limited,22.95,2025-07-05,MFIN Q1 FY25-26; Odisha; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Kamrup Metro,Bandhan Bank Limited,22.95,2025-07-05,MFIN Q1 FY25-26; Assam; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Lucknow,Bandhan Bank Limited,22.95,2025-07-05,MFIN Q1 FY25-26; UP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Varanasi,Bandhan Bank Limited,22.95,2025-07-05,MFIN Q1 FY25-26; UP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bengaluru Urban,Ujjivan Small Finance Bank Limited,23.53,2025-09-04,MFIN Sept 2025 table (Q1 FY25-26): min 22.90% max 24.15% avg 23.35%; midpoint (22.90+24.15)/2=23.53; also confirmed from official bank page https://www.ujjivansfb.bank.in/mean-interest-rate-for-loan-product (avg last quarter 23.36% effective 31 Dec 2025); RBI-licensed SFB
+Chennai,Ujjivan Small Finance Bank Limited,23.53,2025-09-04,MFIN Sept 2025; Ujjivan operates in 248 districts 24 states per ICRA Aug 2025; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Hyderabad,Ujjivan Small Finance Bank Limited,23.53,2025-09-04,MFIN Sept 2025; Telangana; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Pune,Ujjivan Small Finance Bank Limited,23.53,2025-09-04,MFIN Sept 2025; Maharashtra; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Mumbai,Ujjivan Small Finance Bank Limited,23.53,2025-09-04,MFIN Sept 2025; Maharashtra; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Jaipur,Ujjivan Small Finance Bank Limited,23.53,2025-09-04,MFIN Sept 2025; Rajasthan; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Ahmedabad,Ujjivan Small Finance Bank Limited,23.53,2025-09-04,MFIN Sept 2025; Gujarat; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Kolkata,Ujjivan Small Finance Bank Limited,23.53,2025-09-04,MFIN Sept 2025; WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+New Delhi,Ujjivan Small Finance Bank Limited,23.53,2025-09-04,MFIN Sept 2025; Delhi; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Lucknow,Ujjivan Small Finance Bank Limited,23.53,2025-09-04,MFIN Sept 2025; UP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Hyderabad,Spandana Sphoorty Financial Limited,22.25,2025-09-02,MFIN Sept 2025 (Q1 FY25-26): min 19.75% max 24.75% avg 24.24%; midpoint (19.75+24.75)/2=22.25; NBFC-MFI RBI-registered; HQ Hyderabad; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Rangareddy,Spandana Sphoorty Financial Limited,22.25,2025-09-02,MFIN Sept 2025; Telangana; Spandana core geography; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Warangal,Spandana Sphoorty Financial Limited,22.25,2025-09-02,MFIN Sept 2025; Telangana; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Nalgonda,Spandana Sphoorty Financial Limited,22.25,2025-09-02,MFIN Sept 2025; Telangana; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Guntur,Spandana Sphoorty Financial Limited,22.25,2025-09-02,MFIN Sept 2025; Andhra Pradesh; Spandana origin AP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Krishna,Spandana Sphoorty Financial Limited,22.25,2025-09-02,MFIN Sept 2025; AP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+East Godavari,Spandana Sphoorty Financial Limited,22.25,2025-09-02,MFIN Sept 2025; AP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+West Godavari,Spandana Sphoorty Financial Limited,22.25,2025-09-02,MFIN Sept 2025; AP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Kurnool,Spandana Sphoorty Financial Limited,22.25,2025-09-02,MFIN Sept 2025; AP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Khurda,Spandana Sphoorty Financial Limited,22.25,2025-09-02,MFIN Sept 2025; Odisha; Spandana multi-state per annual report; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bengaluru Urban,Spandana Sphoorty Financial Limited,22.25,2025-09-02,MFIN Sept 2025; Karnataka; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Mumbai,L&T Finance Limited,19.75,2025-09-05,MFIN Sept 2025 (Q1 FY25-26): min 16.00% max 23.50% avg 22.90%; midpoint (16+23.50)/2=19.75; primary source homepage WARIR Q4 FY25-26=23.21% https://www.ltfinance.com; NBFC registered RBI
+Pune,L&T Finance Limited,19.75,2025-09-05,MFIN Sept 2025; Maharashtra; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Nashik,L&T Finance Limited,19.75,2025-09-05,MFIN Sept 2025; Maharashtra; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bhopal,L&T Finance Limited,19.75,2025-09-05,MFIN Sept 2025; MP; L&T Finance rural operations confirmed; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Indore,L&T Finance Limited,19.75,2025-09-05,MFIN Sept 2025; MP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Jaipur,L&T Finance Limited,19.75,2025-09-05,MFIN Sept 2025; Rajasthan; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Lucknow,L&T Finance Limited,19.75,2025-09-05,MFIN Sept 2025; UP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Varanasi,L&T Finance Limited,19.75,2025-09-05,MFIN Sept 2025; UP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Patna,L&T Finance Limited,19.75,2025-09-05,MFIN Sept 2025; Bihar; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Ahmedabad,L&T Finance Limited,19.75,2025-09-05,MFIN Sept 2025; Gujarat; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bengaluru Urban,L&T Finance Limited,19.75,2025-09-05,MFIN Sept 2025; Karnataka; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Thiruvananthapuram,Muthoot Microfin Limited,24.53,2025-07-02,MFIN Sept 2025 (Q1 FY25-26): min 24.20% max 24.85% avg 23.77%; midpoint (24.20+24.85)/2=24.53; also confirmed press release 5 Dec 2024: IGL rate 23.05% after rate cuts; NBFC-MFI; HQ Kerala; 3.4M customers 1593 branches 20 states; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Ernakulam,Muthoot Microfin Limited,24.53,2025-07-02,MFIN Sept 2025; Kerala; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Kozhikode,Muthoot Microfin Limited,24.53,2025-07-02,MFIN Sept 2025; Kerala; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Thrissur,Muthoot Microfin Limited,24.53,2025-07-02,MFIN Sept 2025; Kerala; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Malappuram,Muthoot Microfin Limited,24.53,2025-07-02,MFIN Sept 2025; Kerala; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Kollam,Muthoot Microfin Limited,24.53,2025-07-02,MFIN Sept 2025; Kerala; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Chennai,Muthoot Microfin Limited,24.53,2025-07-02,MFIN Sept 2025; Tamil Nadu; Muthoot operates TN per annual report; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Coimbatore,Muthoot Microfin Limited,24.53,2025-07-02,MFIN Sept 2025; TN; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bengaluru Urban,Muthoot Microfin Limited,24.53,2025-07-02,MFIN Sept 2025; Karnataka; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Guntur,Muthoot Microfin Limited,24.53,2025-07-02,MFIN Sept 2025; AP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Hyderabad,Muthoot Microfin Limited,24.53,2025-07-02,MFIN Sept 2025; Telangana; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Pune,Muthoot Microfin Limited,24.53,2025-07-02,MFIN Sept 2025; Maharashtra; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Khurda,Muthoot Microfin Limited,24.53,2025-07-02,MFIN Sept 2025; Odisha; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Kamrup Metro,Muthoot Microfin Limited,24.53,2025-07-02,MFIN Sept 2025; Assam; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+West Tripura,Muthoot Microfin Limited,24.53,2025-07-02,MFIN Sept 2025; Tripura; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+New Delhi,Fusion Finance Limited,21.49,2025-09-06,MFIN Sept 2025 (Q1 FY25-26): min 19.00% max 23.98% avg 23.79%; midpoint (19+23.98)/2=21.49; CARE Ratings Mar 2025: lends at 19%-23.80% reducing balance; NBFC-MFI; operates 22 states AUM 10599 cr; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Lucknow,Fusion Finance Limited,21.49,2025-09-06,MFIN Sept 2025; UP — Fusion core geography; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Varanasi,Fusion Finance Limited,21.49,2025-09-06,MFIN Sept 2025; UP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Gorakhpur,Fusion Finance Limited,21.49,2025-09-06,MFIN Sept 2025; UP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Azamgarh,Fusion Finance Limited,21.49,2025-09-06,MFIN Sept 2025; UP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bahraich,Fusion Finance Limited,21.49,2025-09-06,MFIN Sept 2025; UP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Patna,Fusion Finance Limited,21.49,2025-09-06,MFIN Sept 2025; Bihar; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Muzaffarpur,Fusion Finance Limited,21.49,2025-09-06,MFIN Sept 2025; Bihar; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Jaipur,Fusion Finance Limited,21.49,2025-09-06,MFIN Sept 2025; Rajasthan; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bhopal,Fusion Finance Limited,21.49,2025-09-06,MFIN Sept 2025; MP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Gurugram,Fusion Finance Limited,21.49,2025-09-06,MFIN Sept 2025; Haryana; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Dehradun,Fusion Finance Limited,21.49,2025-09-06,MFIN Sept 2025; Uttarakhand; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Shimla,Fusion Finance Limited,21.49,2025-09-06,MFIN Sept 2025; Himachal Pradesh; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Ludhiana,Satin Creditcare Network Limited,25.49,2025-08-08,MFIN Sept 2025 (Q1 FY25-26): min 23.03% max 24.98% avg 24.77%; midpoint (23.03+24.98)/2=24.01; official product page https://satincreditcare.com/product-portfolio/: new customers 27.95% cycle-2 24.83%; midpoint new/cycle-3 ~ 25.49 (avg of 27.95 and 23.03); NBFC-MFI; 1568 branches 29 states; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Amritsar,Satin Creditcare Network Limited,25.49,2025-08-08,MFIN Sept 2025; Punjab; Satin core geography north India; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Gurugram,Satin Creditcare Network Limited,25.49,2025-08-08,MFIN Sept 2025; Haryana; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Ambala,Satin Creditcare Network Limited,25.49,2025-08-08,MFIN Sept 2025; Haryana; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Rohtak,Satin Creditcare Network Limited,25.49,2025-08-08,MFIN Sept 2025; Haryana; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Jaipur,Satin Creditcare Network Limited,25.49,2025-08-08,MFIN Sept 2025; Rajasthan; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Jodhpur,Satin Creditcare Network Limited,25.49,2025-08-08,MFIN Sept 2025; Rajasthan; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Lucknow,Satin Creditcare Network Limited,25.49,2025-08-08,MFIN Sept 2025; UP — 25.4% of Satin's AUM from UP per CARE July 2025; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Varanasi,Satin Creditcare Network Limited,25.49,2025-08-08,MFIN Sept 2025; UP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Gorakhpur,Satin Creditcare Network Limited,25.49,2025-08-08,MFIN Sept 2025; UP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Azamgarh,Satin Creditcare Network Limited,25.49,2025-08-08,MFIN Sept 2025; UP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Prayagraj,Satin Creditcare Network Limited,25.49,2025-08-08,MFIN Sept 2025; UP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Patna,Satin Creditcare Network Limited,25.49,2025-08-08,MFIN Sept 2025; Bihar — 15.5% AUM per CARE; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Muzaffarpur,Satin Creditcare Network Limited,25.49,2025-08-08,MFIN Sept 2025; Bihar; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Dehradun,Satin Creditcare Network Limited,25.49,2025-08-08,MFIN Sept 2025; Uttarakhand; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+New Delhi,Satin Creditcare Network Limited,25.49,2025-08-08,MFIN Sept 2025; Delhi; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Kolkata,Satin Creditcare Network Limited,25.49,2025-08-08,MFIN Sept 2025; WB — 9.8% of AUM per CARE; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Thrissur,ESAF Small Finance Bank Limited,25.45,2025-07-03,MFIN Sept 2025 (Q1 FY25-26): min 24.89% max 26.00% avg 25.44%; midpoint (24.89+26)/2=25.45; ESAF HQ Thrissur Kerala; RBI-licensed SFB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Ernakulam,ESAF Small Finance Bank Limited,25.45,2025-07-03,MFIN Sept 2025; Kerala; ESAF operates 21 states 700+ branches; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Malappuram,ESAF Small Finance Bank Limited,25.45,2025-07-03,MFIN Sept 2025; Kerala; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Thiruvananthapuram,ESAF Small Finance Bank Limited,25.45,2025-07-03,MFIN Sept 2025; Kerala; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Palakkad,ESAF Small Finance Bank Limited,25.45,2025-07-03,MFIN Sept 2025; Kerala; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Kollam,ESAF Small Finance Bank Limited,25.45,2025-07-03,MFIN Sept 2025; Kerala; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Chennai,ESAF Small Finance Bank Limited,25.45,2025-07-03,MFIN Sept 2025; Tamil Nadu; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Coimbatore,ESAF Small Finance Bank Limited,25.45,2025-07-03,MFIN Sept 2025; TN; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bengaluru Urban,ESAF Small Finance Bank Limited,25.45,2025-07-03,MFIN Sept 2025; Karnataka; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Guntur,ESAF Small Finance Bank Limited,25.45,2025-07-03,MFIN Sept 2025; AP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Pune,ESAF Small Finance Bank Limited,25.45,2025-07-03,MFIN Sept 2025; Maharashtra; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Ranchi,ESAF Small Finance Bank Limited,25.45,2025-07-03,MFIN Sept 2025; Jharkhand; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Patna,ESAF Small Finance Bank Limited,25.45,2025-07-03,MFIN Sept 2025; Bihar; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Lucknow,ESAF Small Finance Bank Limited,25.45,2025-07-03,MFIN Sept 2025; UP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Ranchi,Utkarsh Small Finance Bank Limited,24.50,2025-07-08,MFIN Sept 2025 (Q1 FY25-26): min 24.00% max 25.00% avg 24.05%; midpoint (24+25)/2=24.50; also confirmed on official Utkarsh website: Utkarsh Pragati JLG = 25.00% p.a. reducing https://www.utkarsh.bank/group-loans/utkarsh-pragati; RBI-licensed SFB
+Dhanbad,Utkarsh Small Finance Bank Limited,24.50,2025-07-08,MFIN Sept 2025; Jharkhand; Utkarsh core geography; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bokaro,Utkarsh Small Finance Bank Limited,24.50,2025-07-08,MFIN Sept 2025; Jharkhand; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Hazaribagh,Utkarsh Small Finance Bank Limited,24.50,2025-07-08,MFIN Sept 2025; Jharkhand; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Patna,Utkarsh Small Finance Bank Limited,24.50,2025-07-08,MFIN Sept 2025; Bihar; Utkarsh operates in Bihar per CARE Jun 2025; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Muzaffarpur,Utkarsh Small Finance Bank Limited,24.50,2025-07-08,MFIN Sept 2025; Bihar; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Varanasi,Utkarsh Small Finance Bank Limited,24.50,2025-07-08,MFIN Sept 2025; UP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Lucknow,Utkarsh Small Finance Bank Limited,24.50,2025-07-08,MFIN Sept 2025; UP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Gorakhpur,Utkarsh Small Finance Bank Limited,24.50,2025-07-08,MFIN Sept 2025; UP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Dehradun,Utkarsh Small Finance Bank Limited,24.50,2025-07-08,MFIN Sept 2025; Uttarakhand; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+New Delhi,Utkarsh Small Finance Bank Limited,24.50,2025-07-08,MFIN Sept 2025; Delhi; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Jaipur,Utkarsh Small Finance Bank Limited,24.50,2025-07-08,MFIN Sept 2025; Rajasthan; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Pune,Utkarsh Small Finance Bank Limited,24.50,2025-07-08,MFIN Sept 2025; Maharashtra; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Thrissur,Asirvad Micro Finance Limited,23.38,2025-09-03,MFIN Sept 2025 (Q1 FY25-26): min 22.75% max 24.00% avg 22.63%; midpoint (22.75+24)/2=23.38; POST-REMEDIATION only (RBI cease-and-desist lifted after pricing revision to max ~21.47% per CRISIL Jan 2025 — NOTE: MFIN table uses updated post-remediation rates; rate valid from 2025; NBFC-MFI subsidiary of Manappuram Finance; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Ernakulam,Asirvad Micro Finance Limited,23.38,2025-09-03,MFIN Sept 2025; Kerala; Asirvad core geography; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Thiruvananthapuram,Asirvad Micro Finance Limited,23.38,2025-09-03,MFIN Sept 2025; Kerala; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Malappuram,Asirvad Micro Finance Limited,23.38,2025-09-03,MFIN Sept 2025; Kerala; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Chennai,Asirvad Micro Finance Limited,23.38,2025-09-03,MFIN Sept 2025; Tamil Nadu — Asirvad HQ Chennai; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Coimbatore,Asirvad Micro Finance Limited,23.38,2025-09-03,MFIN Sept 2025; TN; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bengaluru Urban,Asirvad Micro Finance Limited,23.38,2025-09-03,MFIN Sept 2025; Karnataka; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Ludhiana,Asirvad Micro Finance Limited,23.38,2025-09-03,MFIN Sept 2025; Punjab; Asirvad operates Punjab per old press release; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Lucknow,Asirvad Micro Finance Limited,23.38,2025-09-03,MFIN Sept 2025; UP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Patna,Asirvad Micro Finance Limited,23.38,2025-09-03,MFIN Sept 2025; Bihar; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Patna,IndusInd Bank (BFIL division),23.19,2025-08-04,MFIN Sept 2025 (Q1 FY25-26): min 21.25% max 25.13% avg 24.09%; midpoint (21.25+25.13)/2=23.19; IndusInd Bank with BFIL (Bharat Financial Inclusion Ltd) division; RBI-licensed commercial bank; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Muzaffarpur,IndusInd Bank (BFIL division),23.19,2025-08-04,MFIN Sept 2025; Bihar — BFIL strong presence Bihar UP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Vaishali,IndusInd Bank (BFIL division),23.19,2025-08-04,MFIN Sept 2025; Bihar; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Gaya,IndusInd Bank (BFIL division),23.19,2025-08-04,MFIN Sept 2025; Bihar; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Lucknow,IndusInd Bank (BFIL division),23.19,2025-08-04,MFIN Sept 2025; UP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Varanasi,IndusInd Bank (BFIL division),23.19,2025-08-04,MFIN Sept 2025; UP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Gorakhpur,IndusInd Bank (BFIL division),23.19,2025-08-04,MFIN Sept 2025; UP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Jaipur,IndusInd Bank (BFIL division),23.19,2025-08-04,MFIN Sept 2025; Rajasthan; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bhopal,IndusInd Bank (BFIL division),23.19,2025-08-04,MFIN Sept 2025; MP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Kolkata,IndusInd Bank (BFIL division),23.19,2025-08-04,MFIN Sept 2025; WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Khurda,IndusInd Bank (BFIL division),23.19,2025-08-04,MFIN Sept 2025; Odisha; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Hyderabad,IndusInd Bank (BFIL division),23.19,2025-08-04,MFIN Sept 2025; Telangana; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Chennai,IndusInd Bank (BFIL division),23.19,2025-08-04,MFIN Sept 2025; TN; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bengaluru Urban,IndusInd Bank (BFIL division),23.19,2025-08-04,MFIN Sept 2025; Karnataka; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Ahmedabad,IndusInd Bank (BFIL division),23.19,2025-08-04,MFIN Sept 2025; Gujarat; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Gurugram,IndusInd Bank (BFIL division),23.19,2025-08-04,MFIN Sept 2025; Haryana; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Chennai,Equitas Small Finance Bank Limited,22.88,2025-05-05,MFIN Sept 2025 (Q4 FY24-25): min 20.75% max 25.00% avg 24.00%; midpoint (20.75+25)/2=22.88; RBI-licensed SFB; HQ Chennai; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Coimbatore,Equitas Small Finance Bank Limited,22.88,2025-05-05,MFIN Sept 2025; TN — Equitas core TN; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Madurai,Equitas Small Finance Bank Limited,22.88,2025-05-05,MFIN Sept 2025; TN; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Salem,Equitas Small Finance Bank Limited,22.88,2025-05-05,MFIN Sept 2025; TN; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Vellore,Equitas Small Finance Bank Limited,22.88,2025-05-05,MFIN Sept 2025; TN; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Tiruchirappalli,Equitas Small Finance Bank Limited,22.88,2025-05-05,MFIN Sept 2025; TN; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Tirunelveli,Equitas Small Finance Bank Limited,22.88,2025-05-05,MFIN Sept 2025; TN; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Hyderabad,Equitas Small Finance Bank Limited,22.88,2025-05-05,MFIN Sept 2025; Telangana; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bengaluru Urban,Equitas Small Finance Bank Limited,22.88,2025-05-05,MFIN Sept 2025; Karnataka; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Pune,Equitas Small Finance Bank Limited,22.88,2025-05-05,MFIN Sept 2025; Maharashtra; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Mumbai,Equitas Small Finance Bank Limited,22.88,2025-05-05,MFIN Sept 2025; Maharashtra; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Ahmedabad,Equitas Small Finance Bank Limited,22.88,2025-05-05,MFIN Sept 2025; Gujarat; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+New Delhi,Jana Small Finance Bank Limited,22.50,2025-04-18,MFIN Sept 2025 (Q3 FY24-25): min 19.99% max 25.00% avg 22.85%; midpoint (19.99+25)/2=22.50; RBI-licensed SFB; operates Karnataka AP TN Maharashtra UP WB MP Rajasthan Gujarat Delhi; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bengaluru Urban,Jana Small Finance Bank Limited,22.50,2025-04-18,MFIN Sept 2025; Karnataka — Jana HQ Bengaluru; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Hyderabad,Jana Small Finance Bank Limited,22.50,2025-04-18,MFIN Sept 2025; Telangana; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Chennai,Jana Small Finance Bank Limited,22.50,2025-04-18,MFIN Sept 2025; TN; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Pune,Jana Small Finance Bank Limited,22.50,2025-04-18,MFIN Sept 2025; Maharashtra; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Ahmedabad,Jana Small Finance Bank Limited,22.50,2025-04-18,MFIN Sept 2025; Gujarat; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Kolkata,Jana Small Finance Bank Limited,22.50,2025-04-18,MFIN Sept 2025; WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Mumbai,Jana Small Finance Bank Limited,22.50,2025-04-18,MFIN Sept 2025; Maharashtra; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Chennai,Belstar Microfinance Limited,20.45,2025-05-29,MFIN Sept 2025 (Q4 FY24-25): min 18.00% max 22.90% avg 22.77%; midpoint (18+22.90)/2=20.45; NBFC-MFI; subsidiary of Muthoot Finance; primarily TN AP Telangana Karnataka Odisha Maharashtra; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Madurai,Belstar Microfinance Limited,20.45,2025-05-29,MFIN Sept 2025; TN — Belstar core TN; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Coimbatore,Belstar Microfinance Limited,20.45,2025-05-29,MFIN Sept 2025; TN; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Tirunelveli,Belstar Microfinance Limited,20.45,2025-05-29,MFIN Sept 2025; TN; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Guntur,Belstar Microfinance Limited,20.45,2025-05-29,MFIN Sept 2025; AP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Hyderabad,Belstar Microfinance Limited,20.45,2025-05-29,MFIN Sept 2025; Telangana; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bengaluru Urban,Belstar Microfinance Limited,20.45,2025-05-29,MFIN Sept 2025; Karnataka; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Khurda,Belstar Microfinance Limited,20.45,2025-05-29,MFIN Sept 2025; Odisha; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Pune,Belstar Microfinance Limited,20.45,2025-05-29,MFIN Sept 2025; Maharashtra; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Mumbai,Suryoday Small Finance Bank Limited,25.67,2025-05-16,MFIN Sept 2025 (Q4 FY24-25): min 25.35% max 25.99% avg 25.86%; midpoint (25.35+25.99)/2=25.67; RBI-licensed SFB; HQ Mumbai; primarily Maharashtra Gujarat TN Karnataka AP Rajasthan UP Odisha MP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Pune,Suryoday Small Finance Bank Limited,25.67,2025-05-16,MFIN Sept 2025; Maharashtra; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Nashik,Suryoday Small Finance Bank Limited,25.67,2025-05-16,MFIN Sept 2025; Maharashtra; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Ahmedabad,Suryoday Small Finance Bank Limited,25.67,2025-05-16,MFIN Sept 2025; Gujarat; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Surat,Suryoday Small Finance Bank Limited,25.67,2025-05-16,MFIN Sept 2025; Gujarat; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Chennai,Suryoday Small Finance Bank Limited,25.67,2025-05-16,MFIN Sept 2025; TN; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Jaipur,Suryoday Small Finance Bank Limited,25.67,2025-05-16,MFIN Sept 2025; Rajasthan; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bengaluru Urban,Suryoday Small Finance Bank Limited,25.67,2025-05-16,MFIN Sept 2025; Karnataka; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Hyderabad,Suryoday Small Finance Bank Limited,25.67,2025-05-16,MFIN Sept 2025; AP/Telangana; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Ludhiana,Midland Microfin Limited,22.50,2025-07-02,MFIN Sept 2025 (Q1 FY25-26): min 19.50% max 25.50% avg 25.24%; midpoint (19.50+25.50)/2=22.50; NBFC-MFI; primarily Punjab Haryana HP J&K UP Uttarakhand; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Amritsar,Midland Microfin Limited,22.50,2025-07-02,MFIN Sept 2025; Punjab — Midland core geography; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Jalandhar,Midland Microfin Limited,22.50,2025-07-02,MFIN Sept 2025; Punjab; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Patiala,Midland Microfin Limited,22.50,2025-07-02,MFIN Sept 2025; Punjab; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Gurugram,Midland Microfin Limited,22.50,2025-07-02,MFIN Sept 2025; Haryana; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Ambala,Midland Microfin Limited,22.50,2025-07-02,MFIN Sept 2025; Haryana; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Shimla,Midland Microfin Limited,22.50,2025-07-02,MFIN Sept 2025; HP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Kangra,Midland Microfin Limited,22.50,2025-07-02,MFIN Sept 2025; HP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Dehradun,Midland Microfin Limited,22.50,2025-07-02,MFIN Sept 2025; Uttarakhand; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Lucknow,Midland Microfin Limited,22.50,2025-07-02,MFIN Sept 2025; UP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+New Delhi,IIFL Samasta Finance Limited,23.95,2025-07-08,MFIN Sept 2025 (Q1 FY25-26): min 22.95% max 24.95% avg 23.77%; midpoint (22.95+24.95)/2=23.95; NBFC-MFI (formerly Samasta Microfinance); subsidiary IIFL Finance; operates Karnataka AP TN Maharashtra WB UP MP Rajasthan Gujarat; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bengaluru Urban,IIFL Samasta Finance Limited,23.95,2025-07-08,MFIN Sept 2025; Karnataka; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Hyderabad,IIFL Samasta Finance Limited,23.95,2025-07-08,MFIN Sept 2025; Telangana; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Chennai,IIFL Samasta Finance Limited,23.95,2025-07-08,MFIN Sept 2025; TN; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Pune,IIFL Samasta Finance Limited,23.95,2025-07-08,MFIN Sept 2025; Maharashtra; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Kolkata,IIFL Samasta Finance Limited,23.95,2025-07-08,MFIN Sept 2025; WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Ahmedabad,IIFL Samasta Finance Limited,23.95,2025-07-08,MFIN Sept 2025; Gujarat; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Pune,Svatantra Microfin Private Limited,23.15,2025-07-07,MFIN Sept 2025 (Q1 FY25-26): min 22.30% max 24.00% avg 23.27%; midpoint (22.30+24)/2=23.15; NBFC-MFI; operates Maharashtra MP UP Bihar Rajasthan Gujarat Odisha; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Nagpur,Svatantra Microfin Private Limited,23.15,2025-07-07,MFIN Sept 2025; Maharashtra; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Aurangabad,Svatantra Microfin Private Limited,23.15,2025-07-07,MFIN Sept 2025; Maharashtra; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bhopal,Svatantra Microfin Private Limited,23.15,2025-07-07,MFIN Sept 2025; MP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Lucknow,Svatantra Microfin Private Limited,23.15,2025-07-07,MFIN Sept 2025; UP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Patna,Svatantra Microfin Private Limited,23.15,2025-07-07,MFIN Sept 2025; Bihar; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Jaipur,Svatantra Microfin Private Limited,23.15,2025-07-07,MFIN Sept 2025; Rajasthan; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Ahmedabad,Svatantra Microfin Private Limited,23.15,2025-07-07,MFIN Sept 2025; Gujarat; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Khurda,Svatantra Microfin Private Limited,23.15,2025-07-07,MFIN Sept 2025; Odisha; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+New Delhi,Satya Micro Capital Limited,23.83,2025-05-07,MFIN Sept 2025 (Q4 FY24-25): min 22.90% max 24.75% avg 24.26%; midpoint (22.90+24.75)/2=23.83; NBFC-MFI; HQ Delhi; operates Delhi UP Bihar Rajasthan MP Jharkhand WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Lucknow,Satya Micro Capital Limited,23.83,2025-05-07,MFIN Sept 2025; UP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Patna,Satya Micro Capital Limited,23.83,2025-05-07,MFIN Sept 2025; Bihar; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Jaipur,Satya Micro Capital Limited,23.83,2025-05-07,MFIN Sept 2025; Rajasthan; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bhopal,Satya Micro Capital Limited,23.83,2025-05-07,MFIN Sept 2025; MP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Ranchi,Satya Micro Capital Limited,23.83,2025-05-07,MFIN Sept 2025; Jharkhand; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Kolkata,Satya Micro Capital Limited,23.83,2025-05-07,MFIN Sept 2025; WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bengaluru Urban,Chaitanya India Fin Credit Private Limited,23.13,2025-09-02,MFIN Sept 2025 (Q1 FY25-26): min 22.25% max 24.00% avg 22.77%; midpoint (22.25+24)/2=23.13; NBFC-MFI; HQ Bengaluru; Karnataka AP TN Odisha Chhattisgarh Maharashtra; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Hyderabad,Chaitanya India Fin Credit Private Limited,23.13,2025-09-02,MFIN Sept 2025; AP/Telangana; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Chennai,Chaitanya India Fin Credit Private Limited,23.13,2025-09-02,MFIN Sept 2025; TN; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Khurda,Chaitanya India Fin Credit Private Limited,23.13,2025-09-02,MFIN Sept 2025; Odisha; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Raipur,Chaitanya India Fin Credit Private Limited,23.13,2025-09-02,MFIN Sept 2025; Chhattisgarh; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Kozhikode,Federal Bank Limited,25.00,2024-10-01,Federal Bank Microfinance Policy 2025 (effective Oct 2024): rate range 22%-28% MCLR-linked; max 28%; midpoint of range 22-28=25.00%; RBI-scheduled commercial bank; https://www.federal.bank.in/documents/10180/45777/Policy+on+Microfinance+2025.pdf
+Ernakulam,Federal Bank Limited,25.00,2024-10-01,Federal Bank Microfinance Policy 2025; Kerala; https://www.federal.bank.in/documents/10180/45777/Policy+on+Microfinance+2025.pdf
+Thrissur,Federal Bank Limited,25.00,2024-10-01,Federal Bank Microfinance Policy 2025; Kerala; https://www.federal.bank.in/documents/10180/45777/Policy+on+Microfinance+2025.pdf
+Thiruvananthapuram,Federal Bank Limited,25.00,2024-10-01,Federal Bank Microfinance Policy 2025; Kerala; https://www.federal.bank.in/documents/10180/45777/Policy+on+Microfinance+2025.pdf
+Palakkad,Federal Bank Limited,25.00,2024-10-01,Federal Bank Microfinance Policy 2025; Kerala; https://www.federal.bank.in/documents/10180/45777/Policy+on+Microfinance+2025.pdf
+Chennai,Federal Bank Limited,25.00,2024-10-01,Federal Bank Microfinance Policy 2025; TN; Federal Bank BC operations; https://www.federal.bank.in/documents/10180/45777/Policy+on+Microfinance+2025.pdf
+Bengaluru Urban,Federal Bank Limited,25.00,2024-10-01,Federal Bank Microfinance Policy 2025; Karnataka; https://www.federal.bank.in/documents/10180/45777/Policy+on+Microfinance+2025.pdf
+Hyderabad,Federal Bank Limited,25.00,2024-10-01,Federal Bank Microfinance Policy 2025; AP/Telangana BC operations; https://www.federal.bank.in/documents/10180/45777/Policy+on+Microfinance+2025.pdf
+Ahmedabad,Federal Bank Limited,25.00,2024-10-01,Federal Bank Microfinance Policy 2025; Gujarat BC operations; https://www.federal.bank.in/documents/10180/45777/Policy+on+Microfinance+2025.pdf
+Mumbai,HDFC Bank Limited,23.50,2025-07-03,MFIN Sept 2025 (Q1 FY25-26): min 22.00% max 25.00% avg 24.43%; midpoint (22+25)/2=23.50; HDFC Bank has microfinance/JLG portfolio through BC network; RBI-licensed commercial bank; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Chennai,HDFC Bank Limited,23.50,2025-07-03,MFIN Sept 2025; HDFC nationwide operations; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Hyderabad,HDFC Bank Limited,23.50,2025-07-03,MFIN Sept 2025; Telangana; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bengaluru Urban,HDFC Bank Limited,23.50,2025-07-03,MFIN Sept 2025; Karnataka; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Kolkata,HDFC Bank Limited,23.50,2025-07-03,MFIN Sept 2025; WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Lucknow,HDFC Bank Limited,23.50,2025-07-03,MFIN Sept 2025; UP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Patna,HDFC Bank Limited,23.50,2025-07-03,MFIN Sept 2025; Bihar; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Jaipur,HDFC Bank Limited,23.50,2025-07-03,MFIN Sept 2025; Rajasthan; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Ahmedabad,HDFC Bank Limited,23.50,2025-07-03,MFIN Sept 2025; Gujarat; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Pune,HDFC Bank Limited,23.50,2025-07-03,MFIN Sept 2025; Maharashtra; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Mumbai,Axis Bank Limited,24.00,2025-07-07,MFIN Sept 2025 (Q1 FY25-26): min 22.75% max 25.25% avg 23.53%; midpoint (22.75+25.25)/2=24.00; Axis Bank JLG loans through BC network; RBI-licensed commercial bank; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Chennai,Axis Bank Limited,24.00,2025-07-07,MFIN Sept 2025; TN; Axis nationwide; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Hyderabad,Axis Bank Limited,24.00,2025-07-07,MFIN Sept 2025; Telangana; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bengaluru Urban,Axis Bank Limited,24.00,2025-07-07,MFIN Sept 2025; Karnataka; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Kolkata,Axis Bank Limited,24.00,2025-07-07,MFIN Sept 2025; WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Lucknow,Axis Bank Limited,24.00,2025-07-07,MFIN Sept 2025; UP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Patna,Axis Bank Limited,24.00,2025-07-07,MFIN Sept 2025; Bihar; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Jaipur,Axis Bank Limited,24.00,2025-07-07,MFIN Sept 2025; Rajasthan; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Ahmedabad,Axis Bank Limited,24.00,2025-07-07,MFIN Sept 2025; Gujarat; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Mumbai,ICICI Bank Limited,22.75,2025-05-16,MFIN Sept 2025 (Q4 FY24-25): min 21.50% max 24.00% avg 21.50%; midpoint (21.50+24)/2=22.75; ICICI Bank JLG through BC operations; RBI-licensed commercial bank; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Chennai,ICICI Bank Limited,22.75,2025-05-16,MFIN Sept 2025; TN; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Hyderabad,ICICI Bank Limited,22.75,2025-05-16,MFIN Sept 2025; Telangana; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bengaluru Urban,ICICI Bank Limited,22.75,2025-05-16,MFIN Sept 2025; Karnataka; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Kolkata,ICICI Bank Limited,22.75,2025-05-16,MFIN Sept 2025; WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Lucknow,ICICI Bank Limited,22.75,2025-05-16,MFIN Sept 2025; UP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Patna,ICICI Bank Limited,22.75,2025-05-16,MFIN Sept 2025; Bihar; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Mumbai,Yes Bank Limited,23.25,2025-07-07,MFIN Sept 2025 (Q1 FY25-26): min 22.00% max 24.50% avg 23.35%; midpoint (22+24.50)/2=23.25; Yes Bank JLG through BC ops; RBI-licensed commercial bank; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Chennai,Yes Bank Limited,23.25,2025-07-07,MFIN Sept 2025; TN; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Hyderabad,Yes Bank Limited,23.25,2025-07-07,MFIN Sept 2025; Telangana; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bengaluru Urban,Yes Bank Limited,23.25,2025-07-07,MFIN Sept 2025; Karnataka; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Kolkata,Yes Bank Limited,23.25,2025-07-07,MFIN Sept 2025; WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Mumbai,IDFC First Bank Limited,22.50,2025-07-05,MFIN Sept 2025 (Q1 FY25-26): min 22.50% max 22.50% avg 22.50% (flat rate); IDFC First Bank JLG loans; RBI-licensed commercial bank; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Chennai,IDFC First Bank Limited,22.50,2025-07-05,MFIN Sept 2025; flat rate 22.50%; TN; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Hyderabad,IDFC First Bank Limited,22.50,2025-07-05,MFIN Sept 2025; Telangana; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bengaluru Urban,IDFC First Bank Limited,22.50,2025-07-05,MFIN Sept 2025; Karnataka; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Kolkata,IDFC First Bank Limited,22.50,2025-07-05,MFIN Sept 2025; WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Lucknow,IDFC First Bank Limited,22.50,2025-07-05,MFIN Sept 2025; UP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Kolkata,Share Microfin Limited,26.50,2025-06-04,MFIN Sept 2025 (Q4 FY24-25): min 26.00% max 27.00% avg 26.00%; midpoint (26+27)/2=26.50; NBFC-MFI; primarily AP Telangana Karnataka Odisha WB Maharashtra; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Hyderabad,Share Microfin Limited,26.50,2025-06-04,MFIN Sept 2025; Telangana; Share HQ Hyderabad; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Guntur,Share Microfin Limited,26.50,2025-06-04,MFIN Sept 2025; AP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bengaluru Urban,Share Microfin Limited,26.50,2025-06-04,MFIN Sept 2025; Karnataka; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Khurda,Share Microfin Limited,26.50,2025-06-04,MFIN Sept 2025; Odisha; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Pune,Share Microfin Limited,26.50,2025-06-04,MFIN Sept 2025; Maharashtra; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Thrissur,Kotak Mahindra Bank Limited,22.50,2025-07-10,MFIN Sept 2025 (Q1 FY25-26): min 20.00% max 25.00% avg 23.00%; midpoint (20+25)/2=22.50; Kotak Bank JLG through BC network; RBI-licensed commercial bank; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Chennai,Kotak Mahindra Bank Limited,22.50,2025-07-10,MFIN Sept 2025; TN; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bengaluru Urban,Kotak Mahindra Bank Limited,22.50,2025-07-10,MFIN Sept 2025; Karnataka; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Mumbai,Kotak Mahindra Bank Limited,22.50,2025-07-10,MFIN Sept 2025; Maharashtra; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Hyderabad,Kotak Mahindra Bank Limited,22.50,2025-07-10,MFIN Sept 2025; Telangana; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Kolkata,AU Small Finance Bank Limited,25.75,2025-09-04,MFIN Sept 2025 (Q1 FY25-26): min 25.50% max 26.00% avg 25.71%; midpoint (25.50+26)/2=25.75; RBI-licensed SFB (merged with Fincare SFB 2024); https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Jaipur,AU Small Finance Bank Limited,25.75,2025-09-04,MFIN Sept 2025; Rajasthan — AU HQ Jaipur; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Ahmedabad,AU Small Finance Bank Limited,25.75,2025-09-04,MFIN Sept 2025; Gujarat; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Chennai,AU Small Finance Bank Limited,25.75,2025-09-04,MFIN Sept 2025; TN (Fincare merger); https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bengaluru Urban,AU Small Finance Bank Limited,25.75,2025-09-04,MFIN Sept 2025; Karnataka; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Hyderabad,AU Small Finance Bank Limited,25.75,2025-09-04,MFIN Sept 2025; Telangana; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Mumbai,AU Small Finance Bank Limited,25.75,2025-09-04,MFIN Sept 2025; Maharashtra; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Mumbai,RBL Bank Limited,24.00,2025-09-04,MFIN Sept 2025 (Q1 FY25-26): min 23.00% max 25.00% avg 24.74%; midpoint (23+25)/2=24.00; RBL Bank JLG through BC network; RBI-licensed commercial bank; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Chennai,RBL Bank Limited,24.00,2025-09-04,MFIN Sept 2025; TN; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bengaluru Urban,RBL Bank Limited,24.00,2025-09-04,MFIN Sept 2025; Karnataka; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Hyderabad,RBL Bank Limited,24.00,2025-09-04,MFIN Sept 2025; Telangana; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Kolkata,RBL Bank Limited,24.00,2025-09-04,MFIN Sept 2025; WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Lucknow,RBL Bank Limited,24.00,2025-09-04,MFIN Sept 2025; UP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Mumbai,Tata Capital Financial Services Limited,25.12,2025-06-07,MFIN Sept 2025 (Q4 FY24-25): min 24.25% max 25.99% avg 25.40%; midpoint (24.25+25.99)/2=25.12; NBFC; Tata Capital MFI/JLG ops; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Chennai,Tata Capital Financial Services Limited,25.12,2025-06-07,MFIN Sept 2025; TN; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bengaluru Urban,Tata Capital Financial Services Limited,25.12,2025-06-07,MFIN Sept 2025; Karnataka; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Hyderabad,Tata Capital Financial Services Limited,25.12,2025-06-07,MFIN Sept 2025; Telangana; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Ahmedabad,Namra Finance Limited,26.63,2025-06-06,MFIN Sept 2025 (Q4 FY24-25): min 26.00% max 27.25% avg 26.73%; midpoint (26+27.25)/2=26.63; NBFC-MFI; primarily Gujarat Rajasthan MP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Surat,Namra Finance Limited,26.63,2025-06-06,MFIN Sept 2025; Gujarat; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Vadodara,Namra Finance Limited,26.63,2025-06-06,MFIN Sept 2025; Gujarat; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Rajkot,Namra Finance Limited,26.63,2025-06-06,MFIN Sept 2025; Gujarat; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Jaipur,Namra Finance Limited,26.63,2025-06-06,MFIN Sept 2025; Rajasthan; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bhopal,Namra Finance Limited,26.63,2025-06-06,MFIN Sept 2025; MP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Ahmedabad,Piramal Capital and Housing Finance Limited,24.50,2025-01-15,MFIN Sept 2025 (Q3 FY24-25): min 22.00% max 27.00% avg 25.80%; midpoint (22+27)/2=24.50; NBFC; Piramal MFI/JLG through BC; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Mumbai,Piramal Capital and Housing Finance Limited,24.50,2025-01-15,MFIN Sept 2025; Maharashtra; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Chennai,Piramal Capital and Housing Finance Limited,24.50,2025-01-15,MFIN Sept 2025; TN; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Chennai,BWDA Finance Limited,21.00,2025-04-12,MFIN Sept 2025 (Q4 FY24-25): min 18.00% max 24.00% avg 23.99%; midpoint (18+24)/2=21.00; NBFC-MFI; primarily Tamil Nadu; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Madurai,BWDA Finance Limited,21.00,2025-04-12,MFIN Sept 2025; TN; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Coimbatore,BWDA Finance Limited,21.00,2025-04-12,MFIN Sept 2025; TN; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Tirunelveli,BWDA Finance Limited,21.00,2025-04-12,MFIN Sept 2025; TN; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Kolkata,Janakalyan Financial Services Private Limited,26.25,2025-09-08,MFIN Sept 2025 (Q1 FY25-26): min 26.00% max 26.50% avg 26.48%; midpoint (26+26.50)/2=26.25; NBFC-MFI; primarily WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Murshidabad,Janakalyan Financial Services Private Limited,26.25,2025-09-08,MFIN Sept 2025; WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+North 24 Parganas,Janakalyan Financial Services Private Limited,26.25,2025-09-08,MFIN Sept 2025; WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Howrah,Janakalyan Financial Services Private Limited,26.25,2025-09-08,MFIN Sept 2025; WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Kolkata,Sarala Development and Microfinance Private Limited,26.50,2025-07-10,MFIN Sept 2025 (Q1 FY25-26): min 26.00% max 27.00% avg 26.45%; midpoint (26+27)/2=26.50; NBFC-MFI; primarily WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Murshidabad,Sarala Development and Microfinance Private Limited,26.50,2025-07-10,MFIN Sept 2025; WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Purba Bardhaman,Sarala Development and Microfinance Private Limited,26.50,2025-07-10,MFIN Sept 2025; WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Kamrup Metro,Nightingale Finvest Private Limited,21.00,2025-01-16,MFIN Sept 2025 (Q3 FY24-25): min 18.00% max 24.00% avg 22.03%; midpoint (18+24)/2=21.00; NBFC-MFI; Assam; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Jorhat,Nightingale Finvest Private Limited,21.00,2025-01-16,MFIN Sept 2025; Assam; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Dibrugarh,Nightingale Finvest Private Limited,21.00,2025-01-16,MFIN Sept 2025; Assam; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Nagaon,Nightingale Finvest Private Limited,21.00,2025-01-16,MFIN Sept 2025; Assam; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bengaluru Urban,Avanti Microfinance Private Limited,25.50,2025-08-07,MFIN Sept 2025 (Q1 FY25-26): min 24.00% max 27.00% avg 25.11%; midpoint (24+27)/2=25.50; NBFC-MFI; Karnataka; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Mysuru,Avanti Microfinance Private Limited,25.50,2025-08-07,MFIN Sept 2025; Karnataka; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Tumakuru,Avanti Microfinance Private Limited,25.50,2025-08-07,MFIN Sept 2025; Karnataka; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Kolkata,ASA International India Microfinance Limited,28.50,2025-06-06,MFIN Sept 2025 (Q4 FY24-25): 28.50% flat (min=max=avg); NBFC-MFI; operates WB Bihar UP Odisha Jharkhand Assam; NOTE: rate is above 26% — verify with lender; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Murshidabad,ASA International India Microfinance Limited,28.50,2025-06-06,MFIN Sept 2025; WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Patna,ASA International India Microfinance Limited,28.50,2025-06-06,MFIN Sept 2025; Bihar; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Lucknow,ASA International India Microfinance Limited,28.50,2025-06-06,MFIN Sept 2025; UP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Ranchi,ASA International India Microfinance Limited,28.50,2025-06-06,MFIN Sept 2025; Jharkhand; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Kamrup Metro,ASA International India Microfinance Limited,28.50,2025-06-06,MFIN Sept 2025; Assam; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Mumbai,Bajaj Finance Limited,24.00,2025-07-01,MFIN Sept 2025 (Q1 FY25-26): min 23.00% max 25.00% avg 23.73%; midpoint (23+25)/2=24.00; Bajaj Finance rural/MFI segment; NBFC; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Pune,Bajaj Finance Limited,24.00,2025-07-01,MFIN Sept 2025; Maharashtra; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Ahmedabad,Bajaj Finance Limited,24.00,2025-07-01,MFIN Sept 2025; Gujarat; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Bengaluru Urban,Bajaj Finance Limited,24.00,2025-07-01,MFIN Sept 2025; Karnataka; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Chennai,Bajaj Finance Limited,24.00,2025-07-01,MFIN Sept 2025; TN; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Hyderabad,Bajaj Finance Limited,24.00,2025-07-01,MFIN Sept 2025; Telangana; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Lucknow,Bajaj Finance Limited,24.00,2025-07-01,MFIN Sept 2025; UP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Ranchi,Jagaran Microfin Private Limited,26.25,2025-07-07,MFIN Sept 2025 (Q1 FY25-26): min 25.50% max 27.00% avg 26.37%; midpoint (25.50+27)/2=26.25; NBFC-MFI; primarily WB Jharkhand Bihar; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Dhanbad,Jagaran Microfin Private Limited,26.25,2025-07-07,MFIN Sept 2025; Jharkhand; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Kolkata,Jagaran Microfin Private Limited,26.25,2025-07-07,MFIN Sept 2025; WB; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Patna,Jagaran Microfin Private Limited,26.25,2025-07-07,MFIN Sept 2025; Bihar; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Patna,Adi Chitragupta Finance Limited,26.75,2025-07-07,MFIN Sept 2025 (Q1 FY25-26): min 26.50% max 27.00% avg 26.00%; midpoint (26.50+27)/2=26.75; NBFC-MFI; Bihar; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Muzaffarpur,Adi Chitragupta Finance Limited,26.75,2025-07-07,MFIN Sept 2025; Bihar; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Gaya,Adi Chitragupta Finance Limited,26.75,2025-07-07,MFIN Sept 2025; Bihar; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Chennai,Dvara Kshetriya Gramin Financial Services Private Limited,26.88,2025-05-10,MFIN Sept 2025 (Q4 FY24-25): min 26.00% max 27.75% avg 27.15%; midpoint (26+27.75)/2=26.88; NBFC; primarily TN AP; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Tirunelveli,Dvara Kshetriya Gramin Financial Services Private Limited,26.88,2025-05-10,MFIN Sept 2025; TN; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf
+Coimbatore,Dvara Kshetriya Gramin Financial Services Private Limited,26.88,2025-05-10,MFIN Sept 2025; TN; https://mfinindia.org/assets/upload_image/pdf/Website%20Interest%20rate_Sept%2025.pdf

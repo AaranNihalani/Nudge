@@ -40,6 +40,8 @@ class Config:
     rl_rollout_pct: int = 0
     support_contact: str | None = None
     default_language: str = "en"
+    mfi_dataset_path: str | None = None
+    mfi_autoload: bool = True
 
     @staticmethod
     def from_env() -> "Config":
@@ -102,6 +104,13 @@ class Config:
         if default_language not in {"en", "hi", "hinglish"}:
             default_language = "en"
 
+        mfi_dataset_path = (_env("NUDGE_MFI_DATASET_PATH") or "").strip() or None
+        if mfi_dataset_path is None:
+            mfi_dataset_path = os.path.join(os.getcwd(), "datasets", "mfi_rates.csv")
+
+        mfi_autoload_raw = (_env("NUDGE_MFI_AUTOLOAD", "true") or "true").strip().lower()
+        mfi_autoload = mfi_autoload_raw in {"1", "true", "yes", "on"}
+
         return Config(
             port=port,
             railway_environment=railway_environment,
@@ -127,4 +136,6 @@ class Config:
             rl_rollout_pct=int(rl_rollout_pct),
             support_contact=_env("NUDGE_SUPPORT_CONTACT"),
             default_language=str(default_language),
+            mfi_dataset_path=str(mfi_dataset_path) if mfi_dataset_path is not None else None,
+            mfi_autoload=bool(mfi_autoload),
         )

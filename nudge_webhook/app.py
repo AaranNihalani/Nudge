@@ -31,7 +31,7 @@ from .bot import InboundMessage, process_twilio_inbound
 from .config import Config
 from .daily_runner import run_daily_decisions
 from .db import connect, init_and_migrate
-from .mfi import register_mfi
+from .mfi import load_dataset_into_sqlite, register_mfi
 from .metrics_export import export_metrics_zip
 
 
@@ -42,6 +42,18 @@ def create_app(config: Config | None = None) -> Flask:
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
     app.config["NUDGE_CONFIG"] = cfg
     app.config["NUDGE_DB"] = init_and_migrate(cfg.db_path)
+    if getattr(cfg, "mfi_autoload", True) and getattr(cfg, "mfi_dataset_path", None):
+        db_path = app.config["NUDGE_DB"].path
+        conn = connect(db_path)
+        try:
+            row = conn.execute("SELECT 1 FROM mfi_districts LIMIT 1").fetchone()
+        finally:
+            conn.close()
+        if row is None:
+            try:
+                load_dataset_into_sqlite(db_path, str(cfg.mfi_dataset_path), replace=True)
+            except Exception:
+                pass
     register_mfi(app)
 
     def _admin_ok() -> bool:
@@ -54,12 +66,22 @@ def create_app(config: Config | None = None) -> Flask:
     @app.get("/health")
     def health() -> Response:
         db_info = app.config.get("NUDGE_DB")
+        mfi_districts = None
+        try:
+            conn = connect(app.config["NUDGE_DB"].path)
+            try:
+                mfi_districts = int(conn.execute("SELECT COUNT(*) AS c FROM mfi_districts").fetchone()["c"])
+            finally:
+                conn.close()
+        except Exception:
+            mfi_districts = None
         return jsonify(
             {
                 "status": "ok",
                 "railway_environment": cfg.railway_environment,
                 "db_path": getattr(db_info, "path", None),
                 "db_schema_version": getattr(db_info, "schema_version", None),
+                "mfi_districts": mfi_districts,
             }
         )
 
