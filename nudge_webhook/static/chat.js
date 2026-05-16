@@ -86,6 +86,17 @@ function rebuildThread() {
 function setSending(sending) {
   elSend.disabled = !!sending;
   elInput.disabled = !!sending;
+  if (!sending) {
+    setTimeout(() => {
+      try {
+        elInput.focus({ preventScroll: true });
+      } catch (e) {
+        try {
+          elInput.focus();
+        } catch (e2) {}
+      }
+    }, 0);
+  }
 }
 
 function kvRow(label, value) {
@@ -264,6 +275,13 @@ async function sendMessage(text) {
 document.getElementById("chips").addEventListener("click", (e) => {
   const t = e.target;
   if (!t || !t.dataset || !t.dataset.send) return;
+  try {
+    elInput.focus({ preventScroll: true });
+  } catch (e2) {
+    try {
+      elInput.focus();
+    } catch (e3) {}
+  }
   sendMessage(t.dataset.send);
 });
 
