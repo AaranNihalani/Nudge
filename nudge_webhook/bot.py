@@ -46,6 +46,10 @@ def _is_keyword(text: str, *, keyword: str) -> bool:
     return text.strip().lower() == keyword.lower()
 
 
+def _starts_with_keyword(text: str, *, keyword: str) -> bool:
+    return text.strip().lower().startswith(keyword.lower())
+
+
 def _extract_district_command(text: str) -> str | None:
     raw = text.strip()
     lower = raw.lower()
@@ -81,9 +85,44 @@ def _districts_sample(conn, *, limit: int = 25) -> list[str]:
     ]
 
 
+def _districts_query(conn, *, prefix: str | None, limit: int = 30) -> tuple[list[str], int]:
+    p = (prefix or "").strip()
+    if p == "":
+        rows = conn.execute(
+            "SELECT name FROM mfi_districts ORDER BY name COLLATE NOCASE ASC LIMIT ?",
+            (int(limit),),
+        ).fetchall()
+        total = int(conn.execute("SELECT COUNT(*) AS c FROM mfi_districts").fetchone()["c"])
+        return ([str(r["name"]) for r in rows], total)
+
+    like = p + "%"
+    rows = conn.execute(
+        "SELECT name FROM mfi_districts WHERE lower(name) LIKE lower(?) ORDER BY name COLLATE NOCASE ASC LIMIT ?",
+        (like, int(limit)),
+    ).fetchall()
+    total = int(
+        conn.execute(
+            "SELECT COUNT(*) AS c FROM mfi_districts WHERE lower(name) LIKE lower(?)",
+            (like,),
+        ).fetchone()["c"]
+    )
+    return ([str(r["name"]) for r in rows], total)
+
+
+def _extract_districts_query(text: str) -> str | None:
+    raw = text.strip()
+    lower = raw.lower()
+    if not lower.startswith("districts"):
+        return None
+    remaining = raw[len("districts") :].strip()
+    if remaining.startswith(":"):
+        remaining = remaining[1:].strip()
+    return remaining or None
+
+
+
 def _has_mfi_districts(conn) -> bool:
     row = conn.execute("SELECT 1 FROM mfi_districts LIMIT 1").fetchone()
-    return row is not None
 
 
 def _nudge_limits_ok(conn, *, user_id: int, cfg: Config, now: datetime) -> bool:
@@ -175,6 +214,7 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
 
         text = inbound.body.strip()
         district_cmd = _extract_district_command(text)
+        districts_query = _extract_districts_query(text)
         parse_after_commit = (
             consent_status == "opted_in"
             and district is not None
@@ -182,7 +222,7 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
             and not _is_keyword(text, keyword="stop")
             and not _is_keyword(text, keyword="start")
             and not _is_keyword(text, keyword="help")
-            and not _is_keyword(text, keyword="districts")
+            and districts_query is None
         )
         parse_user_id = user_id
         parse_raw_message_id = inbound_raw_message_id
@@ -213,32 +253,59 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
             )
             if district:
                 reply = (
-                    "Thanks — you’re opted in. I’ll only send occasional low-frequency nudges. "
-                    "Reply STOP anytime to opt out."
+                    "You’re opted in. NudgeAI is on.\n"
+                    f"District: {district}\n\n"
+                    "How to use:\n"
+                    "1) Tell me what loan you’re about to take (amount + time + interest).\n"
+                    "2) I’ll suggest regulated lenders in your district if it looks expensive.\n\n"
+                    "Commands:\n"
+                    "- DISTRICTS (or DISTRICTS <prefix>)\n"
+                    "- DISTRICT <name>\n"
+                    "- HELP\n"
+                    "- STOP\n\n"
+                    "Example message:\n"
+                    "“Need 5000 for 30 days. Moneylender says 5% monthly.”"
                 )
             else:
-                sample = _districts_sample(conn, limit=10)
+                sample = _districts_sample(conn, limit=12)
                 sample_text = ", ".join(sample) if sample else ""
-                extra = f" (examples: {sample_text})" if sample_text else ""
+                extra = f"Examples: {sample_text}\n" if sample_text else ""
                 reply = (
-                    "Thanks — you’re opted in. To personalise suggestions, what district are you in?"
-                    f"{extra}\nReply with your district name. Reply STOP anytime to opt out."
+                    "You’re opted in. NudgeAI is on.\n\n"
+                    "To personalise suggestions, reply with your district name.\n"
+                    + extra
+                    + "You can also type:\n"
+                    "- DISTRICTS (to see more)\n"
+                    "- DISTRICT <name>\n\n"
+                    "Reply STOP anytime to opt out."
                 )
         elif _is_keyword(text, keyword="help"):
             reply = (
+                "NudgeAI help\n\n"
+                "What I do:\n"
+                "- If you’re about to take a high-interest loan, I point you to cheaper regulated alternatives in your district.\n"
+                "- I keep messages low-frequency to avoid spam.\n\n"
                 "Commands:\n"
-                "- START: opt in\n"
-                "- STOP: opt out\n"
-                "- DISTRICT <name>: set or change your district\n"
-                "- DISTRICTS: show a sample list\n"
-                "If you’re opted in, I’ll send low-frequency suggestions based on your district."
+                "- START\n"
+                "- STOP\n"
+                "- DISTRICT <name>\n"
+                "- DISTRICTS (or DISTRICTS <prefix>)\n\n"
+                "To get suggestions, send a message like:\n"
+                "“Need 5000 for 30 days. Interest 5% monthly.”"
             )
-        elif _is_keyword(text, keyword="districts"):
-            sample = _districts_sample(conn, limit=25)
+        elif districts_query is not None:
+            sample, total = _districts_query(conn, prefix=districts_query, limit=30)
             if sample:
-                reply = "Districts (sample): " + ", ".join(sample)
+                shown = len(sample)
+                suffix = f" (showing {shown} of {total})" if total > shown else ""
+                prefix_note = f" for “{districts_query}”" if (districts_query or "").strip() != "" else ""
+                reply = (
+                    f"Districts{prefix_note}{suffix}:\n"
+                    + ", ".join(sample)
+                    + "\n\nReply: DISTRICT <name>"
+                )
             else:
-                reply = "No district list is loaded yet."
+                reply = "No matching districts found."
         else:
             if district_cmd is not None:
                 candidate = district_cmd
@@ -248,7 +315,7 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                     reply = (
                         "I couldn’t match that district. Reply with an exact district name"
                         + (f" (examples: {', '.join(sample)})" if sample else "")
-                        + "."
+                        + ". You can also try: DISTRICTS <prefix>"
                     )
                 else:
                     chosen = canonical or candidate.strip()
@@ -256,7 +323,11 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                         "UPDATE users SET district = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
                         (chosen, user_id),
                     )
-                    reply = f"Got it — I’ll use district: {chosen}. Reply STOP anytime to opt out."
+                    reply = (
+                        f"district set to {chosen}\n\n"
+                        "Now send your loan terms and I’ll suggest regulated alternatives if it looks expensive.\n"
+                        "Example: “Need 5000 for 30 days. Interest 5% monthly.”"
+                    )
             else:
                 if consent_status != "opted_in":
                     reply = "To get nudges, reply START to opt in. Reply STOP to opt out."
@@ -267,7 +338,7 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                         reply = (
                             "I couldn’t match that district. Reply with an exact district name"
                             + (f" (examples: {', '.join(sample)})" if sample else "")
-                            + "."
+                            + ". You can also try: DISTRICTS <prefix>"
                         )
                     else:
                         chosen = canonical or text.strip()
@@ -275,7 +346,11 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                             "UPDATE users SET district = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
                             (chosen, user_id),
                         )
-                        reply = f"Thanks — district set to {chosen}. I’ll keep nudges low-frequency."
+                        reply = (
+                            f"district set to {chosen}\n\n"
+                            "Now send your loan terms and I’ll suggest regulated alternatives if it looks expensive.\n"
+                            "Example: “Need 5000 for 30 days. Interest 5% monthly.”"
+                        )
                         district = chosen
                 else:
                     policy_enabled = bool(cfg.baseline_policy_enabled) or str(cfg.policy_mode or "").lower() in {
