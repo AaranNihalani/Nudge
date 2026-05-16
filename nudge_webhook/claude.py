@@ -20,6 +20,19 @@ def _extract_message_text(message: Any) -> str:
     return "\n".join([t for t in text_chunks if t]).strip()
 
 
+def _extract_json_object(text: str) -> dict[str, Any]:
+    raw = (text or "").strip()
+    start = raw.find("{")
+    end = raw.rfind("}")
+    if start < 0 or end < 0 or end <= start:
+        raise ValueError(f"claude_returned_no_json_object:snippet={raw[:280]}")
+    candidate = raw[start : end + 1]
+    payload = json.loads(candidate)
+    if not isinstance(payload, dict):
+        raise ValueError("claude_returned_non_object_json")
+    return payload
+
+
 def generate_reply(config: Config, user_text: str) -> str | None:
     if not config.claude_api_key or Anthropic is None:
         return None
@@ -62,12 +75,7 @@ def call_json_with_retries(
                 messages=[{"role": "user", "content": user_prompt}],
             )
             raw_text = _extract_message_text(message)
-            stripped = raw_text.strip()
-            if not stripped.startswith("{") or not stripped.endswith("}"):
-                raise ValueError("claude_returned_non_json")
-            payload = json.loads(stripped)
-            if not isinstance(payload, dict):
-                raise ValueError("claude_returned_non_object_json")
+            payload = _extract_json_object(raw_text)
             return payload, str(config.claude_model)
         except Exception as e:
             last_error = e
@@ -76,5 +84,6 @@ def call_json_with_retries(
             backoff = min(4.0, 0.5 * (2**attempt))
             time.sleep(backoff)
 
-    _ = last_error
+    if getattr(config, "debug_claude", False) and last_error is not None:
+        raise last_error
     return None

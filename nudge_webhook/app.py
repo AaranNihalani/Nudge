@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 from flask import Flask, Response, jsonify, request
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -82,6 +84,11 @@ def create_app(config: Config | None = None) -> Flask:
                 "db_path": getattr(db_info, "path", None),
                 "db_schema_version": getattr(db_info, "schema_version", None),
                 "mfi_districts": mfi_districts,
+                "claude_model": cfg.claude_model,
+                "claude_key_present": bool(cfg.claude_api_key),
+                "verbose_replies": bool(getattr(cfg, "verbose_replies", False)),
+                "debug_claude": bool(getattr(cfg, "debug_claude", False)),
+                "render_git_commit": os.environ.get("RENDER_GIT_COMMIT"),
             }
         )
 

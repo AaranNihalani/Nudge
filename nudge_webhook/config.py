@@ -42,6 +42,7 @@ class Config:
     default_language: str = "en"
     mfi_dataset_path: str | None = None
     mfi_autoload: bool = True
+    debug_claude: bool = False
 
     @staticmethod
     def from_env() -> "Config":
@@ -111,6 +112,9 @@ class Config:
         mfi_autoload_raw = (_env("NUDGE_MFI_AUTOLOAD", "true") or "true").strip().lower()
         mfi_autoload = mfi_autoload_raw in {"1", "true", "yes", "on"}
 
+        debug_claude_raw = (_env("NUDGE_DEBUG_CLAUDE", "false") or "false").strip().lower()
+        debug_claude = debug_claude_raw in {"1", "true", "yes", "on"}
+
         return Config(
             port=port,
             railway_environment=railway_environment,
@@ -138,4 +142,5 @@ class Config:
             default_language=str(default_language),
             mfi_dataset_path=str(mfi_dataset_path) if mfi_dataset_path is not None else None,
             mfi_autoload=bool(mfi_autoload),
+            debug_claude=bool(debug_claude),
         )

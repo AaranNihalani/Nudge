@@ -10,6 +10,24 @@ from nudge_webhook.db import connect, init_and_migrate
 from nudge_webhook.mfi import load_dataset_into_sqlite
 
 
+def _write_test_dataset_csv(path: str) -> None:
+    Path(path).write_text(
+        "\n".join(
+            [
+                "district,lender,rate_apr,effective_date,source",
+                "Kampala,GreenField Finance,20.5,2025-01-01,test",
+                "Kampala,Sunrise MFI,18.0,2025-01-01,test",
+                "Kampala,Unity Credit,18.0,2025-01-01,test",
+                "Gulu,GreenField Finance,19.5,2025-01-01,test",
+                "Gulu,RiverBank Microcredit,19.5,2025-01-01,test",
+                "Gulu,Valley Lending,22.0,2025-01-01,test",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+
 def _make_config(db_path: str, *, cooldown_minutes: int = 360, max_day: int = 2, max_week: int = 5) -> Config:
     return Config(
         port=5000,
@@ -29,11 +47,10 @@ def _make_config(db_path: str, *, cooldown_minutes: int = 360, max_day: int = 2,
 
 class TestTask4ConsentAndCaps(unittest.TestCase):
     def test_start_stop_and_district_flow(self) -> None:
-        repo_root = Path(__file__).resolve().parents[1]
-        dataset_path = str(repo_root / "datasets" / "mfi_rates.csv")
-
         with tempfile.TemporaryDirectory() as td:
             db_path = str(Path(td) / "test.sqlite3")
+            dataset_path = str(Path(td) / "mfi_rates_test.csv")
+            _write_test_dataset_csv(dataset_path)
             init_and_migrate(db_path)
             load_dataset_into_sqlite(db_path, dataset_path, replace=True)
 
@@ -83,11 +100,10 @@ class TestTask4ConsentAndCaps(unittest.TestCase):
                 conn.close()
 
     def test_nudge_cooldown_blocks_second_nudge(self) -> None:
-        repo_root = Path(__file__).resolve().parents[1]
-        dataset_path = str(repo_root / "datasets" / "mfi_rates.csv")
-
         with tempfile.TemporaryDirectory() as td:
             db_path = str(Path(td) / "test.sqlite3")
+            dataset_path = str(Path(td) / "mfi_rates_test.csv")
+            _write_test_dataset_csv(dataset_path)
             init_and_migrate(db_path)
             load_dataset_into_sqlite(db_path, dataset_path, replace=True)
 
@@ -112,11 +128,10 @@ class TestTask4ConsentAndCaps(unittest.TestCase):
                 conn.close()
 
     def test_daily_cap_blocks_after_limit(self) -> None:
-        repo_root = Path(__file__).resolve().parents[1]
-        dataset_path = str(repo_root / "datasets" / "mfi_rates.csv")
-
         with tempfile.TemporaryDirectory() as td:
             db_path = str(Path(td) / "test.sqlite3")
+            dataset_path = str(Path(td) / "mfi_rates_test.csv")
+            _write_test_dataset_csv(dataset_path)
             init_and_migrate(db_path)
             load_dataset_into_sqlite(db_path, dataset_path, replace=True)
 

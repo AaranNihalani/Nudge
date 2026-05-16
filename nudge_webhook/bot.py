@@ -549,6 +549,7 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
     decision_policy: str | None = None
     limits_blocked = False
     districts_total_debug: int | None = None
+    parse_error_debug: str | None = None
     correction: tuple[str, str] | None = None
 
     conn = connect(db_path)
@@ -1081,11 +1082,29 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                 result = parse_borrow_intent_with_llm(cfg, text=loan_text, call_json=call_json_with_retries)
                 parse_attempted = True
             except Exception:
+                try:
+                    import traceback
+
+                    parse_error_debug = traceback.format_exc(limit=1).strip()
+                except Exception:
+                    parse_error_debug = "llm_parse_exception"
                 result = None
                 parse_attempted = True
 
             if result is None:
-                needs_policy_decision = bool(loan_policy_enabled)
+                if cfg.verbose_replies:
+                    err = (parse_error_debug or "llm_parse_failed").replace("\n", " ")
+                    reply = (
+                        "I tried to extract loan details but couldn’t parse the Claude response.\n"
+                        f"error={err}\n\n"
+                        "Try sending in this format:\n"
+                        "“Need <amount> for <days> days at <rate>% monthly with <lender type>”\n\n"
+                        "Example:\n"
+                        "“Need 5000 for 30 days at 5% monthly with moneylender.”"
+                    )
+                    needs_policy_decision = False
+                else:
+                    needs_policy_decision = bool(loan_policy_enabled)
             else:
                 loan_payload_debug = result.payload
                 loan_missing_debug = _missing_borrow_fields(result.payload)
@@ -1242,6 +1261,8 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
             debug_parts.append(f"decision={decision_action or 'wait'}")
             debug_parts.append(f"engine={decision_policy}")
         debug_parts.append(f"parsed={'yes' if parse_saved else ('attempted' if parse_attempted else 'no')}")
+        if parse_error_debug:
+            debug_parts.append("parse_error=" + parse_error_debug.replace("\n", " ")[:220])
         if loan_payload_debug is not None:
             intent = loan_payload_debug.get("intent")
             conf = loan_payload_debug.get("confidence")
