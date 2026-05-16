@@ -1079,7 +1079,19 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
 
         if needs_llm_parse:
             try:
-                result = parse_borrow_intent_with_llm(cfg, text=loan_text, call_json=call_json_with_retries)
+                def _call_json_fast(cfg2: Config, system_prompt: str, user_prompt: str):
+                    try:
+                        return call_json_with_retries(
+                            cfg2,
+                            system_prompt,
+                            user_prompt,
+                            timeout_seconds=float(getattr(cfg2, "claude_timeout_seconds", 8.0)),
+                            attempts=int(getattr(cfg2, "claude_attempts", 1)),
+                        )
+                    except TypeError:
+                        return call_json_with_retries(cfg2, system_prompt, user_prompt)
+
+                result = parse_borrow_intent_with_llm(cfg, text=loan_text, call_json=_call_json_fast)
                 parse_attempted = True
             except Exception:
                 try:

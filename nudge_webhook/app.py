@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 
-from flask import Flask, Response, jsonify, request
+from flask import Flask, Response, jsonify, render_template, request
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 try:
@@ -91,6 +91,98 @@ def create_app(config: Config | None = None) -> Flask:
                 "render_git_commit": os.environ.get("RENDER_GIT_COMMIT"),
             }
         )
+
+    @app.get("/")
+    def web_chat() -> Response:
+        return Response(render_template("index.html"), mimetype="text/html")
+
+    def _parse_status_line(reply: str) -> dict[str, str]:
+        out: dict[str, str] = {}
+        for line in (reply or "").splitlines():
+            if not line.strip().lower().startswith("[status]"):
+                continue
+            rest = line.split("]", 1)[1] if "]" in line else line
+            parts = [p.strip() for p in rest.split("|") if p.strip()]
+            for p in parts:
+                if "=" in p:
+                    k, v = p.split("=", 1)
+                    out[k.strip()] = v.strip()
+            break
+        return out
+
+    @app.post("/api/chat")
+    def api_chat() -> Response:
+        payload = request.get_json(silent=True) or {}
+        session_id = str(payload.get("session_id") or "").strip()
+        message = str(payload.get("message") or "").strip()
+        if session_id == "" or message == "":
+            return Response("missing session_id or message", status=400)
+
+        inbound = InboundMessage(
+            from_addr=f"web:{session_id}",
+            to_addr="web",
+            body=message,
+            twilio_message_sid=None,
+            payload={"source": "web"},
+        )
+        db_path = app.config["NUDGE_DB"].path
+        reply_text = process_twilio_inbound(cfg, db_path=db_path, inbound=inbound)
+
+        conn = connect(db_path)
+        try:
+            row = conn.execute(
+                "SELECT id, consent_status, district FROM users WHERE phone_e164 = ?",
+                (f"web:{session_id}",),
+            ).fetchone()
+            user_id = int(row["id"]) if row is not None else None
+            consent_status = str(row["consent_status"]) if row is not None else None
+            district = str(row["district"]) if row is not None and row["district"] is not None else None
+            mfi_districts = int(conn.execute("SELECT COUNT(*) AS c FROM mfi_districts").fetchone()["c"])
+
+            last_event = None
+            if user_id is not None:
+                last_event = conn.execute(
+                    """
+                    SELECT intent, confidence, amount_inr, tenure_days, interest_rate_apr, lender_type, negotiation_stage, model, parsed_at
+                    FROM parsed_events
+                    WHERE user_id = ? AND event_type = 'borrow_intent'
+                    ORDER BY id DESC
+                    LIMIT 1
+                    """,
+                    (int(user_id),),
+                ).fetchone()
+        finally:
+            conn.close()
+
+        status = _parse_status_line(reply_text)
+
+        debug: dict[str, object] = {
+            "policy": status.get("policy"),
+            "engine": status.get("engine"),
+            "decision": status.get("decision"),
+            "parsed": status.get("parsed"),
+            "intent": status.get("intent"),
+            "confidence": status.get("confidence"),
+            "limits": status.get("limits"),
+            "district": district,
+            "consent_status": consent_status,
+            "mfi_districts": mfi_districts,
+        }
+
+        if last_event is not None:
+            debug["last_borrow_intent"] = {
+                "intent": bool(int(last_event["intent"])) if last_event["intent"] is not None else None,
+                "confidence": float(last_event["confidence"]) if last_event["confidence"] is not None else None,
+                "amount_inr": float(last_event["amount_inr"]) if last_event["amount_inr"] is not None else None,
+                "tenure_days": int(last_event["tenure_days"]) if last_event["tenure_days"] is not None else None,
+                "interest_rate_apr": float(last_event["interest_rate_apr"]) if last_event["interest_rate_apr"] is not None else None,
+                "lender_type": str(last_event["lender_type"]) if last_event["lender_type"] is not None else None,
+                "negotiation_stage": str(last_event["negotiation_stage"]) if last_event["negotiation_stage"] is not None else None,
+                "model": str(last_event["model"]) if last_event["model"] is not None else None,
+                "parsed_at": str(last_event["parsed_at"]) if last_event["parsed_at"] is not None else None,
+            }
+
+        return jsonify({"reply": reply_text, "debug": debug})
 
     @app.post("/twilio")
     def twilio_webhook() -> Response:

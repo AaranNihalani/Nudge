@@ -1,0 +1,284 @@
+:root{
+  --bg0:#07070a;
+  --bg1:#0d0e14;
+  --card:rgba(255,255,255,.06);
+  --card2:rgba(255,255,255,.08);
+  --stroke:rgba(255,255,255,.10);
+  --stroke2:rgba(255,255,255,.16);
+  --txt:rgba(255,255,255,.92);
+  --muted:rgba(255,255,255,.66);
+  --muted2:rgba(255,255,255,.48);
+  --accent:#f6b26b;
+  --accent2:#8ad7ff;
+  --good:#63f2c8;
+  --bad:#ff7a95;
+  --shadow:0 18px 60px rgba(0,0,0,.55);
+  --radius:18px;
+  --radius2:26px;
+  --mono:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  color:var(--txt);
+  background:
+    radial-gradient(1200px 600px at 20% 10%, rgba(246,178,107,.22), transparent 65%),
+    radial-gradient(900px 520px at 85% 25%, rgba(138,215,255,.18), transparent 70%),
+    radial-gradient(900px 600px at 50% 110%, rgba(99,242,200,.14), transparent 65%),
+    linear-gradient(180deg, var(--bg0), var(--bg1));
+  font-family:"IBM Plex Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+.bg-grain{
+  pointer-events:none;
+  position:fixed;
+  inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='.13'/%3E%3C/svg%3E");
+  mix-blend-mode:overlay;
+  opacity:.55;
+}
+
+.shell{
+  max-width:1180px;
+  margin:0 auto;
+  padding:28px 20px 24px;
+}
+
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:16px;
+  margin-bottom:18px;
+}
+
+.brand{display:flex; align-items:center; gap:12px}
+.mark{
+  width:44px; height:44px;
+  border-radius:14px;
+  background:
+    radial-gradient(12px 12px at 30% 30%, rgba(255,255,255,.9), rgba(255,255,255,.0) 60%),
+    linear-gradient(135deg, rgba(246,178,107,.85), rgba(138,215,255,.70));
+  box-shadow:0 10px 35px rgba(0,0,0,.55);
+  border:1px solid rgba(255,255,255,.22);
+}
+.brand-title{
+  font-family:"Fraunces", serif;
+  font-weight:600;
+  letter-spacing:.2px;
+  font-size:20px;
+  line-height:1.05;
+}
+.brand-sub{font-size:12px; color:var(--muted2); margin-top:2px}
+
+.top-actions{display:flex; gap:10px}
+.ghost{
+  background:transparent;
+  color:var(--muted);
+  border:1px solid var(--stroke);
+  border-radius:999px;
+  padding:10px 12px;
+  cursor:pointer;
+  transition:transform .12s ease, border-color .12s ease, background .12s ease;
+}
+.ghost:hover{border-color:var(--stroke2); background:rgba(255,255,255,.04); transform:translateY(-1px)}
+.ghost:active{transform:translateY(0)}
+
+.layout{
+  display:grid;
+  grid-template-columns: 1.45fr .95fr;
+  gap:16px;
+}
+
+.panel{
+  background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.04));
+  border:1px solid var(--stroke);
+  border-radius:var(--radius2);
+  box-shadow:var(--shadow);
+  overflow:hidden;
+  backdrop-filter: blur(10px);
+}
+
+.chat{display:flex; flex-direction:column; min-height:70vh}
+.chat-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 16px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.chat-head-title{font-weight:600; letter-spacing:.2px}
+.badges{display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end}
+.badge{
+  font-size:11px;
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.12);
+  color:var(--muted);
+  background:rgba(0,0,0,.18);
+}
+.badge.good{border-color:rgba(99,242,200,.35); color:rgba(99,242,200,.92)}
+.badge.bad{border-color:rgba(255,122,149,.35); color:rgba(255,122,149,.92)}
+.badge.accent{border-color:rgba(246,178,107,.35); color:rgba(246,178,107,.92)}
+
+.chips{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  padding:12px 14px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.chip{
+  cursor:pointer;
+  border-radius:999px;
+  padding:9px 12px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(0,0,0,.18);
+  color:rgba(255,255,255,.82);
+  font-size:12px;
+  transition:transform .12s ease, background .12s ease, border-color .12s ease;
+}
+.chip:hover{transform:translateY(-1px); border-color:rgba(255,255,255,.18); background:rgba(255,255,255,.06)}
+.chip:active{transform:translateY(0)}
+.chip-accent{border-color:rgba(246,178,107,.35); color:rgba(246,178,107,.95)}
+
+.thread{
+  padding:14px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  overflow:auto;
+  flex:1;
+}
+
+.msg{
+  max-width:86%;
+  border-radius:18px;
+  padding:12px 12px 10px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(0,0,0,.18);
+}
+.msg.me{margin-left:auto; border-top-right-radius:10px; background:rgba(138,215,255,.10); border-color:rgba(138,215,255,.22)}
+.msg.bot{margin-right:auto; border-top-left-radius:10px; background:rgba(246,178,107,.08); border-color:rgba(246,178,107,.18)}
+.msg .meta{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  margin-top:8px;
+  font-size:11px;
+  color:var(--muted2);
+}
+.msg .body{white-space:pre-wrap; line-height:1.35}
+.msg .mini{font-family:var(--mono); font-size:11px; color:rgba(255,255,255,.62); margin-top:10px}
+
+.composer{
+  display:flex;
+  gap:10px;
+  padding:12px;
+  border-top:1px solid rgba(255,255,255,.08);
+  background:rgba(0,0,0,.12);
+}
+.composer input{
+  flex:1;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(0,0,0,.18);
+  color:rgba(255,255,255,.9);
+  padding:12px 14px;
+  outline:none;
+}
+.composer input:focus{border-color:rgba(246,178,107,.35); box-shadow:0 0 0 4px rgba(246,178,107,.10)}
+.composer button{
+  border-radius:999px;
+  padding:12px 16px;
+  border:1px solid rgba(255,255,255,.14);
+  background:linear-gradient(135deg, rgba(246,178,107,.95), rgba(138,215,255,.75));
+  color:rgba(20,18,22,.95);
+  font-weight:700;
+  cursor:pointer;
+  transition:transform .12s ease, filter .12s ease;
+}
+.composer button:hover{transform:translateY(-1px); filter:saturate(1.08)}
+.composer button:active{transform:translateY(0)}
+.composer button:disabled{opacity:.6; cursor:not-allowed}
+
+.side{padding:14px; display:flex; flex-direction:column; gap:14px; min-height:70vh}
+.side-block{
+  background:rgba(0,0,0,.14);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:var(--radius);
+  padding:12px;
+}
+.side-title{
+  font-family:"Fraunces", serif;
+  font-size:15px;
+  font-weight:600;
+  margin-bottom:10px;
+}
+.kv{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap:8px;
+}
+.kv-row{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  font-size:12px;
+  padding:8px 10px;
+  border-radius:14px;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);
+}
+.kv-row span{color:var(--muted)}
+.kv-row strong{font-weight:600}
+
+.loan{
+  padding:10px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.04);
+  font-size:12px;
+  line-height:1.35;
+}
+.loan table{width:100%; border-collapse:collapse; font-size:12px}
+.loan td{padding:6px 0; border-bottom:1px dashed rgba(255,255,255,.10)}
+.loan td:first-child{color:var(--muted)}
+.loan td:last-child{text-align:right; font-weight:600}
+.loan tr:last-child td{border-bottom:none}
+.loan-actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px}
+.mini-btn{
+  border-radius:999px;
+  padding:8px 10px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(0,0,0,.18);
+  color:rgba(255,255,255,.82);
+  font-size:12px;
+  cursor:pointer;
+  transition:transform .12s ease, background .12s ease, border-color .12s ease;
+}
+.mini-btn:hover{transform:translateY(-1px); border-color:rgba(255,255,255,.18); background:rgba(255,255,255,.06)}
+.mini-btn:active{transform:translateY(0)}
+.mini-btn.accent{border-color:rgba(246,178,107,.35); color:rgba(246,178,107,.95)}
+
+.debug{
+  margin:0;
+  font-family:var(--mono);
+  font-size:11px;
+  color:rgba(255,255,255,.70);
+  white-space:pre-wrap;
+  word-break:break-word;
+  line-height:1.35;
+}
+
+.muted{color:var(--muted2)}
+.foot{margin-top:14px; padding:0 4px}
+
+@media (max-width: 980px){
+  .layout{grid-template-columns:1fr}
+  .chat{min-height:62vh}
+  .side{min-height:auto}
+}
+

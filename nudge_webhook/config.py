@@ -43,6 +43,8 @@ class Config:
     mfi_dataset_path: str | None = None
     mfi_autoload: bool = True
     debug_claude: bool = False
+    claude_timeout_seconds: float = 8.0
+    claude_attempts: int = 1
 
     @staticmethod
     def from_env() -> "Config":
@@ -115,6 +117,19 @@ class Config:
         debug_claude_raw = (_env("NUDGE_DEBUG_CLAUDE", "false") or "false").strip().lower()
         debug_claude = debug_claude_raw in {"1", "true", "yes", "on"}
 
+        timeout_raw = (_env("NUDGE_CLAUDE_TIMEOUT_SECONDS", "8") or "8").strip()
+        attempts_raw = (_env("NUDGE_CLAUDE_ATTEMPTS", "1") or "1").strip()
+        try:
+            claude_timeout_seconds = float(timeout_raw)
+        except ValueError:
+            claude_timeout_seconds = 8.0
+        claude_timeout_seconds = float(min(max(1.0, claude_timeout_seconds), 12.0))
+        try:
+            claude_attempts = int(attempts_raw)
+        except ValueError:
+            claude_attempts = 1
+        claude_attempts = int(min(max(1, claude_attempts), 3))
+
         return Config(
             port=port,
             railway_environment=railway_environment,
@@ -143,4 +158,6 @@ class Config:
             mfi_dataset_path=str(mfi_dataset_path) if mfi_dataset_path is not None else None,
             mfi_autoload=bool(mfi_autoload),
             debug_claude=bool(debug_claude),
+            claude_timeout_seconds=float(claude_timeout_seconds),
+            claude_attempts=int(claude_attempts),
         )
