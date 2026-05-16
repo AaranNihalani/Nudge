@@ -177,7 +177,15 @@ def _decision_for_action(
             return PolicyDecision(
                 action="alert",
                 nudge_type="alert",
-                content=alert_message(conn, district=district, quoted_apr=float(state.implied_apr), current_lender=None, n=3),
+                content=alert_message(
+                    conn,
+                    district=district,
+                    quoted_apr=float(state.implied_apr),
+                    current_lender=None,
+                    amount_inr=state.borrow.amount_inr,
+                    tenure_days=state.borrow.tenure_days,
+                    n=3,
+                ),
                 policy_name=policy_name,
                 policy_version=policy_version,
                 parsed_event_id=state.borrow.last_intent_event_id,
@@ -193,6 +201,8 @@ def _decision_for_action(
                 district=district,
                 current_rate=float(state.implied_apr) if state.implied_apr is not None else None,
                 exclude_lender=None,
+                amount_inr=state.borrow.amount_inr,
+                tenure_days=state.borrow.tenure_days,
                 n=3,
             ),
             policy_name=policy_name,
@@ -228,7 +238,13 @@ def decide_policy(conn, *, cfg: Config, state: UserState) -> PolicyDecision:
 
     if mode in {"rl", "auto"}:
         rl = _load_rl_policy(cfg, conn)
-        if rl is not None and state.consent_status == "opted_in" and state.district:
+        allow_rl = True
+        if mode == "auto":
+            pct = int(getattr(cfg, "rl_rollout_pct", 0) or 0)
+            pct = max(0, min(100, pct))
+            allow_rl = pct >= 100 or (pct > 0 and (int(state.user_id) % 100) < pct)
+
+        if allow_rl and rl is not None and state.consent_status == "opted_in" and state.district:
             obs = _state_to_rl_obs(conn, state=state, horizon_days=int(rl.horizon_days))
             try:
                 action = rl.predict_action(obs=obs)

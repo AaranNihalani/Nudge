@@ -3,8 +3,29 @@ from __future__ import annotations
 from flask import Flask, Response, jsonify, request
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-from twilio.request_validator import RequestValidator
-from twilio.twiml.messaging_response import MessagingResponse
+try:
+    from twilio.request_validator import RequestValidator
+    from twilio.twiml.messaging_response import MessagingResponse
+except Exception:
+    RequestValidator = None
+
+    class MessagingResponse:
+        def __init__(self) -> None:
+            self._messages: list[str] = []
+
+        def message(self, body: str) -> None:
+            self._messages.append(str(body))
+
+        def __str__(self) -> str:
+            msg = self._messages[-1] if self._messages else ""
+            escaped = (
+                msg.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace('"', "&quot;")
+                .replace("'", "&apos;")
+            )
+            return f"<Response><Message>{escaped}</Message></Response>"
 
 from .bot import InboundMessage, process_twilio_inbound
 from .config import Config
@@ -44,7 +65,7 @@ def create_app(config: Config | None = None) -> Flask:
 
     @app.post("/twilio")
     def twilio_webhook() -> Response:
-        if cfg.twilio_validate_signature and cfg.twilio_auth_token:
+        if cfg.twilio_validate_signature and cfg.twilio_auth_token and RequestValidator is not None:
             signature = request.headers.get("X-Twilio-Signature", "")
             validator = RequestValidator(cfg.twilio_auth_token)
             if not validator.validate(request.url, request.form, signature):

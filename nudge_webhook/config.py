@@ -36,6 +36,10 @@ class Config:
     default_channel: str = "whatsapp"
     admin_token: str | None = None
     anon_salt: str | None = None
+    verbose_replies: bool = False
+    rl_rollout_pct: int = 0
+    support_contact: str | None = None
+    default_language: str = "en"
 
     @staticmethod
     def from_env() -> "Config":
@@ -85,6 +89,19 @@ class Config:
         if policy_mode == "":
             policy_mode = "baseline" if baseline_policy_enabled else "off"
 
+        verbose_raw = (_env("NUDGE_VERBOSE_REPLIES", "false") or "false").strip().lower()
+        verbose_replies = verbose_raw in {"1", "true", "yes", "on"}
+
+        rollout_raw = (_env("NUDGE_RL_ROLLOUT_PCT", "0") or "0").strip()
+        try:
+            rl_rollout_pct = max(0, min(100, int(rollout_raw)))
+        except ValueError:
+            rl_rollout_pct = 0
+
+        default_language = (_env("NUDGE_DEFAULT_LANGUAGE", "en") or "en").strip().lower()
+        if default_language not in {"en", "hi", "hinglish"}:
+            default_language = "en"
+
         return Config(
             port=port,
             railway_environment=railway_environment,
@@ -106,4 +123,8 @@ class Config:
             default_channel=_env("NUDGE_DEFAULT_CHANNEL", "whatsapp") or "whatsapp",
             admin_token=_env("NUDGE_ADMIN_TOKEN"),
             anon_salt=_env("NUDGE_ANON_SALT"),
+            verbose_replies=bool(verbose_replies),
+            rl_rollout_pct=int(rl_rollout_pct),
+            support_contact=_env("NUDGE_SUPPORT_CONTACT"),
+            default_language=str(default_language),
         )

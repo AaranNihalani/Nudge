@@ -4,7 +4,10 @@ import json
 import time
 from typing import Any
 
-from anthropic import Anthropic
+try:
+    from anthropic import Anthropic
+except Exception:
+    Anthropic = None
 
 from .config import Config
 
@@ -18,7 +21,7 @@ def _extract_message_text(message: Any) -> str:
 
 
 def generate_reply(config: Config, user_text: str) -> str | None:
-    if not config.claude_api_key:
+    if not config.claude_api_key or Anthropic is None:
         return None
 
     try:
@@ -44,7 +47,7 @@ def call_json_with_retries(
     timeout_seconds: float = 20,
     attempts: int = 3,
 ) -> tuple[dict[str, Any], str] | None:
-    if not config.claude_api_key:
+    if not config.claude_api_key or Anthropic is None:
         return None
 
     last_error: Exception | None = None

@@ -166,6 +166,40 @@ _MIGRATIONS: list[tuple[int, str]] = [
         ALTER TABLE nudges ADD COLUMN trigger TEXT NOT NULL DEFAULT 'event';
         """,
     ),
+    (
+        5,
+        """
+        CREATE TABLE IF NOT EXISTS user_sessions (
+            user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+            districts_prefix TEXT,
+            districts_offset INTEGER NOT NULL DEFAULT 0,
+            districts_page_size INTEGER NOT NULL DEFAULT 30,
+            borrow_draft_json TEXT,
+            borrow_source_raw_message_id INTEGER REFERENCES raw_messages(id) ON DELETE SET NULL,
+            borrow_model TEXT,
+            updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
+        );
+        """,
+    ),
+    (
+        6,
+        """
+        ALTER TABLE user_sessions ADD COLUMN language TEXT;
+
+        CREATE TABLE IF NOT EXISTS user_actions (
+            id INTEGER PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            source_raw_message_id INTEGER REFERENCES raw_messages(id) ON DELETE SET NULL,
+            action_type TEXT NOT NULL,
+            lender TEXT,
+            details_json TEXT,
+            created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_user_actions_user_created_at
+            ON user_actions(user_id, created_at);
+        """,
+    ),
 ]
 
 
