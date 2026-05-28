@@ -187,6 +187,8 @@ def create_app(config: Config | None = None) -> Flask:
             "district": district,
             "consent_status": consent_status,
             "mfi_districts": mfi_districts,
+            "claude_enabled": bool(cfg.claude_api_key),
+            "claude_model": cfg.claude_model,
         }
 
         if draft_payload is not None:

@@ -13,7 +13,13 @@ from nudge_webhook.db import connect, init_and_migrate
 from nudge_webhook.nudge_content import lender_detail_fallback
 
 
-def _make_cfg(db_path: str, *, verbose_replies: bool = False) -> Config:
+def _make_cfg(
+    db_path: str,
+    *,
+    verbose_replies: bool = False,
+    baseline_policy_enabled: bool = True,
+    policy_mode: str = "baseline",
+) -> Config:
     return Config(
         port=5000,
         railway_environment=None,
@@ -26,8 +32,8 @@ def _make_cfg(db_path: str, *, verbose_replies: bool = False) -> Config:
         nudge_cooldown_minutes=0,
         nudge_max_per_day=100,
         nudge_max_per_week=500,
-        baseline_policy_enabled=True,
-        policy_mode="baseline",
+        baseline_policy_enabled=bool(baseline_policy_enabled),
+        policy_mode=str(policy_mode),
         verbose_replies=bool(verbose_replies),
     )
 
@@ -110,6 +116,104 @@ class TestTask11ConversationFlows(unittest.TestCase):
 
             second = process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "MORE"), now=now)
             self.assertIn("D030", second)
+
+    def test_policy_off_still_parses_loan_and_returns_costed_options(self) -> None:
+        def stub_call_json_with_retries(cfg: Config, system_prompt: str, user_prompt: str) -> tuple[dict[str, Any], str] | None:
+            _ = (cfg, system_prompt, user_prompt)
+            return (
+                {
+                    "schema_version": 1,
+                    "intent": True,
+                    "confidence": 0.95,
+                    "amount_inr": 500000,
+                    "tenure_days": 30,
+                    "interest_rate_apr": None,
+                    "lender_name": None,
+                    "lender_type": "moneylender",
+                    "negotiation_stage": "asking",
+                },
+                "fixture-llm",
+            )
+
+        original_call_json = bot_module.call_json_with_retries
+        bot_module.call_json_with_retries = stub_call_json_with_retries
+        try:
+            with tempfile.TemporaryDirectory() as td:
+                db_path = str(Path(td) / "test.sqlite3")
+                init_and_migrate(db_path)
+
+                conn = connect(db_path)
+                try:
+                    conn.execute("BEGIN IMMEDIATE")
+                    _seed_minimal_mfi(conn, district="D")
+                    conn.commit()
+                finally:
+                    conn.close()
+
+                cfg = _make_cfg(db_path, baseline_policy_enabled=False, policy_mode="off")
+                now = datetime(2026, 5, 16, 12, 0, 0, tzinfo=timezone.utc)
+                from_e164 = "+15550001112"
+
+                process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "START"), now=now)
+                process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "DISTRICT D"), now=now)
+
+                reply = process_twilio_inbound(
+                    cfg, db_path=db_path, inbound=_inbound(from_e164, "Need 5 lakh for 30 days with moneylender"), now=now
+                )
+                self.assertIn("1) B", reply)
+                self.assertIn("repay about INR", reply)
+                self.assertIn("interest about INR", reply)
+
+                conn = connect(db_path)
+                try:
+                    user_id = int(conn.execute("SELECT id FROM users WHERE phone_e164 = ?", (from_e164,)).fetchone()["id"])
+                    row = conn.execute(
+                        """
+                        SELECT amount_inr, tenure_days, lender_type
+                        FROM parsed_events
+                        WHERE user_id = ? AND event_type = 'borrow_intent'
+                        ORDER BY id DESC
+                        LIMIT 1
+                        """,
+                        (user_id,),
+                    ).fetchone()
+                    self.assertIsNotNone(row)
+                    self.assertEqual(float(row["amount_inr"]), 500000.0)
+                    self.assertEqual(int(row["tenure_days"]), 30)
+                    self.assertEqual(str(row["lender_type"]), "moneylender")
+                finally:
+                    conn.close()
+        finally:
+            bot_module.call_json_with_retries = original_call_json
+
+    def test_selected_option_amount_followup_refreshes_cost_breakdown(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            db_path = str(Path(td) / "test.sqlite3")
+            init_and_migrate(db_path)
+
+            conn = connect(db_path)
+            try:
+                conn.execute("BEGIN IMMEDIATE")
+                _seed_minimal_mfi(conn, district="D")
+                conn.commit()
+            finally:
+                conn.close()
+
+            cfg = _make_cfg(db_path, baseline_policy_enabled=False, policy_mode="off")
+            now = datetime(2026, 5, 16, 12, 0, 0, tzinfo=timezone.utc)
+            from_e164 = "+15550001113"
+
+            process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "START"), now=now)
+            process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "DISTRICT D"), now=now)
+            process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "hello"), now=now)
+
+            option_reply = process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "1"), now=now)
+            self.assertIn("Reply with something like: 5000 for 30 days.", option_reply)
+
+            refreshed = process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "5 lakh for 30 days"), now=now)
+            self.assertIn("Option 1: B", refreshed)
+            self.assertIn("INR 90,000 interest over a year", refreshed)
+            self.assertIn("total repayment is about INR 507,397 before fees", refreshed)
 
     def test_missing_interest_still_persists_and_suggests_top_local_options(self) -> None:
         def stub_call_json_with_retries(cfg: Config, system_prompt: str, user_prompt: str) -> tuple[dict[str, Any], str] | None:

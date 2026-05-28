@@ -525,6 +525,78 @@ def _looks_like_new_loan_message(text: str) -> bool:
     return has_loan_word and (_parse_amount_inr(raw) is not None or _parse_tenure_days(raw) is not None)
 
 
+def _looks_like_loan_terms_fragment(text: str) -> bool:
+    raw = (text or "").strip().lower()
+    if raw == "" or re.search(r"\d", raw) is None:
+        return False
+    has_amount_cue = re.search(r"(₹|rs\.?|rupees?|lakh|lakhs|lac|lacs|\bk\b|\b\d{4,}\b)", raw) is not None
+    has_tenure_cue = re.search(r"\b\d+\s*(day|days|d|week|weeks|w|month|months|m)\b", raw) is not None
+    has_rate_cue = re.search(r"\b\d+(?:\.\d+)?\s*%?\s*(apr|annual|year|yearly|month|monthly|week|weekly|day|daily)\b", raw) is not None
+    has_loan_word = any(w in raw for w in ("loan", "borrow", "need", "lend", "credit"))
+    return bool(has_rate_cue or has_tenure_cue or (has_amount_cue and (has_loan_word or has_tenure_cue or " for " in raw)))
+
+
+def _empty_borrow_payload() -> dict[str, Any]:
+    return {
+        "schema_version": 1,
+        "intent": True,
+        "confidence": 0.85,
+        "amount_inr": None,
+        "tenure_days": None,
+        "interest_rate_apr": None,
+        "lender_name": None,
+        "lender_type": "unknown",
+        "negotiation_stage": "asking",
+    }
+
+
+def _load_latest_borrow_payload(conn, *, user_id: int) -> dict[str, Any] | None:
+    row = conn.execute(
+        """
+        SELECT event_json
+        FROM parsed_events
+        WHERE user_id = ? AND event_type = 'borrow_intent' AND intent = 1
+        ORDER BY parsed_at DESC, id DESC
+        LIMIT 1
+        """,
+        (int(user_id),),
+    ).fetchone()
+    if row is None or row["event_json"] is None:
+        return None
+    try:
+        payload = json.loads(str(row["event_json"]))
+    except Exception:
+        return None
+    return dict(payload) if isinstance(payload, dict) else None
+
+
+def _merge_borrow_details_from_text(
+    *,
+    text: str,
+    base_payload: dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    updated = dict(base_payload) if isinstance(base_payload, dict) else _empty_borrow_payload()
+    changed = False
+    amount = _parse_amount_inr(text)
+    if amount is not None:
+        updated["amount_inr"] = float(amount)
+        changed = True
+    tenure = _parse_tenure_days(text)
+    if tenure is not None:
+        updated["tenure_days"] = int(tenure)
+        changed = True
+    rate = _parse_interest_rate_apr(text)
+    if rate is not None:
+        updated["interest_rate_apr"] = float(rate)
+        changed = True
+    if not changed:
+        return None
+    try:
+        return validate_borrow_intent_payload(updated)
+    except Exception:
+        return None
+
+
 def _selected_lender_feedback_kind(text: str) -> str:
     raw = (text or "").strip().lower()
     positive = {"yes", "y", "ok", "okay", "manageable", "good", "looks good", "interested", "proceed", "go ahead"}
@@ -898,6 +970,7 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
     loan_text: str = ""
     loan_district: str | None = None
     loan_policy_enabled = False
+    assistant_recommendation_enabled = False
     policy_inbound_channel = "whatsapp" if inbound.from_addr.lower().startswith("whatsapp:") else "sms"
     reply: str | None = None
     debug_parts: list[str] = []
@@ -961,6 +1034,19 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
         selected_lender_rank, selected_lender_option = _load_selected_lender_option(session)
         option_selection = _parse_lender_option_selection(text, options=lender_options)
         option_selection_request = option_selection is not None or _looks_like_lender_option_selection(text)
+        loan_terms_fragment = _looks_like_loan_terms_fragment(text)
+        selected_lender_context_update = (
+            selected_lender_option is not None
+            and correction is None
+            and district_cmd is None
+            and districts_query is None
+            and not more_cmd
+            and lang_cmd is None
+            and contacted_cmd is None
+            and switched_cmd is None
+            and not option_selection_request
+            and loan_terms_fragment
+        )
         selected_lender_followup = (
             selected_lender_option is not None
             and not has_borrow_draft
@@ -976,11 +1062,13 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
             and not _is_keyword(text, keyword="start")
             and not _is_keyword(text, keyword="help")
             and not _looks_like_new_loan_message(text)
+            and not selected_lender_context_update
         )
         policy_enabled = bool(cfg.baseline_policy_enabled) or str(cfg.policy_mode or "").lower() in {"baseline", "rl", "auto"}
         loan_policy_enabled = bool(policy_enabled)
-        loan_after_commit = (correction is not None) or has_borrow_draft or (
-            policy_enabled
+        assistant_recommendation_enabled = consent_status == "opted_in" and district is not None
+        loan_after_commit = (correction is not None) or has_borrow_draft or selected_lender_context_update or (
+            (policy_enabled or _looks_like_new_loan_message(text) or loan_terms_fragment)
             and consent_status == "opted_in"
             and district is not None
             and not more_cmd
@@ -1351,6 +1439,8 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
         borrow_model: str | None = None
         needs_llm_parse = False
         needs_policy_decision = False
+        needs_assistant_recommendation = False
+        selected_option_refresh_after_parse = False
         clear_draft = False
         persist_payload: dict[str, Any] | None = None
         persist_raw_message_id: int | None = None
@@ -1397,6 +1487,10 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                             persist_model = borrow_model
                             clear_draft = True
                             needs_policy_decision = bool(loan_policy_enabled)
+                            needs_assistant_recommendation = bool(
+                                assistant_recommendation_enabled and not loan_policy_enabled
+                            )
+                            selected_option_refresh_after_parse = selected_lender_option is not None
                             reply_prefix = "Updated. "
                 else:
                     row = conn.execute(
@@ -1455,6 +1549,10 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                                 loan_payload_debug = next_payload
                                 loan_missing_debug = _missing_borrow_fields(next_payload)
                                 needs_policy_decision = bool(loan_policy_enabled)
+                                needs_assistant_recommendation = bool(
+                                    assistant_recommendation_enabled and not loan_policy_enabled
+                                )
+                                selected_option_refresh_after_parse = selected_lender_option is not None
                                 reply_prefix = "Updated. "
                                 reply = None
             elif borrow_draft is not None:
@@ -1511,6 +1609,36 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                             persist_model = borrow_model
                             clear_draft = True
                             needs_policy_decision = bool(loan_policy_enabled)
+                            needs_assistant_recommendation = bool(
+                                assistant_recommendation_enabled and not loan_policy_enabled
+                            )
+                            selected_option_refresh_after_parse = selected_lender_context_update
+            elif selected_lender_context_update and selected_lender_option is not None:
+                base_payload = _load_latest_borrow_payload(conn, user_id=loan_user_id) or _empty_borrow_payload()
+                updated_payload = _merge_borrow_details_from_text(text=loan_text, base_payload=base_payload)
+                if updated_payload is None:
+                    reply = "Send the loan amount and time like: 5000 for 30 days."
+                else:
+                    loan_payload_debug = updated_payload
+                    loan_missing_debug = _missing_borrow_fields(updated_payload)
+                    if loan_missing_debug:
+                        _save_borrow_draft(
+                            conn,
+                            user_id=loan_user_id,
+                            payload=updated_payload,
+                            source_raw_message_id=loan_raw_message_id,
+                            model="selected-option-fragment",
+                        )
+                        reply = _clarifying_question(loan_missing_debug[0])
+                    else:
+                        persist_payload = updated_payload
+                        persist_raw_message_id = loan_raw_message_id
+                        persist_model = "selected-option-fragment"
+                        needs_policy_decision = bool(loan_policy_enabled)
+                        needs_assistant_recommendation = bool(
+                            assistant_recommendation_enabled and not loan_policy_enabled
+                        )
+                        selected_option_refresh_after_parse = True
             else:
                 needs_llm_parse = True
 
@@ -1561,6 +1689,16 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                     needs_policy_decision = False
                 else:
                     needs_policy_decision = bool(loan_policy_enabled)
+                    if assistant_recommendation_enabled and not loan_policy_enabled:
+                        fallback = (
+                            "I couldn’t extract the loan details clearly. "
+                            "Send the amount and time in one message, for example: Need 5000 for 30 days."
+                        )
+                        reply = _claude_humanize_reply(
+                            cfg,
+                            fallback=fallback,
+                            purpose="ask the user to restate the loan amount and time clearly",
+                        ) or fallback
             else:
                 try:
                     loan_payload_debug = _apply_text_heuristics(result.payload, text=loan_text)
@@ -1591,6 +1729,10 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                         persist_raw_message_id = loan_raw_message_id
                         persist_model = result.model
                         needs_policy_decision = bool(loan_policy_enabled)
+                        needs_assistant_recommendation = bool(
+                            assistant_recommendation_enabled and not loan_policy_enabled
+                        )
+                        selected_option_refresh_after_parse = selected_lender_context_update
                     else:
                         if cfg.verbose_replies:
                             conf = result.payload.get("confidence")
@@ -1629,6 +1771,87 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                 raise
             finally:
                 conn.close()
+
+        if reply is None and parse_saved and selected_option_refresh_after_parse and selected_lender_option is not None:
+            amount_inr = persist_payload.get("amount_inr") if persist_payload is not None else None
+            tenure_days = persist_payload.get("tenure_days") if persist_payload is not None else None
+            current_rate = persist_payload.get("interest_rate_apr") if persist_payload is not None else None
+            refreshed_option = dict(selected_lender_option)
+            if amount_inr is not None:
+                refreshed_option["amount_inr"] = float(amount_inr)
+            if tenure_days is not None:
+                refreshed_option["tenure_days"] = int(tenure_days)
+            if current_rate is not None:
+                refreshed_option["current_rate"] = float(current_rate)
+            conn = connect(db_path)
+            try:
+                conn.execute("BEGIN IMMEDIATE")
+                _save_selected_lender_option(
+                    conn,
+                    user_id=loan_user_id,
+                    option=refreshed_option,
+                    rank=selected_lender_rank,
+                )
+                conn.commit()
+            except Exception:
+                conn.rollback()
+                raise
+            finally:
+                conn.close()
+            detail = _claude_lender_detail(
+                cfg,
+                option=refreshed_option,
+                rank=selected_lender_rank or 1,
+                district=loan_district,
+            ) or lender_detail_fallback(
+                option=refreshed_option,
+                rank=selected_lender_rank or 1,
+                district=loan_district,
+            )
+            reply = (reply_prefix + detail).strip() if reply_prefix else detail
+
+        if reply is None and needs_assistant_recommendation and loan_district is not None and persist_payload is not None:
+            conn = connect(db_path)
+            try:
+                conn.execute("BEGIN IMMEDIATE")
+                current_rate = (
+                    float(persist_payload["interest_rate_apr"])
+                    if persist_payload.get("interest_rate_apr") is not None
+                    else None
+                )
+                options = recommended_lender_rows(conn, district=loan_district, current_rate=current_rate, n=3)
+                options = _with_lender_option_context(
+                    options,
+                    amount_inr=float(persist_payload["amount_inr"]) if persist_payload.get("amount_inr") is not None else None,
+                    tenure_days=int(persist_payload["tenure_days"]) if persist_payload.get("tenure_days") is not None else None,
+                    current_rate=current_rate,
+                )
+                fallback_content = suggest_lender_message(
+                    conn,
+                    district=loan_district,
+                    current_rate=current_rate,
+                    amount_inr=float(persist_payload["amount_inr"]) if persist_payload.get("amount_inr") is not None else None,
+                    tenure_days=int(persist_payload["tenure_days"]) if persist_payload.get("tenure_days") is not None else None,
+                    n=3,
+                )
+                content = _claude_recommendation_message(
+                    cfg,
+                    fallback=fallback_content,
+                    district=loan_district,
+                    options=options,
+                    amount_inr=float(persist_payload["amount_inr"]) if persist_payload.get("amount_inr") is not None else None,
+                    tenure_days=int(persist_payload["tenure_days"]) if persist_payload.get("tenure_days") is not None else None,
+                    current_rate=current_rate,
+                ) or fallback_content
+                _save_lender_options(conn, user_id=loan_user_id, options=options)
+                _save_selected_lender_option(conn, user_id=loan_user_id, option=None, rank=None)
+                conn.commit()
+            except Exception:
+                conn.rollback()
+                raise
+            finally:
+                conn.close()
+            reply = (reply_prefix + content).strip() if reply_prefix else content
 
         if reply is None and needs_policy_decision:
             state = compute_user_state(db_path, user_id=loan_user_id, now=now_dt)

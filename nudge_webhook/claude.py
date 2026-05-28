@@ -37,18 +37,29 @@ def generate_reply(config: Config, user_text: str) -> str | None:
     if not config.claude_api_key or Anthropic is None:
         return None
 
-    try:
-        client = Anthropic(api_key=config.claude_api_key, timeout=30)
-        message = client.messages.create(
-            model=config.claude_model,
-            max_tokens=256,
-            messages=[{"role": "user", "content": user_text}],
-        )
-    except Exception:
-        return None
+    last_error: Exception | None = None
+    attempts = max(1, int(getattr(config, "claude_attempts", 1)))
+    timeout_seconds = float(getattr(config, "claude_timeout_seconds", 8.0))
+    for attempt in range(attempts):
+        try:
+            client = Anthropic(api_key=config.claude_api_key, timeout=timeout_seconds)
+            message = client.messages.create(
+                model=config.claude_model,
+                max_tokens=256,
+                messages=[{"role": "user", "content": user_text}],
+            )
+            reply = _extract_message_text(message)
+            return reply or None
+        except Exception as e:
+            last_error = e
+            if attempt >= attempts - 1:
+                break
+            backoff = min(4.0, 0.5 * (2**attempt))
+            time.sleep(backoff)
 
-    reply = _extract_message_text(message)
-    return reply or None
+    if getattr(config, "debug_claude", False) and last_error is not None:
+        raise last_error
+    return None
 
 
 def call_json_with_retries(

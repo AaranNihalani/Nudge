@@ -163,6 +163,8 @@ function updateSide(debug) {
   elContextKv.appendChild(kvRow("Consent", debug?.consent_status));
   elContextKv.appendChild(kvRow("District", debug?.district));
   elContextKv.appendChild(kvRow("MFI districts loaded", debug?.mfi_districts));
+  elContextKv.appendChild(kvRow("Claude", debug?.claude_enabled ? "on" : "off"));
+  elContextKv.appendChild(kvRow("Claude model", debug?.claude_model));
   elContextKv.appendChild(kvRow("Policy", debug?.policy));
   elContextKv.appendChild(kvRow("Decision", debug?.decision));
   elContextKv.appendChild(kvRow("Parsed", debug?.parsed));
@@ -178,6 +180,8 @@ function updateSide(debug) {
   if (debug?.district) elBadges.appendChild(badge(`district: ${debug.district}`, "accent"));
   if (typeof debug?.mfi_districts === "number")
     elBadges.appendChild(badge(`mfi: ${debug.mfi_districts}`, debug.mfi_districts > 0 ? "good" : "bad"));
+  if (typeof debug?.claude_enabled === "boolean")
+    elBadges.appendChild(badge(`claude: ${debug.claude_enabled ? "on" : "off"}`, debug.claude_enabled ? "good" : "bad"));
   if (debug?.policy) elBadges.appendChild(badge(`policy: ${debug.policy}`));
   if (debug?.decision) elBadges.appendChild(badge(`decision: ${debug.decision}`));
 
@@ -367,6 +371,8 @@ fetch("/health")
       consent_status: undefined,
       district: undefined,
       mfi_districts: j.mfi_districts,
+      claude_enabled: j.claude_key_present,
+      claude_model: j.claude_model,
     };
     updateSide(d);
   })
