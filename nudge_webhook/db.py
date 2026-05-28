@@ -229,11 +229,27 @@ def connect(db_path: str, *, timeout_seconds: int = 30) -> sqlite3.Connection:
     return conn
 
 
+def _fallback_tmp_db_path(abs_path: str) -> str:
+    base = os.path.basename(abs_path) or "nudge.sqlite3"
+    if not base.endswith(".sqlite3"):
+        base = base + ".sqlite3"
+    return os.path.join("/tmp", base)
+
+
 def init_and_migrate(db_path: str, *, timeout_seconds: int = 30, attempts: int = 6) -> DbInfo:
     abs_path = os.path.abspath(db_path)
     parent = os.path.dirname(abs_path)
     if parent and not os.path.exists(parent):
-        os.makedirs(parent, exist_ok=True)
+        try:
+            os.makedirs(parent, exist_ok=True)
+        except OSError as e:
+            if getattr(e, "errno", None) in {30, 13}:
+                abs_path = _fallback_tmp_db_path(abs_path)
+                parent = os.path.dirname(abs_path)
+                if parent and not os.path.exists(parent):
+                    os.makedirs(parent, exist_ok=True)
+            else:
+                raise
 
     last_error: Exception | None = None
     for attempt in range(max(1, int(attempts))):
