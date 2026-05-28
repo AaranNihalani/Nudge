@@ -55,6 +55,17 @@ def _seed_minimal_mfi(conn, *, district: str = "D") -> None:
         )
 
 
+def _seed_single_mfi(conn, *, district: str = "D") -> None:
+    conn.execute("INSERT OR IGNORE INTO mfi_districts(name) VALUES (?)", (district,))
+    conn.execute("INSERT OR IGNORE INTO mfi_lenders(name) VALUES ('Solo')")
+    district_id = int(conn.execute("SELECT id FROM mfi_districts WHERE name = ?", (district,)).fetchone()["id"])
+    lender_id = int(conn.execute("SELECT id FROM mfi_lenders WHERE name = 'Solo'").fetchone()["id"])
+    conn.execute(
+        "INSERT OR REPLACE INTO mfi_rates(district_id, lender_id, rate_apr) VALUES (?, ?, ?)",
+        (district_id, lender_id, 21.0),
+    )
+
+
 class TestTask11ConversationFlows(unittest.TestCase):
     def test_districts_paging_with_more(self) -> None:
         with tempfile.TemporaryDirectory() as td:
@@ -133,12 +144,15 @@ class TestTask11ConversationFlows(unittest.TestCase):
                 self.assertIn("1) B", r1)
                 self.assertIn("2) C", r1)
                 self.assertIn("3) A", r1)
+                self.assertIn("repay ~INR", r1)
+                self.assertIn("interest ~INR", r1)
                 self.assertNotIn("quoted rate", r1.lower())
                 self.assertNotIn("save ~", r1.lower())
 
                 r2 = process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "2"), now=now)
                 self.assertIn("Option 2: C", r2)
                 self.assertIn("Indicative rate", r2)
+                self.assertIn("simple-interest repayment", r2)
                 self.assertIn("CONTACTED C", r2)
 
                 conn = connect(db_path)
@@ -172,6 +186,61 @@ class TestTask11ConversationFlows(unittest.TestCase):
                     self.assertIsNone(draft["borrow_draft_json"])
                 finally:
                     conn.close()
+        finally:
+            bot_module.call_json_with_retries = original_call_json
+
+    def test_single_lender_option_does_not_prompt_for_missing_options(self) -> None:
+        def stub_call_json_with_retries(cfg: Config, system_prompt: str, user_prompt: str) -> tuple[dict[str, Any], str] | None:
+            _ = (cfg, system_prompt, user_prompt)
+            return (
+                {
+                    "schema_version": 1,
+                    "intent": True,
+                    "confidence": 0.9,
+                    "amount_inr": 500000,
+                    "tenure_days": 30,
+                    "interest_rate_apr": None,
+                    "lender_name": None,
+                    "lender_type": "moneylender",
+                    "negotiation_stage": "asking",
+                },
+                "fixture-llm",
+            )
+
+        original_call_json = bot_module.call_json_with_retries
+        bot_module.call_json_with_retries = stub_call_json_with_retries
+        try:
+            with tempfile.TemporaryDirectory() as td:
+                db_path = str(Path(td) / "test.sqlite3")
+                init_and_migrate(db_path)
+
+                conn = connect(db_path)
+                try:
+                    conn.execute("BEGIN IMMEDIATE")
+                    _seed_single_mfi(conn, district="D")
+                    conn.commit()
+                finally:
+                    conn.close()
+
+                cfg = _make_cfg(db_path)
+                now = datetime(2026, 5, 16, 12, 0, 0, tzinfo=timezone.utc)
+                from_e164 = "+15550002223"
+
+                process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "START"), now=now)
+                process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "DISTRICT D"), now=now)
+
+                reply = process_twilio_inbound(
+                    cfg, db_path=db_path, inbound=_inbound(from_e164, "Need 5 lakh for 30 days with moneylender"), now=now
+                )
+                self.assertIn("1) Solo", reply)
+                self.assertIn("Reply 1 to explore this option", reply)
+                self.assertNotIn("Reply 1, 2, or 3", reply)
+                self.assertNotIn("2)", reply)
+
+                invalid = process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "2"), now=now)
+                self.assertIn("I found 1 option", invalid)
+                self.assertIn("Reply 1", invalid)
+                self.assertNotIn("1, 2, or 3", invalid)
         finally:
             bot_module.call_json_with_retries = original_call_json
 

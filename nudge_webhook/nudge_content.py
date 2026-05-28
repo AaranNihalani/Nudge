@@ -82,13 +82,27 @@ def recommended_lender_rows(
     return rows
 
 
-def _render_rows(rows: list[dict[str, Any]]) -> str:
+def _selection_prompt(count: int) -> str:
+    if count <= 0:
+        return ""
+    if count == 1:
+        return "Reply 1 to explore this option."
+    if count == 2:
+        return "Reply 1 or 2 to explore an option."
+    return "Reply 1, 2, or 3 to explore an option."
+
+
+def _render_rows(rows: list[dict[str, Any]], *, amount_inr: float | None = None, tenure_days: int | None = None) -> str:
     parts: list[str] = []
     for i, r in enumerate(rows, start=1):
         lender = str(r.get("lender") or "")
         rate = float(r.get("rate_apr") or 0.0)
         monthly = _apr_to_monthly_percent(rate)
-        parts.append(f"{i}) {lender} (~{rate:g}% APR ≈{_format_percent(monthly)}%/month)")
+        estimate = ""
+        if amount_inr is not None and tenure_days is not None:
+            interest, total = _simple_interest_estimate(float(amount_inr), int(tenure_days), rate)
+            estimate = f"; repay ~{_format_inr(total)} (interest ~{_format_inr(interest)})"
+        parts.append(f"{i}) {lender} (~{rate:g}% APR ≈{_format_percent(monthly)}%/month{estimate})")
     return "\n".join(parts)
 
 
@@ -114,7 +128,7 @@ def suggest_lender_message(
             f"Thanks. I don’t have regulated lender rate data for {district} yet. "
             "You can reply DISTRICT <name> to update your district or STOP to opt out."
         )
-    joined = _render_rows(rows)
+    joined = _render_rows(rows, amount_inr=amount_inr, tenure_days=tenure_days)
 
     preface = ""
     if current_rate is not None:
@@ -140,12 +154,9 @@ def suggest_lender_message(
     else:
         heading = f"In {district}, the top local regulated options by indicative APR (APR is annualised):"
 
-    return (
-        f"{preface}{estimate}{heading}\n{joined}\n\n"
-        "Reply 1, 2, or 3 to explore an option.\n\n"
-        f"{why}\n\n"
-        "Reply DISTRICT <name> to change district. Reply STOP to opt out."
-    )
+    prompt = _selection_prompt(len(rows))
+    prompt_block = f"{prompt}\n\n" if prompt else ""
+    return f"{preface}{estimate}{heading}\n{joined}\n\n{prompt_block}{why}\n\nReply DISTRICT <name> to change district. Reply STOP to opt out."
 
 
 def alert_message(
@@ -170,7 +181,7 @@ def alert_message(
             f"If you’re being quoted ~{quoted_apr:g}% APR (≈{_format_percent(_apr_to_monthly_percent(quoted_apr))}%/month), that’s very costly. "
             f"I don’t have regulated lender rate data for {district} yet. Reply STOP to opt out."
         )
-    joined = _render_rows(rows)
+    joined = _render_rows(rows, amount_inr=amount_inr, tenure_days=tenure_days)
 
     estimate = ""
     if amount_inr is not None and tenure_days is not None:
@@ -185,10 +196,12 @@ def alert_message(
         )
 
     why = "Why regulated? They’re licensed/registered and overseen, and usually have clearer terms and fairer collections rules."
+    prompt = _selection_prompt(len(rows))
+    prompt_block = f"{prompt}\n\n" if prompt else ""
     return (
         f"If you’re being quoted ~{quoted_apr:g}% APR (≈{_format_percent(_apr_to_monthly_percent(quoted_apr))}%/month), that’s very costly.\n"
         f"{estimate}In {district}, some regulated alternatives (APR is annualised):\n{joined}\n\n"
-        "Reply 1, 2, or 3 to explore an option.\n\n"
+        f"{prompt_block}"
         f"{why}\n\n"
         "Reply DISTRICT <name> to change district. Reply STOP to opt out."
     )
@@ -201,15 +214,31 @@ def lender_detail_fallback(*, option: dict[str, Any], rank: int, district: str |
     effective_date = str(option.get("effective_date") or "").strip()
     source = str(option.get("source") or "").strip()
     where = district or str(option.get("district") or "").strip() or "your district"
+    amount_inr = option.get("amount_inr")
+    tenure_days = option.get("tenure_days")
+    option_count = int(option.get("option_count") or 0)
 
     date_line = f"\nRate data date: {effective_date}." if effective_date else ""
     source_line = f"\nSource note: {source[:220]}{'...' if len(source) > 220 else ''}" if source else ""
+    estimate_line = ""
+    if amount_inr is not None and tenure_days is not None:
+        interest, total = _simple_interest_estimate(float(amount_inr), int(tenure_days), rate)
+        estimate_line = (
+            f"\nFor {_format_inr(float(amount_inr))} over {int(tenure_days)} days, simple-interest repayment is "
+            f"~{_format_inr(total)} (interest ~{_format_inr(interest)}), before fees."
+        )
+    if option_count <= 1:
+        next_step = f"Reply CONTACTED {lender} after you contact them."
+    elif option_count == 2:
+        next_step = f"Reply CONTACTED {lender} after you contact them, or reply 1 or 2 to explore another option."
+    else:
+        next_step = f"Reply CONTACTED {lender} after you contact them, or reply 1, 2, or 3 to explore another option."
     return (
         f"Option {int(rank)}: {lender}\n"
         f"Indicative rate: ~{rate:g}% APR (about {_format_percent(monthly)}% per month) in {where}."
-        f"{date_line}{source_line}\n\n"
+        f"{estimate_line}{date_line}{source_line}\n\n"
         "Before applying, ask them for the total repayment amount, all fees, penalties, documents needed, and collection terms.\n\n"
-        f"Reply CONTACTED {lender} after you contact them, or reply 1, 2, or 3 to explore another option."
+        + next_step
     )
 
 

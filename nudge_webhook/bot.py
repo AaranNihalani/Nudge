@@ -346,17 +346,35 @@ def _load_lender_options(session: dict[str, Any] | None) -> list[dict[str, Any]]
     return [dict(x) for x in parsed if isinstance(x, dict)]
 
 
+def _lender_option_prompt(count: int) -> str:
+    if count <= 0:
+        return "Send your loan amount and time first, and I’ll show local options."
+    if count == 1:
+        return "Reply 1 to open it."
+    if count == 2:
+        return "Reply 1 or 2 to open an option."
+    return "Reply 1, 2, or 3 to open an option."
+
+
+def _option_selection_number(text: str) -> int | None:
+    lower = (text or "").strip().lower()
+    if lower == "":
+        return None
+    m = re.fullmatch(r"(?:option|pick|choose|select|show|tell me about|explore)\s*#?\s*([1-9])", lower)
+    if m is None:
+        m = re.fullmatch(r"#?\s*([1-9])", lower)
+    return int(m.group(1)) if m is not None else None
+
+
 def _parse_lender_option_selection(text: str, *, options: list[dict[str, Any]]) -> tuple[int, dict[str, Any]] | None:
     raw = (text or "").strip()
     if raw == "" or not options:
         return None
     lower = raw.lower()
 
-    m = re.fullmatch(r"(?:option|pick|choose|select|show|tell me about|explore)\s*#?\s*([1-9])", lower)
-    if m is None:
-        m = re.fullmatch(r"#?\s*([1-9])", lower)
-    if m is not None:
-        idx = int(m.group(1)) - 1
+    selected_number = _option_selection_number(lower)
+    if selected_number is not None:
+        idx = int(selected_number) - 1
         if 0 <= idx < len(options):
             return idx + 1, options[idx]
 
@@ -371,10 +389,58 @@ def _looks_like_lender_option_selection(text: str) -> bool:
     lower = (text or "").strip().lower()
     if lower == "":
         return False
-    return bool(
-        re.fullmatch(r"#?\s*[1-9]", lower)
-        or re.fullmatch(r"(?:option|pick|choose|select|show|tell me about|explore)\s*#?\s*[1-9]", lower)
+    return _option_selection_number(lower) is not None
+
+
+def _with_lender_option_context(
+    options: list[dict[str, Any]],
+    *,
+    amount_inr: float | None = None,
+    tenure_days: int | None = None,
+    current_rate: float | None = None,
+) -> list[dict[str, Any]]:
+    count = len(options)
+    enriched: list[dict[str, Any]] = []
+    for option in options:
+        item = dict(option)
+        item["option_count"] = int(count)
+        if amount_inr is not None:
+            item["amount_inr"] = float(amount_inr)
+        if tenure_days is not None:
+            item["tenure_days"] = int(tenure_days)
+        if current_rate is not None:
+            item["current_rate"] = float(current_rate)
+        enriched.append(item)
+    return enriched
+
+
+def _claude_recommendation_message(
+    cfg: Config,
+    *,
+    fallback: str,
+    district: str,
+    options: list[dict[str, Any]],
+    amount_inr: float | None = None,
+    tenure_days: int | None = None,
+    current_rate: float | None = None,
+) -> str | None:
+    if not options:
+        return None
+    prompt = (
+        "Rewrite the message below as a natural WhatsApp chatbot response for an Indian consumer. "
+        "Preserve every numbered lender option, lender name, APR, monthly rate, repayment amount, interest amount, and command exactly. "
+        "Do not add approval claims, phone numbers, legal advice, or extra lenders. "
+        "Keep it concise and easy to act on. If there is one option, do not mention options 2 or 3.\n\n"
+        f"District: {district}\n"
+        f"Loan amount INR: {amount_inr}\n"
+        f"Tenure days: {tenure_days}\n"
+        f"Quoted APR: {current_rate}\n"
+        f"Facts to preserve:\n{fallback}"
     )
+    reply = generate_reply(cfg, prompt)
+    if reply is None:
+        return None
+    return reply.strip() or None
 
 
 def _claude_lender_detail(cfg: Config, *, option: dict[str, Any], rank: int, district: str | None) -> str | None:
@@ -382,18 +448,29 @@ def _claude_lender_detail(cfg: Config, *, option: dict[str, Any], rank: int, dis
     rate = option.get("rate_apr")
     effective_date = option.get("effective_date")
     source = option.get("source")
+    amount_inr = option.get("amount_inr")
+    tenure_days = option.get("tenure_days")
+    option_count = int(option.get("option_count") or 0)
+    next_step = (
+        f"Reply CONTACTED {lender} after you contact them, or {_lender_option_prompt(option_count).replace('Reply ', 'reply ')}"
+        if option_count
+        else f"Reply CONTACTED {lender} after you contact them."
+    )
     prompt = (
         "You are NudgeAI, a concise financial inclusion chatbot for Indian consumers. "
         "Explain the selected regulated credit option in plain English. "
         "Do not claim the user is approved. Do not give financial/legal advice. "
-        "Make the next action obvious. Keep it under 120 words.\n\n"
+        "Make the next action obvious. Keep it under 120 words. "
+        "If only one option exists, do not mention options 2 or 3.\n\n"
         f"Selected option rank: {rank}\n"
         f"Lender: {lender}\n"
         f"District: {district or option.get('district') or 'unknown'}\n"
         f"Indicative APR: {rate}\n"
+        f"Loan amount INR: {amount_inr}\n"
+        f"Tenure days: {tenure_days}\n"
         f"Effective date: {effective_date}\n"
         f"Source note: {source}\n\n"
-        f"End with: Reply CONTACTED {lender} after you contact them, or reply 1, 2, or 3 to compare another option."
+        f"End with: {next_step}"
     )
     reply = generate_reply(cfg, prompt)
     if reply is None:
@@ -855,7 +932,10 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                 district=district,
             )
         elif option_selection_request:
-            reply = "I don’t have recent lender options to open yet. Send your loan amount and time first, then reply 1, 2, or 3."
+            if lender_options:
+                reply = f"I found {len(lender_options)} option{'s' if len(lender_options) != 1 else ''}. {_lender_option_prompt(len(lender_options))}"
+            else:
+                reply = "I don’t have recent lender options to open yet. Send your loan amount and time first, and I’ll show local options."
         elif contacted_cmd is not None:
             lender = (contacted_cmd or "").strip()
             if lender == "":
@@ -1012,7 +1092,14 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                             )
                         else:
                             options = recommended_lender_rows(conn, district=district, n=3)
-                            content = suggest_lender_message(conn, district=district, n=3)
+                            options = _with_lender_option_context(options)
+                            fallback_content = suggest_lender_message(conn, district=district, n=3)
+                            content = _claude_recommendation_message(
+                                cfg,
+                                fallback=fallback_content,
+                                district=district,
+                                options=options,
+                            ) or fallback_content
                             _save_lender_options(conn, user_id=user_id, options=options)
                             conn.execute(
                                 """
@@ -1378,10 +1465,30 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                         ).strip()
                     base_reply = (echo + "\n\n" + decision.content).strip() if echo else decision.content
                     reply = (reply_prefix + base_reply).strip() if reply_prefix else base_reply
+                    nudge_content_to_store = decision.content
                     if decision.nudge_type in {"alert", "suggest_lender"} and state.district:
                         current_rate = float(state.implied_apr) if state.implied_apr is not None else None
                         options = recommended_lender_rows(conn, district=state.district, current_rate=current_rate, n=3)
+                        options = _with_lender_option_context(
+                            options,
+                            amount_inr=state.borrow.amount_inr,
+                            tenure_days=state.borrow.tenure_days,
+                            current_rate=current_rate,
+                        )
                         _save_lender_options(conn, user_id=loan_user_id, options=options)
+                        generated = _claude_recommendation_message(
+                            cfg,
+                            fallback=decision.content,
+                            district=state.district,
+                            options=options,
+                            amount_inr=state.borrow.amount_inr,
+                            tenure_days=state.borrow.tenure_days,
+                            current_rate=current_rate,
+                        )
+                        if generated is not None:
+                            nudge_content_to_store = generated
+                            generated_reply = (echo + "\n\n" + generated).strip() if echo else generated
+                            reply = (reply_prefix + generated_reply).strip() if reply_prefix else generated_reply
                     if decision.nudge_type is not None:
                         conn.execute(
                             """
@@ -1392,7 +1499,7 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                                 loan_user_id,
                                 decision.parsed_event_id,
                                 decision.nudge_type,
-                                decision.content,
+                                nudge_content_to_store,
                                 decision.policy_name,
                                 decision.policy_version,
                                 _format_sqlite_ts(now_dt),
