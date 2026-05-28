@@ -98,6 +98,24 @@ def decide_baseline(conn, *, state: UserState) -> PolicyDecision:
             parsed_event_id=state.borrow.last_intent_event_id,
         )
 
+    if implied_apr is None and state.borrow.amount_inr is not None and state.borrow.tenure_days is not None:
+        return PolicyDecision(
+            action="suggest_lender",
+            nudge_type="suggest_lender",
+            content=suggest_lender_message(
+                conn,
+                district=district,
+                current_rate=None,
+                exclude_lender=None,
+                amount_inr=state.borrow.amount_inr,
+                tenure_days=state.borrow.tenure_days,
+                n=3,
+            ),
+            policy_name="baseline-threshold",
+            policy_version="v1",
+            parsed_event_id=state.borrow.last_intent_event_id,
+        )
+
     if stage == "borrowed" and state.days_since_borrow is not None and state.days_since_borrow <= 7.0:
         return PolicyDecision(
             action="education",

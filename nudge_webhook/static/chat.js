@@ -170,7 +170,7 @@ function updateSide(debug) {
     ["Confidence", bi.confidence == null ? "—" : String(bi.confidence)],
     ["Amount", formatMoneyInr(bi.amount_inr)],
     ["Tenure", bi.tenure_days == null ? "—" : `${bi.tenure_days} days`],
-    ["APR", formatPct(bi.interest_rate_apr)],
+    ["APR (optional)", formatPct(bi.interest_rate_apr)],
     ["Lender type", bi.lender_type || "—"],
     ["Stage", bi.negotiation_stage || "—"],
     ["Model", bi.model || "—"],
@@ -204,7 +204,7 @@ function updateSide(debug) {
   };
   elLoanActions.appendChild(mkAction("CORRECT amount", `CORRECT amount=${bi.amount_inr ?? ""}`, "accent"));
   elLoanActions.appendChild(mkAction("CORRECT tenure", `CORRECT tenure=${bi.tenure_days ?? ""}`));
-  elLoanActions.appendChild(mkAction("CORRECT rate", `CORRECT rate=${bi.interest_rate_apr ?? ""}apr`));
+  elLoanActions.appendChild(mkAction("CORRECT rate", `CORRECT rate=${bi.interest_rate_apr ?? "5% monthly"}`));
   elLoanActions.appendChild(mkAction("CORRECT lender", `CORRECT lender_type=${bi.lender_type ?? ""}`));
   elLoanActions.appendChild(mkAction("Force intent", "CORRECT intent=true", "accent"));
 };
@@ -216,9 +216,9 @@ function statusSnippet(debug) {
   if (debug?.parsed) bits.push(`parsed=${debug.parsed}`);
   const bi = debug?.last_borrow_intent;
   if (bi && (bi.amount_inr || bi.tenure_days || bi.interest_rate_apr)) {
-    bits.push(
-      `loan=${bi.amount_inr ?? "?"}/${bi.tenure_days ?? "?"}d/${bi.interest_rate_apr ?? "?"}%APR`
-    );
+    const loanBits = [`loan=${bi.amount_inr ?? "?"}/${bi.tenure_days ?? "?"}d`];
+    if (bi.interest_rate_apr != null) loanBits.push(`${bi.interest_rate_apr}%APR`);
+    bits.push(loanBits.join("/"));
   }
   return bits.length ? `[${bits.join(" | ")}]` : "";
 }

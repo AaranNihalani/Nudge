@@ -117,11 +117,12 @@ def suggest_lender_message(
         )
 
     why = "Why regulated? They’re licensed/registered and overseen, and usually have clearer terms and fairer collections rules."
-    return (
-        f"{preface}{estimate}In {district}, some regulated alternatives with lower indicative APR (APR is annualised):\n{joined}\n\n"
-        f"{why}\n\n"
-        "Reply DISTRICT <name> to change district. Reply STOP to opt out."
-    )
+    if current_rate is not None:
+        heading = f"In {district}, some regulated alternatives with lower indicative APR (APR is annualised):"
+    else:
+        heading = f"In {district}, the top local regulated options by indicative APR (APR is annualised):"
+
+    return f"{preface}{estimate}{heading}\n{joined}\n\n{why}\n\nReply DISTRICT <name> to change district. Reply STOP to opt out."
 
 
 def alert_message(

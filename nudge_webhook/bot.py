@@ -308,7 +308,7 @@ def _save_borrow_draft(
 
 def _missing_borrow_fields(payload: dict[str, Any]) -> list[str]:
     missing: list[str] = []
-    for k in ("amount_inr", "tenure_days", "interest_rate_apr"):
+    for k in ("amount_inr", "tenure_days"):
         if payload.get(k) is None:
             missing.append(k)
     return missing
@@ -324,12 +324,15 @@ def _clarifying_question(field: str) -> str:
 
 def _parse_amount_inr(text: str) -> float | None:
     raw = (text or "").strip().lower()
-    m = re.search(r"(?:₹\s*)?(\d+(?:\.\d+)?)\s*([k])?\b", raw)
+    m = re.search(r"(?:₹\s*)?(\d+(?:\.\d+)?)\s*(k|lakh|lakhs|lac|lacs)?\b", raw)
     if not m:
         return None
     val = float(m.group(1))
-    if m.group(2):
+    unit = m.group(2)
+    if unit == "k":
         val *= 1000.0
+    elif unit in {"lakh", "lakhs", "lac", "lacs"}:
+        val *= 100000.0
     if val <= 0:
         return None
     return float(val)
@@ -685,8 +688,8 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                     "You’re opted in. NudgeAI is on.\n"
                     f"District: {district}\n\n"
                     "How to use:\n"
-                    "1) Tell me what loan you’re about to take (amount + time + interest).\n"
-                    "2) I’ll suggest regulated lenders in your district if it looks expensive.\n\n"
+                    "1) Tell me what loan you’re about to take (amount + time).\n"
+                    "2) I’ll suggest regulated lenders in your district. If you know the interest rate, include it too.\n\n"
                     "Commands:\n"
                     "- DISTRICTS (or DISTRICTS <prefix>)\n"
                     "- MORE\n"
@@ -698,7 +701,7 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                     "- HELP\n"
                     "- STOP\n\n"
                     "Example message:\n"
-                    "“Need 5000 for 30 days. Moneylender says 5% monthly.”"
+                    "“Need 5000 for 30 days with moneylender.”"
                 )
             else:
                 sample = _districts_sample(conn, limit=12)
@@ -734,7 +737,7 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                 "- SWITCHED <lender> (or SWITCHED FROM <old> TO <new>)\n\n"
                 "- LANG EN / LANG HI / LANG HINGLISH\n\n"
                 "To get suggestions, send a message like:\n"
-                "“Need 5000 for 30 days. Interest 5% monthly.”"
+                "“Need 5000 for 30 days with moneylender.”"
                 + support
             )
         elif lang_cmd is not None:
@@ -860,8 +863,8 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                     )
                     reply = (
                         f"district set to {chosen}\n\n"
-                        "Now send your loan terms and I’ll suggest regulated alternatives if it looks expensive.\n"
-                        "Example: “Need 5000 for 30 days. Interest 5% monthly.”"
+                        "Now send your loan amount and time, and I’ll suggest regulated alternatives.\n"
+                        "Example: “Need 5000 for 30 days with moneylender.”"
                     )
             else:
                 if consent_status != "opted_in":
@@ -884,8 +887,8 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                         )
                         reply = (
                             f"district set to {chosen}\n\n"
-                            "Now send your loan terms and I’ll suggest regulated alternatives if it looks expensive.\n"
-                            "Example: “Need 5000 for 30 days. Interest 5% monthly.”"
+                            "Now send your loan amount and time, and I’ll suggest regulated alternatives.\n"
+                            "Example: “Need 5000 for 30 days with moneylender.”"
                         )
                         district = chosen
                 else:
@@ -1057,7 +1060,7 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                     draft_validated = None
                 if draft_validated is None:
                     _save_borrow_draft(conn, user_id=loan_user_id, payload=None, source_raw_message_id=None, model=None)
-                    reply = "Sorry — I lost track of the loan details. Please send the loan amount, tenure, and interest rate again."
+                    reply = "Sorry — I lost track of the loan details. Please send the loan amount and tenure again."
                 else:
                     updated = dict(draft_validated)
                     if updated.get("amount_inr") is None:
@@ -1146,9 +1149,9 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                         "I tried to extract loan details but couldn’t parse the Claude response.\n"
                         f"error={err}\n\n"
                         "Try sending in this format:\n"
-                        "“Need <amount> for <days> days at <rate>% monthly with <lender type>”\n\n"
+                        "“Need <amount> for <days> days with <lender type>”\n\n"
                         "Example:\n"
-                        "“Need 5000 for 30 days at 5% monthly with moneylender.”"
+                        "“Need 5000 for 30 days with moneylender.”"
                     )
                     needs_policy_decision = False
                 else:
@@ -1191,7 +1194,7 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                                 f"confidence={conf}\n\n"
                                 "If you ARE discussing a loan, reply:\n"
                                 "CORRECT intent=true\n\n"
-                                "Then resend the loan terms (amount + time + interest)."
+                                "Then resend the loan terms (amount + time)."
                             )
                             needs_policy_decision = False
                         else:
@@ -1329,12 +1332,10 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
             amt = loan_payload_debug.get("amount_inr")
             tenure = loan_payload_debug.get("tenure_days")
             apr = loan_payload_debug.get("interest_rate_apr")
-            debug_parts.append(
-                "loan="
-                + f"amount={amt if amt is not None else 'null'}"
-                + f",tenure_days={tenure if tenure is not None else 'null'}"
-                + f",apr={apr if apr is not None else 'null'}"
-            )
+            loan_debug = "loan=" + f"amount={amt if amt is not None else 'null'}" + f",tenure_days={tenure if tenure is not None else 'null'}"
+            if apr is not None:
+                loan_debug += f",apr={apr}"
+            debug_parts.append(loan_debug)
         if loan_missing_debug:
             debug_parts.append("missing=" + ",".join(loan_missing_debug))
         if districts_total_debug is not None:

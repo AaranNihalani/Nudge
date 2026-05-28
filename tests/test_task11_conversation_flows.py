@@ -44,13 +44,15 @@ def _inbound(from_e164: str, body: str) -> InboundMessage:
 
 def _seed_minimal_mfi(conn, *, district: str = "D") -> None:
     conn.execute("INSERT OR IGNORE INTO mfi_districts(name) VALUES (?)", (district,))
-    conn.execute("INSERT OR IGNORE INTO mfi_lenders(name) VALUES ('A')")
+    for lender in ("A", "B", "C"):
+        conn.execute("INSERT OR IGNORE INTO mfi_lenders(name) VALUES (?)", (lender,))
     district_id = int(conn.execute("SELECT id FROM mfi_districts WHERE name = ?", (district,)).fetchone()["id"])
-    lender_id = int(conn.execute("SELECT id FROM mfi_lenders WHERE name='A'").fetchone()["id"])
-    conn.execute(
-        "INSERT OR REPLACE INTO mfi_rates(district_id, lender_id, rate_apr) VALUES (?, ?, ?)",
-        (district_id, lender_id, 24.0),
-    )
+    for lender, rate in (("A", 24.0), ("B", 18.0), ("C", 20.0)):
+        lender_id = int(conn.execute("SELECT id FROM mfi_lenders WHERE name = ?", (lender,)).fetchone()["id"])
+        conn.execute(
+            "INSERT OR REPLACE INTO mfi_rates(district_id, lender_id, rate_apr) VALUES (?, ?, ?)",
+            (district_id, lender_id, rate),
+        )
 
 
 class TestTask11ConversationFlows(unittest.TestCase):
@@ -83,7 +85,7 @@ class TestTask11ConversationFlows(unittest.TestCase):
             second = process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "MORE"), now=now)
             self.assertIn("D030", second)
 
-    def test_missing_field_clarifying_question_then_resume(self) -> None:
+    def test_missing_interest_still_persists_and_suggests_top_local_options(self) -> None:
         def stub_call_json_with_retries(cfg: Config, system_prompt: str, user_prompt: str) -> tuple[dict[str, Any], str] | None:
             _ = (cfg, system_prompt, user_prompt)
             return (
@@ -91,7 +93,7 @@ class TestTask11ConversationFlows(unittest.TestCase):
                     "schema_version": 1,
                     "intent": True,
                     "confidence": 0.9,
-                    "amount_inr": 5000,
+                    "amount_inr": 500000,
                     "tenure_days": 30,
                     "interest_rate_apr": None,
                     "lender_name": None,
@@ -123,8 +125,15 @@ class TestTask11ConversationFlows(unittest.TestCase):
                 process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "START"), now=now)
                 process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "DISTRICT D"), now=now)
 
-                r1 = process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "Need 5000 for 30 days"), now=now)
-                self.assertIn("interest", r1.lower())
+                r1 = process_twilio_inbound(
+                    cfg, db_path=db_path, inbound=_inbound(from_e164, "Need 5 lakh for 30 days with moneylender"), now=now
+                )
+                self.assertIn("top local regulated options", r1.lower())
+                self.assertIn("1) B", r1)
+                self.assertIn("2) C", r1)
+                self.assertIn("3) A", r1)
+                self.assertNotIn("quoted rate", r1.lower())
+                self.assertNotIn("save ~", r1.lower())
 
                 conn = connect(db_path)
                 try:
@@ -135,19 +144,10 @@ class TestTask11ConversationFlows(unittest.TestCase):
                             (user_id,),
                         ).fetchone()["c"]
                     )
-                    self.assertEqual(events, 0)
-                finally:
-                    conn.close()
-
-                r2 = process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "5% monthly"), now=now)
-                self.assertIn("very costly", r2.lower())
-
-                conn = connect(db_path)
-                try:
-                    user_id = int(conn.execute("SELECT id FROM users WHERE phone_e164 = ?", (from_e164,)).fetchone()["id"])
+                    self.assertEqual(events, 1)
                     row = conn.execute(
                         """
-                        SELECT interest_rate_apr
+                        SELECT amount_inr, interest_rate_apr
                         FROM parsed_events
                         WHERE user_id = ? AND event_type='borrow_intent'
                         ORDER BY id DESC
@@ -156,7 +156,14 @@ class TestTask11ConversationFlows(unittest.TestCase):
                         (user_id,),
                     ).fetchone()
                     self.assertIsNotNone(row)
-                    self.assertAlmostEqual(float(row["interest_rate_apr"]), 60.0, places=4)
+                    self.assertEqual(float(row["amount_inr"]), 500000.0)
+                    self.assertIsNone(row["interest_rate_apr"])
+                    draft = conn.execute(
+                        "SELECT borrow_draft_json FROM user_sessions WHERE user_id = ?",
+                        (user_id,),
+                    ).fetchone()
+                    self.assertIsNotNone(draft)
+                    self.assertIsNone(draft["borrow_draft_json"])
                 finally:
                     conn.close()
         finally:
@@ -276,4 +283,3 @@ class TestTask11ConversationFlows(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

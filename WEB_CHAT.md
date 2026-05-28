@@ -18,7 +18,7 @@ This means the same DB-backed state machine works unchanged (consent, district s
 ## Debug Semantics (what to look at)
 The right rail shows:
 - **Context:** consent status, current district, number of loaded MFI districts, active policy decision.
-- **Parsed Loan:** the latest `borrow_intent` event (amount/tenure/APR/lender_type/stage/model).
+- **Parsed Loan:** the latest `borrow_intent` event (amount/tenure/lender_type/stage/model, plus APR if supplied).
 - **Debug JSON:** raw `debug` payload returned by the API.
 
 Key fields:
@@ -44,4 +44,3 @@ Key fields:
   - `NUDGE_MFI_DATASET_PATH=./datasets/mfi_rates.csv`
 - Recommended debugging for pilots:
   - `NUDGE_VERBOSE_REPLIES=true`
-

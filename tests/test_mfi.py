@@ -48,6 +48,10 @@ class TestMfi(unittest.TestCase):
             self.assertEqual([r["rate_apr"] for r in alternatives], [18.0, 18.0])
             self.assertEqual([r["lender"] for r in alternatives], ["Sunrise MFI", "Unity Credit"])
 
+            top_local = query_top_n_alternatives(db_path, district="Kampala", n=3)
+            self.assertEqual([r["rate_apr"] for r in top_local], [18.0, 18.0, 20.5])
+            self.assertEqual([r["lender"] for r in top_local], ["Sunrise MFI", "Unity Credit", "GreenField Finance"])
+
 
 if __name__ == "__main__":
     unittest.main()

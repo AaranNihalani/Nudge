@@ -108,7 +108,7 @@ def _fetch_user_row(conn, *, user_id: int) -> dict[str, Any] | None:
 def _borrow_snapshot(conn, *, user_id: int) -> BorrowSnapshot:
     last_intent = conn.execute(
         """
-        SELECT id, parsed_at, negotiation_stage
+        SELECT id, parsed_at, negotiation_stage, interest_rate_apr
         FROM parsed_events
         WHERE user_id = ? AND event_type = 'borrow_intent' AND intent = 1
         ORDER BY parsed_at DESC, id DESC
@@ -119,6 +119,11 @@ def _borrow_snapshot(conn, *, user_id: int) -> BorrowSnapshot:
     last_intent_event_id = int(last_intent["id"]) if last_intent is not None else None
     last_intent_at = _parse_sqlite_ts(str(last_intent["parsed_at"])) if last_intent is not None else None
     last_stage = str(last_intent["negotiation_stage"]) if last_intent is not None else None
+    implied_apr = (
+        float(last_intent["interest_rate_apr"])
+        if last_intent is not None and last_intent["interest_rate_apr"] is not None
+        else None
+    )
 
     last_borrowed = conn.execute(
         """
@@ -134,18 +139,6 @@ def _borrow_snapshot(conn, *, user_id: int) -> BorrowSnapshot:
         (int(user_id),),
     ).fetchone()
     last_borrowed_at = _parse_sqlite_ts(str(last_borrowed["parsed_at"])) if last_borrowed is not None else None
-
-    rate_row = conn.execute(
-        """
-        SELECT interest_rate_apr
-        FROM parsed_events
-        WHERE user_id = ? AND event_type = 'borrow_intent' AND intent = 1 AND interest_rate_apr IS NOT NULL
-        ORDER BY parsed_at DESC, id DESC
-        LIMIT 1
-        """,
-        (int(user_id),),
-    ).fetchone()
-    implied_apr = float(rate_row["interest_rate_apr"]) if rate_row is not None else None
 
     amount_row = conn.execute(
         """

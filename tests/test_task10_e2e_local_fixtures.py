@@ -108,6 +108,13 @@ class TestTask10E2ELocalFixtures(unittest.TestCase):
                 self.assertIsInstance(results, list)
                 self.assertGreater(len(results), 0)
 
+                top_local = client.get("/mfi/alternatives?district=Kampala&n=3")
+                top_payload = top_local.get_json()
+                self.assertIsInstance(top_payload, dict)
+                top_results = top_payload.get("results")
+                self.assertIsInstance(top_results, list)
+                self.assertEqual([r["lender"] for r in top_results], ["Sunrise MFI", "Unity Credit", "GreenField Finance"])
+
                 r3 = client.post("/twilio", data=_load_twilio_fixture("whatsapp_inbound_borrow_message.json"))
                 body = r3.data.decode("utf-8")
                 self.assertIn("very costly", body.lower())

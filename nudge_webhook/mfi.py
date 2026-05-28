@@ -222,13 +222,17 @@ def query_top_n_alternatives(
     db_path: str,
     *,
     district: str,
-    current_rate: float,
+    current_rate: float | None = None,
     n: int = 3,
     exclude_lender: str | None = None,
     include_equal: bool = False,
 ) -> list[dict[str, Any]]:
     op = "<=" if include_equal else "<"
-    params: list[Any] = [district, float(current_rate)]
+    params: list[Any] = [district]
+    rate_sql = ""
+    if current_rate is not None:
+        rate_sql = f"AND r.rate_apr {op} ?"
+        params.append(float(current_rate))
     exclude_sql = ""
     if exclude_lender:
         exclude_sql = "AND l.name <> ?"
@@ -243,7 +247,7 @@ def query_top_n_alternatives(
             JOIN mfi_districts d ON d.id = r.district_id
             JOIN mfi_lenders l ON l.id = r.lender_id
             WHERE d.name = ?
-                AND r.rate_apr {op} ?
+                {rate_sql}
                 {exclude_sql}
             ORDER BY r.rate_apr ASC, l.name COLLATE NOCASE ASC, l.id ASC
             LIMIT ?
@@ -277,7 +281,7 @@ class MfiRepository:
         self,
         *,
         district: str,
-        current_rate: float,
+        current_rate: float | None = None,
         n: int = 3,
         exclude_lender: str | None = None,
         include_equal: bool = False,
@@ -320,7 +324,8 @@ def rates_endpoint() -> Response:
 @_bp.get("/alternatives")
 def alternatives_endpoint() -> Response:
     district = _to_text(request.args.get("district"))
-    current_rate = float(_to_text(request.args.get("current_rate")))
+    current_rate_raw = _to_text(request.args.get("current_rate"))
+    current_rate = float(current_rate_raw) if current_rate_raw != "" else None
     n = int(_to_text(request.args.get("n") or "3"))
     exclude_lender = _to_text(request.args.get("exclude_lender")) or None
     include_equal = (_to_text(request.args.get("include_equal")) or "false").lower() in {"1", "true", "yes"}
@@ -352,4 +357,3 @@ def register_mfi(app: Flask) -> None:
     def load_mfi_command(dataset_path: str, replace: bool) -> None:
         count = repo.load(dataset_path, replace=replace)
         click.echo(f"loaded {count} rows")
-
