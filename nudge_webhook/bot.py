@@ -645,8 +645,8 @@ def _selected_lender_conversation_fallback(
     cost_hint = _selected_lender_cost_hint(option)
     if kind == "positive":
         return (
-            f"That sounds promising.{cost_hint} Before deciding on {lender}, confirm the exact monthly payment, fees, penalties, documents, "
-            f"and collection terms with them. If you contact them, reply CONTACTED {lender}. If you decide to switch, reply SWITCHED {lender}."
+            f"Got it.{cost_hint} To proceed, contact {lender} and ask for the exact EMI/monthly payment, total repayment, and all fees/penalties in writing. "
+            f"After you contact them, reply CONTACTED {lender}."
             + compare
         )
     if kind == "negative":
@@ -661,14 +661,10 @@ def _selected_lender_conversation_fallback(
             f"{_lender_option_prompt(option_count)}"
         )
     return (
-        f"For {lender}, focus on whether the monthly payment fits your cash flow after household expenses.{cost_hint} "
-        + (
-            "If you send the amount and loan time, I can estimate the rupee cost for this option. "
-            if cost_hint == ""
-            else ""
-        )
-        + "Ask the lender for the exact EMI/monthly repayment, processing fees, late fees, and total repayment in writing. "
-        f"Does this option feel manageable, too high, or uncertain?{compare}"
+        f"Here’s the key check for {lender}:{cost_hint} "
+        + (" Send the loan amount and time if you want me to estimate the rupee cost. " if cost_hint == "" else " ")
+        + "To move forward, contact them and confirm the exact EMI/monthly payment, total repayment, and all fees/penalties in writing."
+        + compare
     )
 
 
@@ -682,12 +678,12 @@ def _claude_selected_lender_conversation(
 ) -> str | None:
     prompt = (
         "You are NudgeAI, a careful WhatsApp chatbot helping an Indian consumer decide whether a local regulated credit option is manageable. "
-        "Respond to the user's latest message using the selected lender facts. Ask one clear follow-up or give one clear next step. "
+        "Respond to the user's latest message using the selected lender facts. Give one clear next step. "
         "Do not claim approval. Do not give legal/financial advice. Do not invent phone numbers, eligibility, fees, or branch details. "
         "Preserve any rupee amounts, APR percentages, payment amounts, and commands exactly. "
         "If the user is ready to proceed, tell them to reply CONTACTED <lender> after contacting them, or SWITCHED <lender> if they choose it. "
         "If the user is unsure or says it is expensive, help them compare affordability and suggest choosing another numbered option if available. "
-        "Keep under 120 words.\n\n"
+        "Do not ask repetitive questions. Keep under 110 words.\n\n"
         f"User message: {user_text}\n"
         f"Selected option rank: {rank}\n"
         f"Selected option JSON: {json.dumps(option, ensure_ascii=False)}\n"
@@ -1222,6 +1218,7 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                     "selected_option": selected_lender_option,
                 },
             )
+            _save_selected_lender_option(conn, user_id=user_id, option=None, rank=None)
         elif contacted_cmd is not None:
             lender = (contacted_cmd or "").strip()
             if lender == "":
@@ -1869,29 +1866,7 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                     decision = decide_policy(conn, cfg=cfg, state=state)
                     decision_action = str(decision.action)
                     decision_policy = str(decision.policy_name)
-                    echo = ""
-                    if cfg.verbose_replies and loan_payload_debug is not None:
-                        amt = loan_payload_debug.get("amount_inr")
-                        tenure = loan_payload_debug.get("tenure_days")
-                        apr = loan_payload_debug.get("interest_rate_apr")
-                        lender_type = loan_payload_debug.get("lender_type")
-                        lender_name = loan_payload_debug.get("lender_name")
-                        stage = loan_payload_debug.get("negotiation_stage")
-                        echo = (
-                            "Parsed loan:\n"
-                            + f"- amount_inr: {amt if amt is not None else 'null'}\n"
-                            + f"- tenure_days: {tenure if tenure is not None else 'null'}\n"
-                            + f"- interest_rate_apr: {apr if apr is not None else 'null'}\n"
-                            + f"- lender_type: {lender_type if lender_type is not None else 'null'}\n"
-                            + f"- lender_name: {lender_name if lender_name is not None else 'null'}\n"
-                            + f"- negotiation_stage: {stage if stage is not None else 'null'}\n"
-                            + "If anything is wrong, reply for example:\n"
-                            + "CORRECT amount=6000\n"
-                            + "CORRECT tenure=45 days\n"
-                            + "CORRECT rate=5% monthly\n"
-                            + "CORRECT lender_type=moneylender\n"
-                        ).strip()
-                    base_reply = (echo + "\n\n" + decision.content).strip() if echo else decision.content
+                    base_reply = decision.content
                     reply = (reply_prefix + base_reply).strip() if reply_prefix else base_reply
                     nudge_content_to_store = decision.content
                     if decision.nudge_type in {"alert", "suggest_lender"} and state.district:
@@ -1967,34 +1942,5 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
             raise
         finally:
             conn.close()
-
-    if cfg.verbose_replies:
-        mode = str(cfg.policy_mode or "").strip().lower() or ("baseline" if cfg.baseline_policy_enabled else "off")
-        debug_parts.append(f"policy={mode}")
-        if decision_policy:
-            debug_parts.append(f"decision={decision_action or 'wait'}")
-            debug_parts.append(f"engine={decision_policy}")
-        debug_parts.append(f"parsed={'yes' if parse_saved else ('attempted' if parse_attempted else 'no')}")
-        if parse_error_debug:
-            debug_parts.append("parse_error=" + parse_error_debug.replace("\n", " ")[:220])
-        if loan_payload_debug is not None:
-            intent = loan_payload_debug.get("intent")
-            conf = loan_payload_debug.get("confidence")
-            debug_parts.append(f"intent={intent}")
-            debug_parts.append(f"confidence={conf}")
-            amt = loan_payload_debug.get("amount_inr")
-            tenure = loan_payload_debug.get("tenure_days")
-            apr = loan_payload_debug.get("interest_rate_apr")
-            loan_debug = "loan=" + f"amount={amt if amt is not None else 'null'}" + f",tenure_days={tenure if tenure is not None else 'null'}"
-            if apr is not None:
-                loan_debug += f",apr={apr}"
-            debug_parts.append(loan_debug)
-        if loan_missing_debug:
-            debug_parts.append("missing=" + ",".join(loan_missing_debug))
-        if districts_total_debug is not None:
-            debug_parts.append(f"districts_total={int(districts_total_debug)}")
-        debug_parts.append(f"limits={'blocked' if limits_blocked else 'ok'}")
-        base = (reply or "OK").strip() or "OK"
-        return (base + "\n\n" + "[status] " + " | ".join(debug_parts)).strip()
 
     return (reply or "OK").strip() or "OK"

@@ -277,7 +277,7 @@ class TestTask11ConversationFlows(unittest.TestCase):
                 self.assertIn("total repayment is about INR 508,219 before fees", r2)
                 self.assertIn("These numbers use APR only", r2)
                 self.assertIn("per month", r2)
-                self.assertIn("How does that payment feel", r2)
+                self.assertIn("To get in touch", r2)
 
                 r3 = process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "That monthly payment is too high"), now=now)
                 self.assertIn("too high", r3.lower())
@@ -443,7 +443,7 @@ class TestTask11ConversationFlows(unittest.TestCase):
         finally:
             bot_module.call_json_with_retries = original_call_json
 
-    def test_verbose_loan_echo_in_status(self) -> None:
+    def test_verbose_mode_does_not_append_status_lines(self) -> None:
         def stub_call_json_with_retries(cfg: Config, system_prompt: str, user_prompt: str) -> tuple[dict[str, Any], str] | None:
             _ = (cfg, system_prompt, user_prompt)
             return (
@@ -485,8 +485,7 @@ class TestTask11ConversationFlows(unittest.TestCase):
                 reply = process_twilio_inbound(
                     cfg, db_path=db_path, inbound=_inbound(from_e164, "Need 5000 for 30 days at 5% monthly"), now=now
                 )
-                self.assertIn("[status]", reply)
-                self.assertIn("loan=amount=", reply)
+                self.assertNotIn("[status]", reply)
         finally:
             bot_module.call_json_with_retries = original_call_json
 
