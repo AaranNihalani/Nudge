@@ -10,6 +10,7 @@ import nudge_webhook.bot as bot_module
 from nudge_webhook.bot import InboundMessage, process_twilio_inbound
 from nudge_webhook.config import Config
 from nudge_webhook.db import connect, init_and_migrate
+from nudge_webhook.nudge_content import lender_detail_fallback
 
 
 def _make_cfg(db_path: str, *, verbose_replies: bool = False) -> Config:
@@ -66,6 +67,21 @@ def _seed_single_mfi(conn, *, district: str = "D") -> None:
 
 
 class TestTask11ConversationFlows(unittest.TestCase):
+    def test_lender_detail_without_amount_prompts_for_loan_details(self) -> None:
+        reply = lender_detail_fallback(
+            option={
+                "lender": "Solo",
+                "rate_apr": 24.0,
+                "district": "D",
+                "option_count": 1,
+            },
+            rank=1,
+            district="D",
+        )
+        self.assertIn("If you tell me the loan amount and how long you need it for", reply)
+        self.assertIn("Reply with something like: 5000 for 30 days.", reply)
+        self.assertNotIn("How does that payment feel", reply)
+
     def test_districts_paging_with_more(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             db_path = str(Path(td) / "test.sqlite3")

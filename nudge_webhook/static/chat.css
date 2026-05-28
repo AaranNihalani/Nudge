@@ -254,6 +254,7 @@ body{
 .loan td:first-child{color:var(--muted)}
 .loan td:last-child{text-align:right; font-weight:600}
 .loan tr:last-child td{border-bottom:none}
+.loan-hint{margin-top:10px; font-size:11px; line-height:1.35}
 .loan-actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px}
 .mini-btn{
   border-radius:999px;

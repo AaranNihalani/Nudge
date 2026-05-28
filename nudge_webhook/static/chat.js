@@ -183,7 +183,7 @@ function updateSide(debug) {
 
   const bi = debug?.last_borrow_intent;
   if (!bi) {
-    elLoanCard.innerHTML = '<div class="muted">No loan parsed yet.</div>';
+    elLoanCard.innerHTML = '<div class="muted">No loan parsed yet. Send the amount and loan time to see payment estimates here.</div>';
     elLoanActions.innerHTML = "";
     return;
   }
@@ -196,6 +196,7 @@ function updateSide(debug) {
     ["APR (optional)", formatPct(bi.interest_rate_apr)],
     ["Lender type", bi.lender_type || "—"],
     ["Stage", bi.negotiation_stage || "—"],
+    ["Source", bi.source || "—"],
     ["Model", bi.model || "—"],
   ];
 
@@ -221,6 +222,12 @@ function updateSide(debug) {
   });
   elLoanCard.innerHTML = "";
   elLoanCard.appendChild(t);
+  if (!breakdown) {
+    const hint = document.createElement("div");
+    hint.className = "muted loan-hint";
+    hint.textContent = "Add amount, tenure, and APR to see yearly, monthly, and total repayment estimates.";
+    elLoanCard.appendChild(hint);
+  }
 
   elLoanActions.innerHTML = "";
   const mkAction = (label, text, kind) => {

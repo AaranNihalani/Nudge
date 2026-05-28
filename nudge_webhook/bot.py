@@ -579,12 +579,23 @@ def _selected_lender_conversation_fallback(
         )
     if kind == "negative":
         return (
-            f"If that monthly payment feels too high, don’t rush.{cost_hint} You can compare another option or ask for a smaller amount/longer tenure. "
+            f"If that monthly payment feels too high, don’t rush.{cost_hint}"
+            + (
+                " Send the amount and loan time if you want me to estimate the rupee cost more exactly."
+                if cost_hint == ""
+                else " You can compare another option or ask for a smaller amount or longer tenure."
+            )
+            + " "
             f"{_lender_option_prompt(option_count)}"
         )
     return (
         f"For {lender}, focus on whether the monthly payment fits your cash flow after household expenses.{cost_hint} "
-        "Ask the lender for the exact EMI/monthly repayment, processing fees, late fees, and total repayment in writing. "
+        + (
+            "If you send the amount and loan time, I can estimate the rupee cost for this option. "
+            if cost_hint == ""
+            else ""
+        )
+        + "Ask the lender for the exact EMI/monthly repayment, processing fees, late fees, and total repayment in writing. "
         f"Does this option feel manageable, too high, or uncertain?{compare}"
     )
 

@@ -195,6 +195,11 @@ def suggest_lender_message(
             f"At the best option shown here (~{best_apr:g}% APR), total repayment would be about "
             f"{_format_inr(float(best_breakdown['total_repayment']))}, so you could save about {_format_inr(save)}.\n"
         )
+    elif amount_inr is None or tenure_days is None:
+        estimate = (
+            "To tell you what you would actually pay in rupees for each option, send the loan amount and loan time. "
+            "Example: Need 5000 for 30 days.\n"
+        )
 
     assumptions = "These estimates assume APR-only simple interest and no extra fees, insurance, or penalties."
     why = "Why regulated? They’re licensed or registered, usually have clearer terms, and are less likely to surprise you on collections."
@@ -279,11 +284,19 @@ def lender_detail_fallback(*, option: dict[str, Any], rank: int, district: str |
     date_line = f"\nRate data date: {effective_date}." if effective_date else ""
     source_line = f"\nSource note: {source[:220]}{'...' if len(source) > 220 else ''}" if source else ""
     estimate_line = ""
+    followup_line = ""
     if amount_inr is not None and tenure_days is not None:
         estimate_line = (
             f"\n{_loan_cost_summary(float(amount_inr), int(tenure_days), rate)}"
             "\nThese numbers use APR only and assume no processing fee, insurance, or penalty charges."
         )
+        followup_line = "How does that payment feel for you: manageable, too high, or uncertain?"
+    else:
+        estimate_line = (
+            "\nIf you tell me the loan amount and how long you need it for, I can estimate the yearly cost, monthly cost, "
+            "and likely total repayment for this option in rupees."
+        )
+        followup_line = "Reply with something like: 5000 for 30 days."
     if option_count <= 1:
         next_step = f"Reply CONTACTED {lender} after you contact them."
     elif option_count == 2:
@@ -294,7 +307,7 @@ def lender_detail_fallback(*, option: dict[str, Any], rank: int, district: str |
         f"Option {int(rank)}: {lender}\n"
         f"Indicative rate: ~{rate:g}% APR (about {_format_percent(monthly)}% per month) in {where}."
         f"{estimate_line}{date_line}{source_line}\n\n"
-        "How does that payment feel for you: manageable, too high, or uncertain?\n\n"
+        f"{followup_line}\n\n"
         "Before applying, ask them to confirm the exact EMI or monthly payment, total repayment, all fees, penalties, documents needed, and collection terms.\n\n"
         + next_step
     )

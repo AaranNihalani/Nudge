@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import os
 
+import json
+
 from flask import Flask, Response, jsonify, render_template, request
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -140,6 +142,8 @@ def create_app(config: Config | None = None) -> Flask:
             mfi_districts = int(conn.execute("SELECT COUNT(*) AS c FROM mfi_districts").fetchone()["c"])
 
             last_event = None
+            draft_payload = None
+            draft_model = None
             if user_id is not None:
                 last_event = conn.execute(
                     """
@@ -151,6 +155,22 @@ def create_app(config: Config | None = None) -> Flask:
                     """,
                     (int(user_id),),
                 ).fetchone()
+                session_row = conn.execute(
+                    """
+                    SELECT borrow_draft_json, borrow_model
+                    FROM user_sessions
+                    WHERE user_id = ?
+                    """,
+                    (int(user_id),),
+                ).fetchone()
+                if session_row is not None and session_row["borrow_draft_json"]:
+                    try:
+                        maybe_draft = json.loads(str(session_row["borrow_draft_json"]))
+                        if isinstance(maybe_draft, dict):
+                            draft_payload = maybe_draft
+                            draft_model = str(session_row["borrow_model"]) if session_row["borrow_model"] is not None else None
+                    except Exception:
+                        draft_payload = None
         finally:
             conn.close()
 
@@ -169,7 +189,20 @@ def create_app(config: Config | None = None) -> Flask:
             "mfi_districts": mfi_districts,
         }
 
-        if last_event is not None:
+        if draft_payload is not None:
+            debug["last_borrow_intent"] = {
+                "intent": bool(draft_payload["intent"]) if draft_payload.get("intent") is not None else None,
+                "confidence": float(draft_payload["confidence"]) if draft_payload.get("confidence") is not None else None,
+                "amount_inr": float(draft_payload["amount_inr"]) if draft_payload.get("amount_inr") is not None else None,
+                "tenure_days": int(draft_payload["tenure_days"]) if draft_payload.get("tenure_days") is not None else None,
+                "interest_rate_apr": float(draft_payload["interest_rate_apr"]) if draft_payload.get("interest_rate_apr") is not None else None,
+                "lender_type": str(draft_payload["lender_type"]) if draft_payload.get("lender_type") is not None else None,
+                "negotiation_stage": str(draft_payload["negotiation_stage"]) if draft_payload.get("negotiation_stage") is not None else None,
+                "model": draft_model or "draft",
+                "parsed_at": None,
+                "source": "draft",
+            }
+        elif last_event is not None:
             debug["last_borrow_intent"] = {
                 "intent": bool(int(last_event["intent"])) if last_event["intent"] is not None else None,
                 "confidence": float(last_event["confidence"]) if last_event["confidence"] is not None else None,
@@ -180,6 +213,7 @@ def create_app(config: Config | None = None) -> Flask:
                 "negotiation_stage": str(last_event["negotiation_stage"]) if last_event["negotiation_stage"] is not None else None,
                 "model": str(last_event["model"]) if last_event["model"] is not None else None,
                 "parsed_at": str(last_event["parsed_at"]) if last_event["parsed_at"] is not None else None,
+                "source": "parsed",
             }
 
         return jsonify({"reply": reply_text, "debug": debug})
