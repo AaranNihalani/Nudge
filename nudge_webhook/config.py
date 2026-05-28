@@ -64,7 +64,10 @@ class Config:
         railway_environment = _env("RAILWAY_ENVIRONMENT")
         db_path = _env("NUDGE_DB_PATH") or _env("SQLITE_PATH")
         if not db_path:
-            db_path = os.path.join(os.getcwd(), "data", "nudge.sqlite3")
+            if _env("VERCEL"):
+                db_path = os.path.join("/tmp", "nudge.sqlite3")
+            else:
+                db_path = os.path.join(os.getcwd(), "data", "nudge.sqlite3")
 
         validate_raw = (_env("TWILIO_VALIDATE_SIGNATURE", "true") or "true").lower()
         twilio_validate_signature = validate_raw not in {"0", "false", "no"}
