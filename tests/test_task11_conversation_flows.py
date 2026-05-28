@@ -152,8 +152,13 @@ class TestTask11ConversationFlows(unittest.TestCase):
                 r2 = process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "2"), now=now)
                 self.assertIn("Option 2: C", r2)
                 self.assertIn("Indicative rate", r2)
-                self.assertIn("simple-interest repayment", r2)
-                self.assertIn("CONTACTED C", r2)
+                self.assertIn("roughly INR", r2)
+                self.assertIn("per month", r2)
+                self.assertIn("How does that monthly payment feel", r2)
+
+                r3 = process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "That monthly payment is too high"), now=now)
+                self.assertIn("too high", r3.lower())
+                self.assertIn("Reply 1, 2, or 3", r3)
 
                 conn = connect(db_path)
                 try:
@@ -165,6 +170,13 @@ class TestTask11ConversationFlows(unittest.TestCase):
                         ).fetchone()["c"]
                     )
                     self.assertEqual(events, 1)
+                    feedback = int(
+                        conn.execute(
+                            "SELECT COUNT(*) AS c FROM user_actions WHERE user_id = ? AND action_type = 'lender_option_feedback'",
+                            (user_id,),
+                        ).fetchone()["c"]
+                    )
+                    self.assertEqual(feedback, 1)
                     row = conn.execute(
                         """
                         SELECT amount_inr, interest_rate_apr

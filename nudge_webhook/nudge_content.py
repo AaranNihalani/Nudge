@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
+import math
 
 
 def _apr_to_monthly_percent(apr_percent: float) -> float:
@@ -23,6 +24,13 @@ def _simple_interest_estimate(amount_inr: float, tenure_days: int, apr_percent: 
     interest = max(0.0, float(amount_inr) * ratio)
     total = max(0.0, float(amount_inr) + interest)
     return interest, total
+
+
+def _monthly_repayment_estimate(amount_inr: float, tenure_days: int, apr_percent: float) -> tuple[float, int, float]:
+    interest, total = _simple_interest_estimate(amount_inr, tenure_days, apr_percent)
+    months = max(1, int(math.ceil(float(tenure_days) / 30.0)))
+    monthly = max(0.0, total / float(months))
+    return monthly, months, total
 
 
 def _alternatives_rows(conn, *, district: str, current_rate: float | None, exclude_lender: str | None, n: int) -> list[dict[str, Any]]:
@@ -101,7 +109,11 @@ def _render_rows(rows: list[dict[str, Any]], *, amount_inr: float | None = None,
         estimate = ""
         if amount_inr is not None and tenure_days is not None:
             interest, total = _simple_interest_estimate(float(amount_inr), int(tenure_days), rate)
-            estimate = f"; repay ~{_format_inr(total)} (interest ~{_format_inr(interest)})"
+            monthly, months, _ = _monthly_repayment_estimate(float(amount_inr), int(tenure_days), rate)
+            estimate = (
+                f"; repay ~{_format_inr(total)} over ~{months} month{'s' if months != 1 else ''} "
+                f"(~{_format_inr(monthly)}/month, interest ~{_format_inr(interest)})"
+            )
         parts.append(f"{i}) {lender} (~{rate:g}% APR ≈{_format_percent(monthly)}%/month{estimate})")
     return "\n".join(parts)
 
@@ -223,9 +235,11 @@ def lender_detail_fallback(*, option: dict[str, Any], rank: int, district: str |
     estimate_line = ""
     if amount_inr is not None and tenure_days is not None:
         interest, total = _simple_interest_estimate(float(amount_inr), int(tenure_days), rate)
+        monthly, months, _ = _monthly_repayment_estimate(float(amount_inr), int(tenure_days), rate)
         estimate_line = (
-            f"\nFor {_format_inr(float(amount_inr))} over {int(tenure_days)} days, simple-interest repayment is "
-            f"~{_format_inr(total)} (interest ~{_format_inr(interest)}), before fees."
+            f"\nFor {_format_inr(float(amount_inr))} over {int(tenure_days)} days, estimated repayment is "
+            f"~{_format_inr(total)} before fees. That is roughly {_format_inr(monthly)} per month over "
+            f"~{months} month{'s' if months != 1 else ''} (interest ~{_format_inr(interest)})."
         )
     if option_count <= 1:
         next_step = f"Reply CONTACTED {lender} after you contact them."
@@ -237,7 +251,8 @@ def lender_detail_fallback(*, option: dict[str, Any], rank: int, district: str |
         f"Option {int(rank)}: {lender}\n"
         f"Indicative rate: ~{rate:g}% APR (about {_format_percent(monthly)}% per month) in {where}."
         f"{estimate_line}{date_line}{source_line}\n\n"
-        "Before applying, ask them for the total repayment amount, all fees, penalties, documents needed, and collection terms.\n\n"
+        "How does that monthly payment feel for you: manageable, too high, or uncertain?\n\n"
+        "Before applying, confirm the exact monthly payment, all fees, penalties, documents needed, and collection terms.\n\n"
         + next_step
     )
 

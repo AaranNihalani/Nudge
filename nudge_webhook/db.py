@@ -207,6 +207,14 @@ _MIGRATIONS: list[tuple[int, str]] = [
         ALTER TABLE user_sessions ADD COLUMN lender_options_updated_at TEXT;
         """,
     ),
+    (
+        8,
+        """
+        ALTER TABLE user_sessions ADD COLUMN selected_lender_option_json TEXT;
+        ALTER TABLE user_sessions ADD COLUMN selected_lender_rank INTEGER;
+        ALTER TABLE user_sessions ADD COLUMN selected_lender_updated_at TEXT;
+        """,
+    ),
 ]
 
 
