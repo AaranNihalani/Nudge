@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 import math
+import json
+import os
 
 
 def _apr_to_monthly_percent(apr_percent: float) -> float:
@@ -51,6 +53,71 @@ def loan_cost_breakdown(amount_inr: float, tenure_days: int, apr_percent: float)
         "monthly_payment": monthly_payment,
         "months": months,
     }
+
+
+_CONTACTS_CACHE: dict[str, dict[str, Any]] | None = None
+
+
+def _norm_key(s: str) -> str:
+    raw = (s or "").strip().lower()
+    out = []
+    for ch in raw:
+        if ch.isalnum():
+            out.append(ch)
+        else:
+            out.append(" ")
+    joined = "".join(out)
+    joined = " ".join([p for p in joined.split() if p])
+    return joined
+
+
+def _load_contacts() -> dict[str, dict[str, Any]]:
+    global _CONTACTS_CACHE
+    if _CONTACTS_CACHE is not None:
+        return _CONTACTS_CACHE
+    try:
+        here = os.path.dirname(__file__)
+        path = os.path.join(here, "lender_contacts.json")
+        with open(path, "r", encoding="utf-8") as f:
+            raw = json.load(f)
+        if not isinstance(raw, dict):
+            _CONTACTS_CACHE = {}
+            return _CONTACTS_CACHE
+        normalized: dict[str, dict[str, Any]] = {}
+        for k, v in raw.items():
+            if not isinstance(k, str) or not isinstance(v, dict):
+                continue
+            normalized[_norm_key(k)] = dict(v)
+        _CONTACTS_CACHE = normalized
+        return _CONTACTS_CACHE
+    except Exception:
+        _CONTACTS_CACHE = {}
+        return _CONTACTS_CACHE
+
+
+def lender_contact_block(lender_name: str) -> str:
+    book = _load_contacts()
+    key = _norm_key(lender_name)
+    entry = book.get(key)
+    if entry is None:
+        return ""
+    phones = entry.get("phone")
+    emails = entry.get("email")
+    website = entry.get("website")
+    parts: list[str] = []
+    if isinstance(phones, list):
+        clean = [str(p).strip() for p in phones if str(p).strip()]
+        if clean:
+            parts.append("Phone: " + ", ".join(clean[:3]))
+    if isinstance(emails, list):
+        clean = [str(e).strip() for e in emails if str(e).strip()]
+        if clean:
+            parts.append("Email: " + ", ".join(clean[:2]))
+    if isinstance(website, str) and website.strip():
+        parts.append("Website: " + website.strip())
+    if not parts:
+        return ""
+    return "\n" + "\n".join(parts)
 
 
 def _loan_cost_summary(amount_inr: float, tenure_days: int, apr_percent: float) -> str:
@@ -290,7 +357,7 @@ def lender_detail_fallback(*, option: dict[str, Any], rank: int, district: str |
             f"\n{_loan_cost_summary(float(amount_inr), int(tenure_days), rate)}"
             "\nThese numbers use APR only and assume no processing fee, insurance, or penalty charges."
         )
-        followup_line = "How does that payment feel for you: manageable, too high, or uncertain?"
+        followup_line = ""
     else:
         estimate_line = (
             "\nIf you tell me the loan amount and how long you need it for, I can estimate the yearly cost, monthly cost, "
@@ -303,12 +370,21 @@ def lender_detail_fallback(*, option: dict[str, Any], rank: int, district: str |
         next_step = f"Reply CONTACTED {lender} after you contact them, or reply 1 or 2 to explore another option."
     else:
         next_step = f"Reply CONTACTED {lender} after you contact them, or reply 1, 2, or 3 to explore another option."
+    contact = lender_contact_block(lender)
+    contact_fallback = (
+        "\nI don’t have a verified phone/email for this lender in my directory yet. "
+        "Use their official website or branch locator, or search on Google Maps for the nearest branch/office."
+        if contact == ""
+        else "\nVerified contacts:"
+    )
     return (
         f"Option {int(rank)}: {lender}\n"
         f"Indicative rate: ~{rate:g}% APR (about {_format_percent(monthly)}% per month) in {where}."
         f"{estimate_line}{date_line}{source_line}\n\n"
-        f"{followup_line}\n\n"
-        "Before applying, ask them to confirm the exact EMI or monthly payment, total repayment, all fees, penalties, documents needed, and collection terms.\n\n"
+        + (f"{followup_line}\n\n" if followup_line else "")
+        + contact_fallback
+        + contact
+        + "\n\nBefore applying, ask them to confirm the exact EMI or monthly payment, total repayment, all fees, penalties, documents needed, and collection terms.\n\n"
         + next_step
     )
 

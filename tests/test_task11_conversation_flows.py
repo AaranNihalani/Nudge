@@ -368,7 +368,7 @@ class TestTask11ConversationFlows(unittest.TestCase):
                 self.assertIn("total repayment is about INR 508,219 before fees", r2)
                 self.assertIn("These numbers use APR only", r2)
                 self.assertIn("per month", r2)
-                self.assertIn("How does that payment feel", r2)
+                self.assertIn("I don’t have a verified phone/email", r2)
 
                 r3 = process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "That monthly payment is too high"), now=now)
                 self.assertIn("too high", r3.lower())
@@ -576,8 +576,7 @@ class TestTask11ConversationFlows(unittest.TestCase):
                 reply = process_twilio_inbound(
                     cfg, db_path=db_path, inbound=_inbound(from_e164, "Need 5000 for 30 days at 5% monthly"), now=now
                 )
-                self.assertIn("[status]", reply)
-                self.assertIn("loan=amount=", reply)
+                self.assertNotIn("[status]", reply)
         finally:
             bot_module.call_json_with_retries = original_call_json
 

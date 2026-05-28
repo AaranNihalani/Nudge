@@ -99,18 +99,7 @@ def create_app(config: Config | None = None) -> Flask:
         return Response(render_template("index.html"), mimetype="text/html")
 
     def _parse_status_line(reply: str) -> dict[str, str]:
-        out: dict[str, str] = {}
-        for line in (reply or "").splitlines():
-            if not line.strip().lower().startswith("[status]"):
-                continue
-            rest = line.split("]", 1)[1] if "]" in line else line
-            parts = [p.strip() for p in rest.split("|") if p.strip()]
-            for p in parts:
-                if "=" in p:
-                    k, v = p.split("=", 1)
-                    out[k.strip()] = v.strip()
-            break
-        return out
+        return {}
 
     @app.post("/api/chat")
     def api_chat() -> Response:

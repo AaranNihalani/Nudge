@@ -174,14 +174,7 @@ def _save_language(conn, *, user_id: int, language: str) -> None:
 
 
 def _language_for_session(cfg: Config, session: dict[str, Any] | None) -> str:
-    lang = None
-    if session and session.get("language") is not None:
-        lang = str(session.get("language") or "").strip().lower()
-    if lang not in {"en", "hi", "hinglish"}:
-        lang = str(getattr(cfg, "default_language", "en") or "en").strip().lower()
-    if lang not in {"en", "hi", "hinglish"}:
-        lang = "en"
-    return lang
+    return "en"
 
 
 def _support_line(cfg: Config) -> str:
@@ -199,13 +192,13 @@ def _strip_prefix_text(raw: str, prefix: str) -> str:
 
 
 def _parse_lang_command(text: str) -> str | None:
-    raw = text.strip()
-    lower = raw.lower()
-    for prefix in ("lang", "language"):
-        if lower == prefix:
-            return ""
-        if lower.startswith(prefix + " ") or lower.startswith(prefix + ":") or lower.startswith(prefix + ","):
-            return _strip_prefix_text(raw, prefix).strip()
+    raw = (text or "").strip().lower()
+    if raw == "":
+        return None
+    if raw == "lang" or raw.startswith("lang ") or raw.startswith("lang:") or raw.startswith("lang,"):
+        return ""
+    if raw == "language" or raw.startswith("language ") or raw.startswith("language:") or raw.startswith("language,"):
+        return ""
     return None
 
 
@@ -1219,7 +1212,6 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                     "- DISTRICTS (or DISTRICTS <prefix>)\n"
                     "- MORE\n"
                     "- DISTRICT <name>\n"
-                    "- LANG EN / LANG HI / LANG HINGLISH\n"
                     "- CORRECT <field>=<value>\n"
                     "- CONTACTED <lender>\n"
                     "- SWITCHED <lender> (or SWITCHED FROM <old> TO <new>)\n"
@@ -1241,8 +1233,6 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                     "- DISTRICTS (to see more)\n"
                     "- MORE\n"
                     "- DISTRICT <name>\n\n"
-                    "Language:\n"
-                    "- LANG EN / LANG HI / LANG HINGLISH\n\n"
                     "Reply STOP anytime to opt out."
                 )
                 reply = _claude_humanize_reply(cfg, fallback=fallback, purpose="welcome a new user and help them set their district") or fallback
@@ -1262,19 +1252,13 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                 "- CORRECT <field>=<value>\n\n"
                 "- CONTACTED <lender>\n"
                 "- SWITCHED <lender> (or SWITCHED FROM <old> TO <new>)\n\n"
-                "- LANG EN / LANG HI / LANG HINGLISH\n\n"
                 "To get suggestions, send a message like:\n"
                 "“Need 5000 for 30 days with moneylender.”"
                 + support
             )
             reply = _claude_humanize_reply(cfg, fallback=fallback, purpose="help the user understand commands and what the chatbot can do") or fallback
         elif lang_cmd is not None:
-            choice = (lang_cmd or "").strip().lower()
-            if choice in {"en", "hi", "hinglish"}:
-                _save_language(conn, user_id=user_id, language=choice)
-                reply = f"Okay, I’ll reply in {choice}."
-            else:
-                reply = "Reply with: LANG EN or LANG HI or LANG HINGLISH"
+            reply = "Nudge is English-only right now."
         elif option_selection is not None:
             rank, option = option_selection
             _save_selected_lender_option(conn, user_id=user_id, option=option, rank=rank)
@@ -2059,34 +2043,5 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
             raise
         finally:
             conn.close()
-
-    if cfg.verbose_replies:
-        mode = str(cfg.policy_mode or "").strip().lower() or ("baseline" if cfg.baseline_policy_enabled else "off")
-        debug_parts.append(f"policy={mode}")
-        if decision_policy:
-            debug_parts.append(f"decision={decision_action or 'wait'}")
-            debug_parts.append(f"engine={decision_policy}")
-        debug_parts.append(f"parsed={'yes' if parse_saved else ('attempted' if parse_attempted else 'no')}")
-        if parse_error_debug:
-            debug_parts.append("parse_error=" + parse_error_debug.replace("\n", " ")[:220])
-        if loan_payload_debug is not None:
-            intent = loan_payload_debug.get("intent")
-            conf = loan_payload_debug.get("confidence")
-            debug_parts.append(f"intent={intent}")
-            debug_parts.append(f"confidence={conf}")
-            amt = loan_payload_debug.get("amount_inr")
-            tenure = loan_payload_debug.get("tenure_days")
-            apr = loan_payload_debug.get("interest_rate_apr")
-            loan_debug = "loan=" + f"amount={amt if amt is not None else 'null'}" + f",tenure_days={tenure if tenure is not None else 'null'}"
-            if apr is not None:
-                loan_debug += f",apr={apr}"
-            debug_parts.append(loan_debug)
-        if loan_missing_debug:
-            debug_parts.append("missing=" + ",".join(loan_missing_debug))
-        if districts_total_debug is not None:
-            debug_parts.append(f"districts_total={int(districts_total_debug)}")
-        debug_parts.append(f"limits={'blocked' if limits_blocked else 'ok'}")
-        base = (reply or "OK").strip() or "OK"
-        return (base + "\n\n" + "[status] " + " | ".join(debug_parts)).strip()
 
     return (reply or "OK").strip() or "OK"

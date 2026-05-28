@@ -1,0 +1,38 @@
+{
+  "Midland Microfin Limited": {
+    "website": "https://midlandmicrofin.com/",
+    "phone": ["1800-137-0600", "0181-5085555"],
+    "email": ["info@midlandmicrofin.com"]
+  },
+  "Satin Creditcare Network Limited": {
+    "website": "https://satincreditcare.com/contact-us/",
+    "phone": ["1800-2123-123", "0124-4715400"],
+    "email": ["clientgrievance@satincreditcare.com", "info@satincreditcare.com"]
+  },
+  "L&T Finance Limited": {
+    "website": "https://www.ltfinance.com/contact-us",
+    "phone": ["1800-268-0000"],
+    "email": ["customercare@ltfs.com"]
+  },
+  "Jana Small Finance Bank Limited": {
+    "website": "https://www.jana.bank.in/",
+    "phone": ["1800-2080"],
+    "email": ["customercare@jana.bank.in"]
+  },
+  "Equitas Small Finance Bank Limited": {
+    "website": "https://equitas.bank.in/head-office/",
+    "phone": ["1800-103-1222", "1800-103-2977"],
+    "email": ["customerservice@equitas.bank.in"]
+  },
+  "CreditAccess Grameen Limited": {
+    "website": "https://www.creditaccessgrameen.in/contact/get-in-touch/",
+    "phone": ["1800-123-153-153", "+91-80-22637300"],
+    "email": ["info@cagrameen.in", "yourvoice@cagrameen.in"]
+  },
+  "Belstar Microfinance Limited": {
+    "website": "https://belstar.in/customer-grievance-redressal/",
+    "phone": ["1800-102-7049", "044-43414510"],
+    "email": ["pno@belstar.in", "bml@belstar.in"]
+  }
+}
+
