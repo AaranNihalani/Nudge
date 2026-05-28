@@ -246,6 +246,7 @@ def parse_borrow_intent_with_llm(
         "- amount_inr is the principal amount in INR if stated, else null.\n"
         "- tenure_days is total days if stated (convert weeks/months to days), else null.\n"
         "- interest_rate_apr is APR percent if inferable; if the message gives monthly percent, multiply by 12.\n"
+        "- If the message says the rate is a cap (e.g. 'less than 50% APR', 'under 3% monthly', 'max 24% APR'), set interest_rate_apr=null.\n"
         "- lender_type must be one of the allowed enum values; use unknown if unclear.\n"
         "- negotiation_stage: none/considering/asking/offered/agreed/borrowed.\n"
         "- Do not add extra keys.\n"

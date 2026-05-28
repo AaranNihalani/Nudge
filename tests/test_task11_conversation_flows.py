@@ -72,6 +72,24 @@ def _seed_single_mfi(conn, *, district: str = "D") -> None:
     )
 
 
+def _seed_named_mfi(conn, *, district: str = "D") -> None:
+    conn.execute("INSERT OR IGNORE INTO mfi_districts(name) VALUES (?)", (district,))
+    lenders = (
+        ("Midland Microfin Limited", 22.50),
+        ("Satin Creditcare Network Limited", 25.49),
+        ("Other Regulated Option", 28.00),
+    )
+    for lender, _ in lenders:
+        conn.execute("INSERT OR IGNORE INTO mfi_lenders(name) VALUES (?)", (lender,))
+    district_id = int(conn.execute("SELECT id FROM mfi_districts WHERE name = ?", (district,)).fetchone()["id"])
+    for lender, rate in lenders:
+        lender_id = int(conn.execute("SELECT id FROM mfi_lenders WHERE name = ?", (lender,)).fetchone()["id"])
+        conn.execute(
+            "INSERT OR REPLACE INTO mfi_rates(district_id, lender_id, rate_apr) VALUES (?, ?, ?)",
+            (district_id, lender_id, float(rate)),
+        )
+
+
 class TestTask11ConversationFlows(unittest.TestCase):
     def test_lender_detail_without_amount_prompts_for_loan_details(self) -> None:
         reply = lender_detail_fallback(
@@ -181,6 +199,79 @@ class TestTask11ConversationFlows(unittest.TestCase):
                     self.assertEqual(float(row["amount_inr"]), 500000.0)
                     self.assertEqual(int(row["tenure_days"]), 30)
                     self.assertEqual(str(row["lender_type"]), "moneylender")
+                finally:
+                    conn.close()
+        finally:
+            bot_module.call_json_with_retries = original_call_json
+
+    def test_lender_selection_by_partial_name_does_not_trigger_intent_false(self) -> None:
+        def stub_call_json_with_retries(cfg: Config, system_prompt: str, user_prompt: str) -> tuple[dict[str, Any], str] | None:
+            _ = (cfg, system_prompt, user_prompt)
+            return (
+                {
+                    "schema_version": 1,
+                    "intent": True,
+                    "confidence": 0.95,
+                    "amount_inr": 5000000,
+                    "tenure_days": 3650,
+                    "interest_rate_apr": 50.0,
+                    "lender_name": None,
+                    "lender_type": "moneylender",
+                    "negotiation_stage": "asking",
+                },
+                "fixture-llm",
+            )
+
+        original_call_json = bot_module.call_json_with_retries
+        bot_module.call_json_with_retries = stub_call_json_with_retries
+        try:
+            with tempfile.TemporaryDirectory() as td:
+                db_path = str(Path(td) / "test.sqlite3")
+                init_and_migrate(db_path)
+
+                conn = connect(db_path)
+                try:
+                    conn.execute("BEGIN IMMEDIATE")
+                    _seed_named_mfi(conn, district="D")
+                    conn.commit()
+                finally:
+                    conn.close()
+
+                cfg = _make_cfg(db_path)
+                now = datetime(2026, 5, 16, 12, 0, 0, tzinfo=timezone.utc)
+                from_e164 = "+15550005555"
+
+                process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "START"), now=now)
+                process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "DISTRICT D"), now=now)
+
+                reply = process_twilio_inbound(
+                    cfg,
+                    db_path=db_path,
+                    inbound=_inbound(from_e164, "need 50 lakh for 10 years from moneylender with less than 50% apr"),
+                    now=now,
+                )
+                self.assertIn("top local regulated options", reply.lower())
+                self.assertIn("1) Midland Microfin Limited", reply)
+
+                opened = process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "ok, tell me about midland"), now=now)
+                self.assertIn("Option 1: Midland Microfin Limited", opened)
+                self.assertNotIn("intent=false", opened.lower())
+
+                conn = connect(db_path)
+                try:
+                    user_id = int(conn.execute("SELECT id FROM users WHERE phone_e164 = ?", (from_e164,)).fetchone()["id"])
+                    row = conn.execute(
+                        """
+                        SELECT interest_rate_apr
+                        FROM parsed_events
+                        WHERE user_id = ? AND event_type='borrow_intent'
+                        ORDER BY id DESC
+                        LIMIT 1
+                        """,
+                        (user_id,),
+                    ).fetchone()
+                    self.assertIsNotNone(row)
+                    self.assertIsNone(row["interest_rate_apr"])
                 finally:
                     conn.close()
         finally:

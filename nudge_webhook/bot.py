@@ -408,6 +408,76 @@ def _option_selection_number(text: str) -> int | None:
     return int(m.group(1)) if m is not None else None
 
 
+def _normalize_words_for_match(text: str) -> list[str]:
+    raw = (text or "").lower()
+    raw = re.sub(r"[^a-z0-9\s]+", " ", raw)
+    raw = re.sub(r"\s+", " ", raw).strip()
+    if raw == "":
+        return []
+    return [w for w in raw.split(" ") if w]
+
+
+_LENDER_QUERY_STOPWORDS = {
+    "tell",
+    "me",
+    "about",
+    "explore",
+    "pick",
+    "choose",
+    "select",
+    "open",
+    "option",
+    "details",
+    "detail",
+    "please",
+    "ok",
+    "okay",
+    "hi",
+    "hello",
+    "show",
+    "for",
+    "the",
+    "a",
+    "an",
+    "on",
+}
+
+
+def _best_lender_option_match(text: str, *, options: list[dict[str, Any]]) -> tuple[int, dict[str, Any]] | None:
+    if not options:
+        return None
+    words = [w for w in _normalize_words_for_match(text) if w not in _LENDER_QUERY_STOPWORDS]
+    if not words:
+        return None
+    query_words = [w for w in words if len(w) >= 3]
+    if not query_words:
+        return None
+
+    best: tuple[int, int, dict[str, Any]] | None = None  # (score, rank, option)
+    for idx, option in enumerate(options, start=1):
+        lender = str(option.get("lender") or "").strip()
+        lender_words = set(_normalize_words_for_match(lender))
+        if not lender_words:
+            continue
+        score = 0
+        for qw in query_words:
+            if qw in lender_words:
+                score += 3
+            elif any(qw in lw and len(qw) >= 4 for lw in lender_words):
+                score += 1
+        if score <= 0:
+            continue
+        if best is None or score > best[0]:
+            best = (score, idx, option)
+
+    if best is None:
+        return None
+    score, rank, option = best
+    if score < 2:
+        return None
+    return rank, option
+
+
 def _parse_lender_option_selection(text: str, *, options: list[dict[str, Any]]) -> tuple[int, dict[str, Any]] | None:
     raw = (text or "").strip()
     if raw == "" or not options:
@@ -424,6 +494,9 @@ def _parse_lender_option_selection(text: str, *, options: list[dict[str, Any]]) 
         lender = str(option.get("lender") or "").strip().lower()
         if lender and (lower == lender or lower in {f"tell me about {lender}", f"explore {lender}", f"pick {lender}"}):
             return idx, option
+    matched = _best_lender_option_match(raw, options=options)
+    if matched is not None:
+        return matched
     return None
 
 
@@ -523,6 +596,17 @@ def _looks_like_new_loan_message(text: str) -> bool:
         return False
     has_loan_word = any(w in raw for w in ("loan", "borrow", "need", "lend", "credit"))
     return has_loan_word and (_parse_amount_inr(raw) is not None or _parse_tenure_days(raw) is not None)
+
+
+def _looks_like_loan_intent_message(text: str) -> bool:
+    raw = (text or "").strip().lower()
+    if raw == "":
+        return False
+    if any(k in raw for k in ("district", "districts", "lang", "stop", "start", "help", "more")):
+        return False
+    has_borrow_intent = any(w in raw for w in ("loan", "borrow", "need", "lend", "credit"))
+    has_lender_cue = any(w in raw for w in ("moneylender", "money lender", "microfinance", "mfi", "nbfc", "bank"))
+    return bool(has_borrow_intent or (has_lender_cue and ("need" in raw or "borrow" in raw)))
 
 
 def _looks_like_loan_terms_fragment(text: str) -> bool:
@@ -794,6 +878,14 @@ def _infer_lender_type_from_text(text: str) -> str | None:
 
 def _apply_text_heuristics(payload: dict[str, Any], *, text: str) -> dict[str, Any]:
     next_payload = dict(payload)
+    raw = (text or "").strip().lower()
+    if next_payload.get("interest_rate_apr") is not None:
+        cap_match = re.search(
+            r"(less than|under|below|<|upto|up to|maximum|max)\s*(?:about\s*)?(\d+(?:\.\d+)?)\s*%?\s*(apr|annual|year|yearly|month|monthly|week|weekly|day|daily)\b",
+            raw,
+        )
+        if cap_match:
+            next_payload["interest_rate_apr"] = None
     if next_payload.get("lender_type") in {None, "", "unknown"}:
         inferred = _infer_lender_type_from_text(text)
         if inferred:
@@ -1068,7 +1160,7 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
         loan_policy_enabled = bool(policy_enabled)
         assistant_recommendation_enabled = consent_status == "opted_in" and district is not None
         loan_after_commit = (correction is not None) or has_borrow_draft or selected_lender_context_update or (
-            (policy_enabled or _looks_like_new_loan_message(text) or loan_terms_fragment)
+            (_looks_like_new_loan_message(text) or _looks_like_loan_intent_message(text) or loan_terms_fragment)
             and consent_status == "opted_in"
             and district is not None
             and not more_cmd
