@@ -290,7 +290,7 @@ def lender_detail_fallback(*, option: dict[str, Any], rank: int, district: str |
             f"\n{_loan_cost_summary(float(amount_inr), int(tenure_days), rate)}"
             "\nThese numbers use APR only and assume no processing fee, insurance, or penalty charges."
         )
-        followup_line = ""
+        followup_line = "How does that payment feel for you: manageable, too high, or uncertain?"
     else:
         estimate_line = (
             "\nIf you tell me the loan amount and how long you need it for, I can estimate the yearly cost, monthly cost, "
@@ -303,17 +303,12 @@ def lender_detail_fallback(*, option: dict[str, Any], rank: int, district: str |
         next_step = f"Reply CONTACTED {lender} after you contact them, or reply 1 or 2 to explore another option."
     else:
         next_step = f"Reply CONTACTED {lender} after you contact them, or reply 1, 2, or 3 to explore another option."
-    contact = (
-        "To get in touch: use their official website or branch locator, or search on Google Maps for the nearest branch/office. "
-        "Confirm the exact EMI, fees, and total repayment with them before agreeing."
-    )
     return (
         f"Option {int(rank)}: {lender}\n"
         f"Indicative rate: ~{rate:g}% APR (about {_format_percent(monthly)}% per month) in {where}."
         f"{estimate_line}{date_line}{source_line}\n\n"
-        + (f"{followup_line}\n\n" if followup_line else "")
-        + contact
-        + "\n\n"
+        f"{followup_line}\n\n"
+        "Before applying, ask them to confirm the exact EMI or monthly payment, total repayment, all fees, penalties, documents needed, and collection terms.\n\n"
         + next_step
     )
 

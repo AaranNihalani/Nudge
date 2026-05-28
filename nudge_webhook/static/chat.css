@@ -178,9 +178,6 @@ body{
   color:var(--muted2);
 }
 .msg .body{white-space:pre-wrap; line-height:1.35}
-.msg .body hr.md-hr{border:0; height:1px; background:rgba(255,255,255,.14); margin:12px 0}
-.msg .body a{color:rgba(138,215,255,.92); text-decoration:none}
-.msg .body a:hover{text-decoration:underline}
 .msg .mini{font-family:var(--mono); font-size:11px; color:rgba(255,255,255,.62); margin-top:10px}
 
 .composer{

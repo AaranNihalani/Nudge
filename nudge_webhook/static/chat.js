@@ -52,7 +52,7 @@ function renderMessage(m) {
 
   const body = document.createElement("div");
   body.className = "body";
-  body.innerHTML = renderMarkdownSafe(m.text || "");
+  body.textContent = m.text || "";
 
   const meta = document.createElement("div");
   meta.className = "meta";
@@ -75,31 +75,6 @@ function renderMessage(m) {
   wrap.appendChild(meta);
   elThread.appendChild(wrap);
   elThread.scrollTop = elThread.scrollHeight;
-}
-
-function escapeHtml(s) {
-  return String(s || "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
-
-function renderMarkdownSafe(text) {
-  const raw = String(text || "");
-  const safe = escapeHtml(raw);
-  const withStrong = safe.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-  const withHr = withStrong.replace(/(?:\n|^)\s*---\s*(?:\n|$)/g, "\n<hr class=\"md-hr\" />\n");
-  const withLinks = withHr.replace(
-    /(https?:\/\/[^\s<]+[^\s<\.)\]])/g,
-    '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
-  );
-  const withBullets = withLinks
-    .split("\n")
-    .map((line) => (line.startsWith("- ") ? `• ${line.slice(2)}` : line))
-    .join("\n");
-  return withBullets.replaceAll("\n", "<br />");
 }
 
 function rebuildThread() {
