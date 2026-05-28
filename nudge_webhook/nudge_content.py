@@ -68,6 +68,20 @@ def _fallback_rows(conn, *, district: str, n: int) -> list[dict[str, Any]]:
     return [dict(r) for r in rows]
 
 
+def recommended_lender_rows(
+    conn,
+    *,
+    district: str,
+    current_rate: float | None = None,
+    exclude_lender: str | None = None,
+    n: int = 3,
+) -> list[dict[str, Any]]:
+    rows = _alternatives_rows(conn, district=district, current_rate=current_rate, exclude_lender=exclude_lender, n=n)
+    if not rows:
+        rows = _fallback_rows(conn, district=district, n=n)
+    return rows
+
+
 def _render_rows(rows: list[dict[str, Any]]) -> str:
     parts: list[str] = []
     for i, r in enumerate(rows, start=1):
@@ -88,9 +102,13 @@ def suggest_lender_message(
     tenure_days: int | None = None,
     n: int = 3,
 ) -> str:
-    rows = _alternatives_rows(conn, district=district, current_rate=current_rate, exclude_lender=exclude_lender, n=n)
-    if not rows:
-        rows = _fallback_rows(conn, district=district, n=n)
+    rows = recommended_lender_rows(
+        conn,
+        district=district,
+        current_rate=current_rate,
+        exclude_lender=exclude_lender,
+        n=n,
+    )
     if not rows:
         return (
             f"Thanks. I don’t have regulated lender rate data for {district} yet. "
@@ -122,7 +140,12 @@ def suggest_lender_message(
     else:
         heading = f"In {district}, the top local regulated options by indicative APR (APR is annualised):"
 
-    return f"{preface}{estimate}{heading}\n{joined}\n\n{why}\n\nReply DISTRICT <name> to change district. Reply STOP to opt out."
+    return (
+        f"{preface}{estimate}{heading}\n{joined}\n\n"
+        "Reply 1, 2, or 3 to explore an option.\n\n"
+        f"{why}\n\n"
+        "Reply DISTRICT <name> to change district. Reply STOP to opt out."
+    )
 
 
 def alert_message(
@@ -135,9 +158,13 @@ def alert_message(
     tenure_days: int | None = None,
     n: int = 3,
 ) -> str:
-    rows = _alternatives_rows(conn, district=district, current_rate=quoted_apr, exclude_lender=current_lender, n=n)
-    if not rows:
-        rows = _fallback_rows(conn, district=district, n=n)
+    rows = recommended_lender_rows(
+        conn,
+        district=district,
+        current_rate=quoted_apr,
+        exclude_lender=current_lender,
+        n=n,
+    )
     if not rows:
         return (
             f"If you’re being quoted ~{quoted_apr:g}% APR (≈{_format_percent(_apr_to_monthly_percent(quoted_apr))}%/month), that’s very costly. "
@@ -161,8 +188,28 @@ def alert_message(
     return (
         f"If you’re being quoted ~{quoted_apr:g}% APR (≈{_format_percent(_apr_to_monthly_percent(quoted_apr))}%/month), that’s very costly.\n"
         f"{estimate}In {district}, some regulated alternatives (APR is annualised):\n{joined}\n\n"
+        "Reply 1, 2, or 3 to explore an option.\n\n"
         f"{why}\n\n"
         "Reply DISTRICT <name> to change district. Reply STOP to opt out."
+    )
+
+
+def lender_detail_fallback(*, option: dict[str, Any], rank: int, district: str | None = None) -> str:
+    lender = str(option.get("lender") or "this lender")
+    rate = float(option.get("rate_apr") or 0.0)
+    monthly = _apr_to_monthly_percent(rate)
+    effective_date = str(option.get("effective_date") or "").strip()
+    source = str(option.get("source") or "").strip()
+    where = district or str(option.get("district") or "").strip() or "your district"
+
+    date_line = f"\nRate data date: {effective_date}." if effective_date else ""
+    source_line = f"\nSource note: {source[:220]}{'...' if len(source) > 220 else ''}" if source else ""
+    return (
+        f"Option {int(rank)}: {lender}\n"
+        f"Indicative rate: ~{rate:g}% APR (about {_format_percent(monthly)}% per month) in {where}."
+        f"{date_line}{source_line}\n\n"
+        "Before applying, ask them for the total repayment amount, all fees, penalties, documents needed, and collection terms.\n\n"
+        f"Reply CONTACTED {lender} after you contact them, or reply 1, 2, or 3 to explore another option."
     )
 
 

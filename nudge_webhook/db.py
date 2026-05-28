@@ -200,6 +200,13 @@ _MIGRATIONS: list[tuple[int, str]] = [
             ON user_actions(user_id, created_at);
         """,
     ),
+    (
+        7,
+        """
+        ALTER TABLE user_sessions ADD COLUMN lender_options_json TEXT;
+        ALTER TABLE user_sessions ADD COLUMN lender_options_updated_at TEXT;
+        """,
+    ),
 ]
 
 

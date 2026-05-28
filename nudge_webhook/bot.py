@@ -6,10 +6,10 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from .claude import call_json_with_retries
+from .claude import call_json_with_retries, generate_reply
 from .config import Config
 from .db import connect
-from .nudge_content import suggest_lender_message
+from .nudge_content import lender_detail_fallback, recommended_lender_rows, suggest_lender_message
 from .nlp import parse_borrow_intent_with_llm, persist_borrow_intent_event, validate_borrow_intent_payload
 from .policy_serving import decide_policy
 from .state import compute_user_state
@@ -139,7 +139,16 @@ def _load_user_session(conn, *, user_id: int) -> dict[str, Any]:
     _ensure_user_session(conn, user_id=user_id)
     row = conn.execute(
         """
-        SELECT districts_prefix, districts_offset, districts_page_size, borrow_draft_json, borrow_source_raw_message_id, borrow_model, language
+        SELECT
+            districts_prefix,
+            districts_offset,
+            districts_page_size,
+            borrow_draft_json,
+            borrow_source_raw_message_id,
+            borrow_model,
+            language,
+            lender_options_json,
+            lender_options_updated_at
         FROM user_sessions
         WHERE user_id = ?
         """,
@@ -304,6 +313,92 @@ def _save_borrow_draft(
             int(user_id),
         ),
     )
+
+
+def _save_lender_options(conn, *, user_id: int, options: list[dict[str, Any]] | None) -> None:
+    _ensure_user_session(conn, user_id=user_id)
+    conn.execute(
+        """
+        UPDATE user_sessions
+        SET lender_options_json = ?,
+            lender_options_updated_at = CASE WHEN ? IS NULL THEN NULL ELSE CURRENT_TIMESTAMP END,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE user_id = ?
+        """,
+        (
+            json.dumps(options, ensure_ascii=False) if options else None,
+            json.dumps(options, ensure_ascii=False) if options else None,
+            int(user_id),
+        ),
+    )
+
+
+def _load_lender_options(session: dict[str, Any] | None) -> list[dict[str, Any]]:
+    raw = session.get("lender_options_json") if session else None
+    if not raw:
+        return []
+    try:
+        parsed = json.loads(str(raw))
+    except Exception:
+        return []
+    if not isinstance(parsed, list):
+        return []
+    return [dict(x) for x in parsed if isinstance(x, dict)]
+
+
+def _parse_lender_option_selection(text: str, *, options: list[dict[str, Any]]) -> tuple[int, dict[str, Any]] | None:
+    raw = (text or "").strip()
+    if raw == "" or not options:
+        return None
+    lower = raw.lower()
+
+    m = re.fullmatch(r"(?:option|pick|choose|select|show|tell me about|explore)\s*#?\s*([1-9])", lower)
+    if m is None:
+        m = re.fullmatch(r"#?\s*([1-9])", lower)
+    if m is not None:
+        idx = int(m.group(1)) - 1
+        if 0 <= idx < len(options):
+            return idx + 1, options[idx]
+
+    for idx, option in enumerate(options, start=1):
+        lender = str(option.get("lender") or "").strip().lower()
+        if lender and (lower == lender or lower in {f"tell me about {lender}", f"explore {lender}", f"pick {lender}"}):
+            return idx, option
+    return None
+
+
+def _looks_like_lender_option_selection(text: str) -> bool:
+    lower = (text or "").strip().lower()
+    if lower == "":
+        return False
+    return bool(
+        re.fullmatch(r"#?\s*[1-9]", lower)
+        or re.fullmatch(r"(?:option|pick|choose|select|show|tell me about|explore)\s*#?\s*[1-9]", lower)
+    )
+
+
+def _claude_lender_detail(cfg: Config, *, option: dict[str, Any], rank: int, district: str | None) -> str | None:
+    lender = str(option.get("lender") or "the selected lender")
+    rate = option.get("rate_apr")
+    effective_date = option.get("effective_date")
+    source = option.get("source")
+    prompt = (
+        "You are NudgeAI, a concise financial inclusion chatbot for Indian consumers. "
+        "Explain the selected regulated credit option in plain English. "
+        "Do not claim the user is approved. Do not give financial/legal advice. "
+        "Make the next action obvious. Keep it under 120 words.\n\n"
+        f"Selected option rank: {rank}\n"
+        f"Lender: {lender}\n"
+        f"District: {district or option.get('district') or 'unknown'}\n"
+        f"Indicative APR: {rate}\n"
+        f"Effective date: {effective_date}\n"
+        f"Source note: {source}\n\n"
+        f"End with: Reply CONTACTED {lender} after you contact them, or reply 1, 2, or 3 to compare another option."
+    )
+    reply = generate_reply(cfg, prompt)
+    if reply is None:
+        return None
+    return reply.strip() or None
 
 
 def _missing_borrow_fields(payload: dict[str, Any]) -> list[str]:
@@ -636,6 +731,9 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
 
         session = _load_user_session(conn, user_id=user_id)
         has_borrow_draft = bool(session.get("borrow_draft_json"))
+        lender_options = _load_lender_options(session)
+        option_selection = _parse_lender_option_selection(text, options=lender_options)
+        option_selection_request = option_selection is not None or _looks_like_lender_option_selection(text)
         policy_enabled = bool(cfg.baseline_policy_enabled) or str(cfg.policy_mode or "").lower() in {"baseline", "rl", "auto"}
         loan_policy_enabled = bool(policy_enabled)
         loan_after_commit = (correction is not None) or has_borrow_draft or (
@@ -647,6 +745,7 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
             and lang_cmd is None
             and contacted_cmd is None
             and switched_cmd is None
+            and not option_selection_request
             and not _is_keyword(text, keyword="stop")
             and not _is_keyword(text, keyword="start")
             and not _is_keyword(text, keyword="help")
@@ -660,6 +759,7 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
         if _is_keyword(text, keyword="stop"):
             _clear_district_paging_state(conn, user_id=user_id)
             _save_borrow_draft(conn, user_id=user_id, payload=None, source_raw_message_id=None, model=None)
+            _save_lender_options(conn, user_id=user_id, options=None)
             conn.execute(
                 """
                 UPDATE users
@@ -747,6 +847,15 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                 reply = f"Language set to {choice}."
             else:
                 reply = "Reply: LANG EN or LANG HI or LANG HINGLISH"
+        elif option_selection is not None:
+            rank, option = option_selection
+            reply = _claude_lender_detail(cfg, option=option, rank=rank, district=district) or lender_detail_fallback(
+                option=option,
+                rank=rank,
+                district=district,
+            )
+        elif option_selection_request:
+            reply = "I don’t have recent lender options to open yet. Send your loan amount and time first, then reply 1, 2, or 3."
         elif contacted_cmd is not None:
             lender = (contacted_cmd or "").strip()
             if lender == "":
@@ -861,6 +970,7 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                         "UPDATE users SET district = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
                         (chosen, user_id),
                     )
+                    _save_lender_options(conn, user_id=user_id, options=None)
                     reply = (
                         f"district set to {chosen}\n\n"
                         "Now send your loan amount and time, and I’ll suggest regulated alternatives.\n"
@@ -885,6 +995,7 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                             "UPDATE users SET district = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
                             (chosen, user_id),
                         )
+                        _save_lender_options(conn, user_id=user_id, options=None)
                         reply = (
                             f"district set to {chosen}\n\n"
                             "Now send your loan amount and time, and I’ll suggest regulated alternatives.\n"
@@ -900,7 +1011,9 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                                 "Reply STOP anytime to opt out."
                             )
                         else:
+                            options = recommended_lender_rows(conn, district=district, n=3)
                             content = suggest_lender_message(conn, district=district, n=3)
+                            _save_lender_options(conn, user_id=user_id, options=options)
                             conn.execute(
                                 """
                                 INSERT INTO nudges(user_id, nudge_type, content, policy_name, policy_version, sent_at)
@@ -1265,6 +1378,10 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                         ).strip()
                     base_reply = (echo + "\n\n" + decision.content).strip() if echo else decision.content
                     reply = (reply_prefix + base_reply).strip() if reply_prefix else base_reply
+                    if decision.nudge_type in {"alert", "suggest_lender"} and state.district:
+                        current_rate = float(state.implied_apr) if state.implied_apr is not None else None
+                        options = recommended_lender_rows(conn, district=state.district, current_rate=current_rate, n=3)
+                        _save_lender_options(conn, user_id=loan_user_id, options=options)
                     if decision.nudge_type is not None:
                         conn.execute(
                             """

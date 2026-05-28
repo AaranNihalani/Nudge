@@ -129,11 +129,17 @@ class TestTask11ConversationFlows(unittest.TestCase):
                     cfg, db_path=db_path, inbound=_inbound(from_e164, "Need 5 lakh for 30 days with moneylender"), now=now
                 )
                 self.assertIn("top local regulated options", r1.lower())
+                self.assertIn("reply 1, 2, or 3", r1.lower())
                 self.assertIn("1) B", r1)
                 self.assertIn("2) C", r1)
                 self.assertIn("3) A", r1)
                 self.assertNotIn("quoted rate", r1.lower())
                 self.assertNotIn("save ~", r1.lower())
+
+                r2 = process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "2"), now=now)
+                self.assertIn("Option 2: C", r2)
+                self.assertIn("Indicative rate", r2)
+                self.assertIn("CONTACTED C", r2)
 
                 conn = connect(db_path)
                 try:
