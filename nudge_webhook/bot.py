@@ -9,7 +9,7 @@ from typing import Any
 from .claude import call_json_with_retries, generate_reply
 from .config import Config
 from .db import connect
-from .nudge_content import lender_detail_fallback, recommended_lender_rows, suggest_lender_message
+from .nudge_content import lender_detail_fallback, loan_cost_breakdown, recommended_lender_rows, suggest_lender_message
 from .nlp import parse_borrow_intent_with_llm, persist_borrow_intent_event, validate_borrow_intent_payload
 from .policy_serving import decide_policy
 from .state import compute_user_state
@@ -456,6 +456,21 @@ def _with_lender_option_context(
     return enriched
 
 
+def _claude_humanize_reply(cfg: Config, *, fallback: str, purpose: str) -> str | None:
+    prompt = (
+        "Rewrite the message below as a warm, natural WhatsApp chatbot reply for an Indian consumer. "
+        "Preserve every rupee amount, percentage, lender name, district name, numbered list item, and command exactly. "
+        "Do not add facts, approvals, phone numbers, legal advice, or new commands. "
+        "Keep it concise and easy to act on.\n\n"
+        f"Purpose: {purpose}\n"
+        f"Message to rewrite:\n{fallback}"
+    )
+    reply = generate_reply(cfg, prompt)
+    if reply is None:
+        return None
+    return reply.strip() or None
+
+
 def _claude_recommendation_message(
     cfg: Config,
     *,
@@ -470,7 +485,7 @@ def _claude_recommendation_message(
         return None
     prompt = (
         "Rewrite the message below as a natural WhatsApp chatbot response for an Indian consumer. "
-        "Preserve every numbered lender option, lender name, APR, monthly rate, repayment amount, interest amount, and command exactly. "
+        "Preserve every numbered lender option, lender name, APR, monthly rate, rupee amount, repayment amount, interest amount, time period, and command exactly. "
         "Do not add approval claims, phone numbers, legal advice, or extra lenders. "
         "Keep it concise and easy to act on. If there is one option, do not mention options 2 or 3.\n\n"
         f"District: {district}\n"
@@ -490,7 +505,7 @@ def _claude_lender_detail(cfg: Config, *, option: dict[str, Any], rank: int, dis
     fallback = lender_detail_fallback(option=option, rank=rank, district=district)
     prompt = (
         "Rewrite this selected-lender explanation as a warm WhatsApp chatbot message for an Indian consumer. "
-        "Preserve the lender name, APR, per-month rate, total repayment, monthly payment, fees warning, and the question asking for the user's opinion. "
+        "Preserve the lender name, APR, per-month rate, every rupee amount, total repayment, monthly payment, fees warning, and the question asking for the user's opinion. "
         "Do not claim approval. Do not add phone numbers or legal/financial advice. "
         "Keep it concise. If there is only one option, do not mention options 2 or 3.\n\n"
         f"Selected lender: {lender}\n"
@@ -524,6 +539,25 @@ def _selected_lender_feedback_kind(text: str) -> str:
     return "open"
 
 
+def _selected_lender_cost_hint(option: dict[str, Any]) -> str:
+    amount_inr = option.get("amount_inr")
+    tenure_days = option.get("tenure_days")
+    rate = option.get("rate_apr")
+    if amount_inr is None or tenure_days is None or rate is None:
+        return ""
+    try:
+        breakdown = loan_cost_breakdown(float(amount_inr), int(tenure_days), float(rate))
+    except Exception:
+        return ""
+    return (
+        f" At {float(rate):g}% APR on INR {int(round(float(amount_inr))):,}, that is about INR "
+        f"{int(round(float(breakdown['annual_interest']))):,} interest over a year and INR "
+        f"{int(round(float(breakdown['monthly_interest']))):,} per month. "
+        f"For {int(tenure_days)} days, estimated interest is about INR {int(round(float(breakdown['tenure_interest']))):,}, "
+        f"so total repayment is about INR {int(round(float(breakdown['total_repayment']))):,} before fees."
+    )
+
+
 def _selected_lender_conversation_fallback(
     *,
     user_text: str,
@@ -536,19 +570,20 @@ def _selected_lender_conversation_fallback(
     compare = ""
     if option_count > 1:
         compare = " You can also reply 1, 2, or 3 to compare another option."
+    cost_hint = _selected_lender_cost_hint(option)
     if kind == "positive":
         return (
-            f"That sounds promising. Before deciding on {lender}, confirm the exact monthly payment, fees, penalties, documents, "
+            f"That sounds promising.{cost_hint} Before deciding on {lender}, confirm the exact monthly payment, fees, penalties, documents, "
             f"and collection terms with them. If you contact them, reply CONTACTED {lender}. If you decide to switch, reply SWITCHED {lender}."
             + compare
         )
     if kind == "negative":
         return (
-            f"If that monthly payment feels too high, don’t rush. You can compare another option or ask for a smaller amount/longer tenure. "
+            f"If that monthly payment feels too high, don’t rush.{cost_hint} You can compare another option or ask for a smaller amount/longer tenure. "
             f"{_lender_option_prompt(option_count)}"
         )
     return (
-        f"For {lender}, focus on whether the monthly payment fits your cash flow after household expenses. "
+        f"For {lender}, focus on whether the monthly payment fits your cash flow after household expenses.{cost_hint} "
         "Ask the lender for the exact EMI/monthly repayment, processing fees, late fees, and total repayment in writing. "
         f"Does this option feel manageable, too high, or uncertain?{compare}"
     )
@@ -566,6 +601,7 @@ def _claude_selected_lender_conversation(
         "You are NudgeAI, a careful WhatsApp chatbot helping an Indian consumer decide whether a local regulated credit option is manageable. "
         "Respond to the user's latest message using the selected lender facts. Ask one clear follow-up or give one clear next step. "
         "Do not claim approval. Do not give legal/financial advice. Do not invent phone numbers, eligibility, fees, or branch details. "
+        "Preserve any rupee amounts, APR percentages, payment amounts, and commands exactly. "
         "If the user is ready to proceed, tell them to reply CONTACTED <lender> after contacting them, or SWITCHED <lender> if they choose it. "
         "If the user is unsure or says it is expensive, help them compare affordability and suggest choosing another numbered option if available. "
         "Keep under 120 words.\n\n"
@@ -590,10 +626,10 @@ def _missing_borrow_fields(payload: dict[str, Any]) -> list[str]:
 
 def _clarifying_question(field: str) -> str:
     if field == "amount_inr":
-        return "How much do you want to borrow (in INR)? Example: 5000"
+        return "How much do you want to borrow in INR? For example: 5000"
     if field == "tenure_days":
-        return "How long is the loan for? Example: 30 days (or 2 months)"
-    return "What interest rate did they quote? Example: 5% monthly (or 60% APR)"
+        return "How long is the loan for? For example: 30 days or 2 months"
+    return "What interest rate did they quote? For example: 5% monthly or 60% APR"
 
 
 def _parse_amount_inr(text: str) -> float | None:
@@ -982,7 +1018,7 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                 (user_id,),
             )
             if district:
-                reply = (
+                fallback = (
                     "You’re opted in. NudgeAI is on.\n"
                     f"District: {district}\n\n"
                     "How to use:\n"
@@ -1001,11 +1037,12 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                     "Example message:\n"
                     "“Need 5000 for 30 days with moneylender.”"
                 )
+                reply = _claude_humanize_reply(cfg, fallback=fallback, purpose="welcome a returning user and explain how to use the chatbot") or fallback
             else:
                 sample = _districts_sample(conn, limit=12)
                 sample_text = ", ".join(sample) if sample else ""
                 extra = f"Examples: {sample_text}\n" if sample_text else ""
-                reply = (
+                fallback = (
                     "You’re opted in. NudgeAI is on.\n\n"
                     "To personalise suggestions, reply with your district name.\n"
                     + extra
@@ -1017,9 +1054,10 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                     "- LANG EN / LANG HI / LANG HINGLISH\n\n"
                     "Reply STOP anytime to opt out."
                 )
+                reply = _claude_humanize_reply(cfg, fallback=fallback, purpose="welcome a new user and help them set their district") or fallback
         elif _is_keyword(text, keyword="help"):
             support = _support_line(cfg)
-            reply = (
+            fallback = (
                 "NudgeAI help\n\n"
                 "What I do:\n"
                 "- If you’re about to take a high-interest loan, I point you to cheaper regulated alternatives in your district.\n"
@@ -1038,13 +1076,14 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                 "“Need 5000 for 30 days with moneylender.”"
                 + support
             )
+            reply = _claude_humanize_reply(cfg, fallback=fallback, purpose="help the user understand commands and what the chatbot can do") or fallback
         elif lang_cmd is not None:
             choice = (lang_cmd or "").strip().lower()
             if choice in {"en", "hi", "hinglish"}:
                 _save_language(conn, user_id=user_id, language=choice)
-                reply = f"Language set to {choice}."
+                reply = f"Okay, I’ll reply in {choice}."
             else:
-                reply = "Reply: LANG EN or LANG HI or LANG HINGLISH"
+                reply = "Reply with: LANG EN or LANG HI or LANG HINGLISH"
         elif option_selection is not None:
             rank, option = option_selection
             _save_selected_lender_option(conn, user_id=user_id, option=option, rank=rank)
@@ -1098,7 +1137,7 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                     details={"lender": lender, "district": district},
                 )
                 _save_selected_lender_option(conn, user_id=user_id, option=None, rank=None)
-                reply = f"Noted. contacted {lender}."
+                reply = f"Thanks, I’ve noted that you contacted {lender}."
         elif switched_cmd is not None:
             from_lender, to_lender = switched_cmd
             if (to_lender or "").strip() == "":
@@ -1126,7 +1165,7 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                     ),
                 )
                 _save_selected_lender_option(conn, user_id=user_id, option=None, rank=None)
-                reply = f"Noted. switched to {to_lender}."
+                reply = f"Thanks, I’ve noted that you switched to {to_lender}."
         elif districts_query is not None:
             page_size = int(session.get("districts_page_size") or 30)
             sample, total = _districts_query(conn, prefix=districts_query, limit=page_size, offset=0)
@@ -1202,11 +1241,12 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                     )
                     _save_lender_options(conn, user_id=user_id, options=None)
                     _save_selected_lender_option(conn, user_id=user_id, option=None, rank=None)
-                    reply = (
+                    fallback = (
                         f"district set to {chosen}\n\n"
                         "Now send your loan amount and time, and I’ll suggest regulated alternatives.\n"
                         "Example: “Need 5000 for 30 days with moneylender.”"
                     )
+                    reply = _claude_humanize_reply(cfg, fallback=fallback, purpose="confirm the user's district and invite them to send loan details") or fallback
             else:
                 if consent_status != "opted_in":
                     reply = "To get nudges, reply START to opt in. Reply STOP to opt out."
@@ -1228,11 +1268,12 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                         )
                         _save_lender_options(conn, user_id=user_id, options=None)
                         _save_selected_lender_option(conn, user_id=user_id, option=None, rank=None)
-                        reply = (
+                        fallback = (
                             f"district set to {chosen}\n\n"
                             "Now send your loan amount and time, and I’ll suggest regulated alternatives.\n"
                             "Example: “Need 5000 for 30 days with moneylender.”"
                         )
+                        reply = _claude_humanize_reply(cfg, fallback=fallback, purpose="confirm the user's district and invite them to send loan details") or fallback
                         district = chosen
                 else:
                     if not loan_after_commit:

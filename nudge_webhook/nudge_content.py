@@ -27,10 +27,44 @@ def _simple_interest_estimate(amount_inr: float, tenure_days: int, apr_percent: 
 
 
 def _monthly_repayment_estimate(amount_inr: float, tenure_days: int, apr_percent: float) -> tuple[float, int, float]:
-    interest, total = _simple_interest_estimate(amount_inr, tenure_days, apr_percent)
+    _, total = _simple_interest_estimate(amount_inr, tenure_days, apr_percent)
     months = max(1, int(math.ceil(float(tenure_days) / 30.0)))
     monthly = max(0.0, total / float(months))
     return monthly, months, total
+
+
+def _apr_cost_amounts(amount_inr: float, apr_percent: float) -> tuple[float, float]:
+    annual_interest = max(0.0, float(amount_inr) * (float(apr_percent) / 100.0))
+    monthly_interest = annual_interest / 12.0
+    return annual_interest, monthly_interest
+
+
+def loan_cost_breakdown(amount_inr: float, tenure_days: int, apr_percent: float) -> dict[str, float | int]:
+    annual_interest, monthly_interest = _apr_cost_amounts(amount_inr, apr_percent)
+    tenure_interest, total_repayment = _simple_interest_estimate(amount_inr, tenure_days, apr_percent)
+    monthly_payment, months, _ = _monthly_repayment_estimate(amount_inr, tenure_days, apr_percent)
+    return {
+        "annual_interest": annual_interest,
+        "monthly_interest": monthly_interest,
+        "tenure_interest": tenure_interest,
+        "total_repayment": total_repayment,
+        "monthly_payment": monthly_payment,
+        "months": months,
+    }
+
+
+def _loan_cost_summary(amount_inr: float, tenure_days: int, apr_percent: float) -> str:
+    breakdown = loan_cost_breakdown(amount_inr, tenure_days, apr_percent)
+    months = int(breakdown["months"])
+    return (
+        f"On {_format_inr(float(amount_inr))}, {apr_percent:g}% APR works out to about "
+        f"{_format_inr(float(breakdown['annual_interest']))} interest over a year and "
+        f"{_format_inr(float(breakdown['monthly_interest']))} interest per month. "
+        f"For {int(tenure_days)} days, estimated interest is {_format_inr(float(breakdown['tenure_interest']))}, "
+        f"so total repayment is about {_format_inr(float(breakdown['total_repayment']))} before fees. "
+        f"If that cost is spread across ~{months} month{'s' if months != 1 else ''}, "
+        f"that is about {_format_inr(float(breakdown['monthly_payment']))} per month."
+    )
 
 
 def _alternatives_rows(conn, *, district: str, current_rate: float | None, exclude_lender: str | None, n: int) -> list[dict[str, Any]]:
@@ -108,11 +142,14 @@ def _render_rows(rows: list[dict[str, Any]], *, amount_inr: float | None = None,
         monthly = _apr_to_monthly_percent(rate)
         estimate = ""
         if amount_inr is not None and tenure_days is not None:
-            interest, total = _simple_interest_estimate(float(amount_inr), int(tenure_days), rate)
-            monthly, months, _ = _monthly_repayment_estimate(float(amount_inr), int(tenure_days), rate)
+            breakdown = loan_cost_breakdown(float(amount_inr), int(tenure_days), rate)
+            months = int(breakdown["months"])
             estimate = (
-                f"; repay ~{_format_inr(total)} over ~{months} month{'s' if months != 1 else ''} "
-                f"(~{_format_inr(monthly)}/month, interest ~{_format_inr(interest)})"
+                f"; on {_format_inr(float(amount_inr))}: about {_format_inr(float(breakdown['annual_interest']))}/year, "
+                f"{_format_inr(float(breakdown['monthly_interest']))}/month; "
+                f"for {int(tenure_days)} days: repay about {_format_inr(float(breakdown['total_repayment']))} "
+                f"(interest about {_format_inr(float(breakdown['tenure_interest']))}, "
+                f"about {_format_inr(float(breakdown['monthly_payment']))}/month over ~{months} month{'s' if months != 1 else ''})"
             )
         parts.append(f"{i}) {lender} (~{rate:g}% APR ≈{_format_percent(monthly)}%/month{estimate})")
     return "\n".join(parts)
@@ -149,26 +186,33 @@ def suggest_lender_message(
 
     estimate = ""
     if amount_inr is not None and tenure_days is not None and current_rate is not None:
-        interest, total = _simple_interest_estimate(float(amount_inr), int(tenure_days), float(current_rate))
+        current_breakdown = loan_cost_breakdown(float(amount_inr), int(tenure_days), float(current_rate))
         best_apr = float(min(float(r.get("rate_apr") or 0.0) for r in rows))
-        _, best_total = _simple_interest_estimate(float(amount_inr), int(tenure_days), best_apr)
-        save = max(0.0, total - best_total)
+        best_breakdown = loan_cost_breakdown(float(amount_inr), int(tenure_days), best_apr)
+        save = max(0.0, float(current_breakdown["total_repayment"]) - float(best_breakdown["total_repayment"]))
         estimate = (
-            f"Rough estimate for {_format_inr(float(amount_inr))} over {int(tenure_days)} days "
-            f"(no fees, simple interest): at {current_rate:g}% APR repay ~{_format_inr(total)} "
-            f"(interest ~{_format_inr(interest)}). At ~{best_apr:g}% APR repay ~{_format_inr(best_total)} "
-            f"(save ~{_format_inr(save)}).\n"
+            f"Your current quote: {_loan_cost_summary(float(amount_inr), int(tenure_days), float(current_rate))}\n"
+            f"At the best option shown here (~{best_apr:g}% APR), total repayment would be about "
+            f"{_format_inr(float(best_breakdown['total_repayment']))}, so you could save about {_format_inr(save)}.\n"
         )
 
-    why = "Why regulated? They’re licensed/registered and overseen, and usually have clearer terms and fairer collections rules."
+    assumptions = "These estimates assume APR-only simple interest and no extra fees, insurance, or penalties."
+    why = "Why regulated? They’re licensed or registered, usually have clearer terms, and are less likely to surprise you on collections."
     if current_rate is not None:
-        heading = f"In {district}, some regulated alternatives with lower indicative APR (APR is annualised):"
+        heading = f"In {district}, here are regulated alternatives with lower indicative APR:"
     else:
-        heading = f"In {district}, the top local regulated options by indicative APR (APR is annualised):"
+        heading = f"In {district}, here are the top local regulated options by indicative APR:"
 
     prompt = _selection_prompt(len(rows))
     prompt_block = f"{prompt}\n\n" if prompt else ""
-    return f"{preface}{estimate}{heading}\n{joined}\n\n{prompt_block}{why}\n\nReply DISTRICT <name> to change district. Reply STOP to opt out."
+    return (
+        f"{preface}{estimate}{heading}\n"
+        f"{joined}\n\n"
+        f"{prompt_block}"
+        f"{assumptions}\n\n"
+        f"{why}\n\n"
+        "Reply DISTRICT <name> to change district. Reply STOP to opt out."
+    )
 
 
 def alert_message(
@@ -197,23 +241,25 @@ def alert_message(
 
     estimate = ""
     if amount_inr is not None and tenure_days is not None:
-        interest, total = _simple_interest_estimate(float(amount_inr), int(tenure_days), float(quoted_apr))
+        quoted_breakdown = loan_cost_breakdown(float(amount_inr), int(tenure_days), float(quoted_apr))
         best_apr = float(min(float(r.get("rate_apr") or 0.0) for r in rows))
-        _, best_total = _simple_interest_estimate(float(amount_inr), int(tenure_days), best_apr)
-        save = max(0.0, total - best_total)
+        best_breakdown = loan_cost_breakdown(float(amount_inr), int(tenure_days), best_apr)
+        save = max(0.0, float(quoted_breakdown["total_repayment"]) - float(best_breakdown["total_repayment"]))
         estimate = (
-            f"Rough estimate for {_format_inr(float(amount_inr))} over {int(tenure_days)} days "
-            f"(no fees, simple interest): repay ~{_format_inr(total)} (interest ~{_format_inr(interest)}). "
-            f"At ~{best_apr:g}% APR repay ~{_format_inr(best_total)} (save ~{_format_inr(save)}).\n"
+            f"For your loan: {_loan_cost_summary(float(amount_inr), int(tenure_days), float(quoted_apr))}\n"
+            f"At the best option shown here (~{best_apr:g}% APR), total repayment would be about "
+            f"{_format_inr(float(best_breakdown['total_repayment']))}, so you could save about {_format_inr(save)}.\n"
         )
 
-    why = "Why regulated? They’re licensed/registered and overseen, and usually have clearer terms and fairer collections rules."
+    assumptions = "These estimates assume APR-only simple interest and no extra fees, insurance, or penalties."
+    why = "Why regulated? They’re licensed or registered, usually have clearer terms, and are less likely to surprise you on collections."
     prompt = _selection_prompt(len(rows))
     prompt_block = f"{prompt}\n\n" if prompt else ""
     return (
         f"If you’re being quoted ~{quoted_apr:g}% APR (≈{_format_percent(_apr_to_monthly_percent(quoted_apr))}%/month), that’s very costly.\n"
         f"{estimate}In {district}, some regulated alternatives (APR is annualised):\n{joined}\n\n"
         f"{prompt_block}"
+        f"{assumptions}\n\n"
         f"{why}\n\n"
         "Reply DISTRICT <name> to change district. Reply STOP to opt out."
     )
@@ -234,12 +280,9 @@ def lender_detail_fallback(*, option: dict[str, Any], rank: int, district: str |
     source_line = f"\nSource note: {source[:220]}{'...' if len(source) > 220 else ''}" if source else ""
     estimate_line = ""
     if amount_inr is not None and tenure_days is not None:
-        interest, total = _simple_interest_estimate(float(amount_inr), int(tenure_days), rate)
-        monthly, months, _ = _monthly_repayment_estimate(float(amount_inr), int(tenure_days), rate)
         estimate_line = (
-            f"\nFor {_format_inr(float(amount_inr))} over {int(tenure_days)} days, estimated repayment is "
-            f"~{_format_inr(total)} before fees. That is roughly {_format_inr(monthly)} per month over "
-            f"~{months} month{'s' if months != 1 else ''} (interest ~{_format_inr(interest)})."
+            f"\n{_loan_cost_summary(float(amount_inr), int(tenure_days), rate)}"
+            "\nThese numbers use APR only and assume no processing fee, insurance, or penalty charges."
         )
     if option_count <= 1:
         next_step = f"Reply CONTACTED {lender} after you contact them."
@@ -251,8 +294,8 @@ def lender_detail_fallback(*, option: dict[str, Any], rank: int, district: str |
         f"Option {int(rank)}: {lender}\n"
         f"Indicative rate: ~{rate:g}% APR (about {_format_percent(monthly)}% per month) in {where}."
         f"{estimate_line}{date_line}{source_line}\n\n"
-        "How does that monthly payment feel for you: manageable, too high, or uncertain?\n\n"
-        "Before applying, confirm the exact monthly payment, all fees, penalties, documents needed, and collection terms.\n\n"
+        "How does that payment feel for you: manageable, too high, or uncertain?\n\n"
+        "Before applying, ask them to confirm the exact EMI or monthly payment, total repayment, all fees, penalties, documents needed, and collection terms.\n\n"
         + next_step
     )
 

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import tempfile
 import unittest
 from datetime import datetime, timezone
@@ -144,17 +143,21 @@ class TestTask11ConversationFlows(unittest.TestCase):
                 self.assertIn("1) B", r1)
                 self.assertIn("2) C", r1)
                 self.assertIn("3) A", r1)
-                self.assertIn("repay ~INR", r1)
-                self.assertIn("interest ~INR", r1)
+                self.assertIn("repay about INR", r1)
+                self.assertIn("interest about INR", r1)
+                self.assertIn("These estimates assume APR-only simple interest", r1)
                 self.assertNotIn("quoted rate", r1.lower())
                 self.assertNotIn("save ~", r1.lower())
 
                 r2 = process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "2"), now=now)
                 self.assertIn("Option 2: C", r2)
                 self.assertIn("Indicative rate", r2)
-                self.assertIn("roughly INR", r2)
+                self.assertIn("20% APR works out to about INR 100,000 interest over a year", r2)
+                self.assertIn("INR 8,333 interest per month", r2)
+                self.assertIn("total repayment is about INR 508,219 before fees", r2)
+                self.assertIn("These numbers use APR only", r2)
                 self.assertIn("per month", r2)
-                self.assertIn("How does that monthly payment feel", r2)
+                self.assertIn("How does that payment feel", r2)
 
                 r3 = process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "That monthly payment is too high"), now=now)
                 self.assertIn("too high", r3.lower())

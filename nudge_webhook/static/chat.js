@@ -132,6 +132,29 @@ function formatMoneyInr(x) {
   return `₹${n.toLocaleString("en-IN")}`;
 }
 
+function computeLoanBreakdown(amountInr, tenureDays, aprPercent) {
+  const amount = Number(amountInr);
+  const tenure = Number(tenureDays);
+  const apr = Number(aprPercent);
+  if (![amount, tenure, apr].every(Number.isFinite) || amount <= 0 || tenure <= 0 || apr <= 0) {
+    return null;
+  }
+  const annualInterest = amount * (apr / 100);
+  const monthlyInterest = annualInterest / 12;
+  const tenureInterest = amount * ((apr / 100) * (tenure / 365));
+  const totalRepayment = amount + tenureInterest;
+  const months = Math.max(1, Math.ceil(tenure / 30));
+  const monthlyPayment = totalRepayment / months;
+  return {
+    annualInterest,
+    monthlyInterest,
+    tenureInterest,
+    totalRepayment,
+    monthlyPayment,
+    months,
+  };
+}
+
 function updateSide(debug) {
   elDebug.textContent = JSON.stringify(debug || {}, null, 2);
 
@@ -175,6 +198,15 @@ function updateSide(debug) {
     ["Stage", bi.negotiation_stage || "—"],
     ["Model", bi.model || "—"],
   ];
+
+  const breakdown = computeLoanBreakdown(bi.amount_inr, bi.tenure_days, bi.interest_rate_apr);
+  if (breakdown) {
+    rows.push(["Interest / year", formatMoneyInr(breakdown.annualInterest)]);
+    rows.push(["Interest / month", formatMoneyInr(breakdown.monthlyInterest)]);
+    rows.push([`Interest / ${breakdown.months > 1 ? `${bi.tenure_days}d` : "tenure"}`, formatMoneyInr(breakdown.tenureInterest)]);
+    rows.push(["Est. total repay", formatMoneyInr(breakdown.totalRepayment)]);
+    rows.push([`Est. per month (${breakdown.months}m)`, formatMoneyInr(breakdown.monthlyPayment)]);
+  }
 
   const t = document.createElement("table");
   rows.forEach(([k, v]) => {
@@ -310,7 +342,7 @@ if (transcript.length === 0) {
   transcript.push({
     role: "bot",
     text:
-      "Welcome. This is the web version of Nudge.\n\nStart with START.\nIf you need a district list: DISTRICTS (and MORE).\nThen send your loan terms in plain English.",
+      "Hi, I’m Nudge.\n\nStart with START.\nIf you need help finding your district, type DISTRICTS and then MORE.\nOnce that’s set, send your loan details in plain English, like: Need 5000 for 30 days at 5% monthly.",
     time: nowLabel(),
   });
   saveTranscript(transcript);
