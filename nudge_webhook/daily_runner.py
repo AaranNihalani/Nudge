@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 
 from .config import Config
 from .db import connect
-from .policy_serving import decide_policy
+from .policy import decide_policy
 from .state import compute_user_state
 from .twilio_outbound import send_message
 
@@ -172,7 +172,7 @@ def run_daily_decisions(cfg: Config, *, db_path: str, now: datetime | None = Non
                 """,
                 (
                     int(user_id),
-                    str(cfg.default_channel or "whatsapp"),
+                    "whatsapp",
                     str(cfg.twilio_from_addr or ""),
                     phone,
                     decision.content,

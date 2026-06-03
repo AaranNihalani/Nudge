@@ -57,6 +57,16 @@ body{
   gap:16px;
 }
 
+.brand-back{
+  color:var(--muted);
+  font-size:18px;
+  text-decoration:none;
+  margin-right:8px;
+  line-height:1;
+  transition:color .15s;
+}
+.brand-back:hover{color:var(--txt);}
+
 .brand{display:flex; align-items:center; gap:12px}
 .mark{
   width:44px; height:44px;

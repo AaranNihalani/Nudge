@@ -6,161 +6,106 @@ from dataclasses import dataclass
 
 def _env(name: str, default: str | None = None) -> str | None:
     value = os.environ.get(name)
-    if value is None or value == "":
-        return default
-    return value
+    return default if (value is None or value == "") else value
+
+
+def _bool_env(name: str, default: bool) -> bool:
+    raw = (_env(name) or "").lower()
+    if raw in {"1", "true", "yes", "on"}:
+        return True
+    if raw in {"0", "false", "no", "off"}:
+        return False
+    return default
+
+
+def _int_env(name: str, default: int, *, lo: int | None = None, hi: int | None = None) -> int:
+    try:
+        v = int(_env(name) or default)
+    except ValueError:
+        v = default
+    if lo is not None:
+        v = max(lo, v)
+    if hi is not None:
+        v = min(hi, v)
+    return v
 
 
 @dataclass(frozen=True)
 class Config:
-    port: int
-    railway_environment: str | None
-    db_path: str
+    port: int = 5000
+    railway_environment: str | None = None
+    db_path: str = "data/nudge.sqlite3"
 
-    twilio_account_sid: str | None
-    twilio_auth_token: str | None
-    twilio_validate_signature: bool
-
-    claude_api_key: str | None
-    claude_model: str
-
-    nudge_cooldown_minutes: int
-    nudge_max_per_day: int
-    nudge_max_per_week: int
-    baseline_policy_enabled: bool
-    policy_mode: str = "off"
-    rl_model_dir: str | None = None
-    rl_model_path: str | None = None
-    rl_active_version: str | None = None
+    twilio_account_sid: str | None = None
+    twilio_auth_token: str | None = None
+    twilio_validate_signature: bool = True
     twilio_from_addr: str | None = None
-    default_channel: str = "whatsapp"
+
+    claude_api_key: str | None = None
+    claude_model: str = "claude-sonnet-4-6"
+    claude_timeout_seconds: float = 8.0
+    claude_attempts: int = 1
+    debug_claude: bool = False
+
+    nudge_cooldown_minutes: int = 360
+    nudge_max_per_day: int = 2
+    nudge_max_per_week: int = 5
+    baseline_policy_enabled: bool = False
+    policy_mode: str = "off"
+
+    mfi_dataset_path: str | None = None
+    mfi_autoload: bool = True
+
     admin_token: str | None = None
     anon_salt: str | None = None
     verbose_replies: bool = False
-    rl_rollout_pct: int = 0
-    support_contact: str | None = None
-    default_language: str = "en"
-    mfi_dataset_path: str | None = None
-    mfi_autoload: bool = True
-    debug_claude: bool = False
-    claude_timeout_seconds: float = 8.0
-    claude_attempts: int = 1
 
     @staticmethod
-    def from_env() -> "Config":
+    def from_env() -> Config:
         try:
             from dotenv import load_dotenv
-
             load_dotenv()
         except Exception:
             pass
 
-        port_raw = _env("PORT", "5000")
-        try:
-            port = int(port_raw or "5000")
-        except ValueError:
-            port = 5000
-
-        railway_environment = _env("RAILWAY_ENVIRONMENT")
         db_path = _env("NUDGE_DB_PATH") or _env("SQLITE_PATH")
         if not db_path:
-            if _env("VERCEL"):
-                db_path = os.path.join("/tmp", "nudge.sqlite3")
-            else:
-                db_path = os.path.join(os.getcwd(), "data", "nudge.sqlite3")
+            db_path = (
+                "/tmp/nudge.sqlite3"
+                if _env("VERCEL")
+                else os.path.join(os.getcwd(), "data", "nudge.sqlite3")
+            )
 
-        validate_raw = (_env("TWILIO_VALIDATE_SIGNATURE", "true") or "true").lower()
-        twilio_validate_signature = validate_raw not in {"0", "false", "no"}
-
-        claude_api_key = _env("CLAUDE_API_KEY") or _env("ANTHROPIC_API_KEY")
-
-        cooldown_raw = _env("NUDGE_COOLDOWN_MINUTES", "360") or "360"
-        max_day_raw = _env("NUDGE_MAX_PER_DAY", "2") or "2"
-        max_week_raw = _env("NUDGE_MAX_PER_WEEK", "5") or "5"
-        try:
-            nudge_cooldown_minutes = max(0, int(cooldown_raw))
-        except ValueError:
-            nudge_cooldown_minutes = 360
-        try:
-            nudge_max_per_day = max(0, int(max_day_raw))
-        except ValueError:
-            nudge_max_per_day = 2
-        try:
-            nudge_max_per_week = max(0, int(max_week_raw))
-        except ValueError:
-            nudge_max_per_week = 5
-
-        baseline_raw = (_env("NUDGE_BASELINE_POLICY_ENABLED", "false") or "false").lower()
-        baseline_policy_enabled = baseline_raw in {"1", "true", "yes", "on"}
-
+        baseline_policy_enabled = _bool_env("NUDGE_BASELINE_POLICY_ENABLED", False)
         policy_mode = (_env("NUDGE_POLICY_MODE") or "").strip().lower()
-        if policy_mode == "":
+        if not policy_mode:
             policy_mode = "baseline" if baseline_policy_enabled else "off"
-
-        verbose_raw = (_env("NUDGE_VERBOSE_REPLIES", "false") or "false").strip().lower()
-        verbose_replies = verbose_raw in {"1", "true", "yes", "on"}
-
-        rollout_raw = (_env("NUDGE_RL_ROLLOUT_PCT", "0") or "0").strip()
-        try:
-            rl_rollout_pct = max(0, min(100, int(rollout_raw)))
-        except ValueError:
-            rl_rollout_pct = 0
-
-        default_language = (_env("NUDGE_DEFAULT_LANGUAGE", "en") or "en").strip().lower()
-        if default_language not in {"en", "hi", "hinglish"}:
-            default_language = "en"
 
         mfi_dataset_path = (_env("NUDGE_MFI_DATASET_PATH") or "").strip() or None
         if mfi_dataset_path is None:
             mfi_dataset_path = os.path.join(os.getcwd(), "datasets", "mfi_rates.csv")
 
-        mfi_autoload_raw = (_env("NUDGE_MFI_AUTOLOAD", "true") or "true").strip().lower()
-        mfi_autoload = mfi_autoload_raw in {"1", "true", "yes", "on"}
-
-        debug_claude_raw = (_env("NUDGE_DEBUG_CLAUDE", "false") or "false").strip().lower()
-        debug_claude = debug_claude_raw in {"1", "true", "yes", "on"}
-
-        timeout_raw = (_env("NUDGE_CLAUDE_TIMEOUT_SECONDS", "8") or "8").strip()
-        attempts_raw = (_env("NUDGE_CLAUDE_ATTEMPTS", "1") or "1").strip()
-        try:
-            claude_timeout_seconds = float(timeout_raw)
-        except ValueError:
-            claude_timeout_seconds = 8.0
-        claude_timeout_seconds = float(min(max(1.0, claude_timeout_seconds), 12.0))
-        try:
-            claude_attempts = int(attempts_raw)
-        except ValueError:
-            claude_attempts = 1
-        claude_attempts = int(min(max(1, claude_attempts), 3))
-
         return Config(
-            port=port,
-            railway_environment=railway_environment,
+            port=_int_env("PORT", 5000),
+            railway_environment=_env("RAILWAY_ENVIRONMENT"),
             db_path=db_path,
             twilio_account_sid=_env("TWILIO_ACCOUNT_SID"),
             twilio_auth_token=_env("TWILIO_AUTH_TOKEN"),
-            twilio_validate_signature=twilio_validate_signature,
-            claude_api_key=claude_api_key,
-            claude_model=_env("CLAUDE_MODEL", "claude-3-5-sonnet-latest") or "claude-3-5-sonnet-latest",
-            nudge_cooldown_minutes=nudge_cooldown_minutes,
-            nudge_max_per_day=nudge_max_per_day,
-            nudge_max_per_week=nudge_max_per_week,
+            twilio_validate_signature=_bool_env("TWILIO_VALIDATE_SIGNATURE", True),
+            twilio_from_addr=_env("TWILIO_FROM") or _env("TWILIO_FROM_ADDR"),
+            claude_api_key=_env("CLAUDE_API_KEY") or _env("ANTHROPIC_API_KEY"),
+            claude_model=_env("CLAUDE_MODEL", "claude-sonnet-4-6") or "claude-sonnet-4-6",
+            claude_timeout_seconds=min(max(1.0, float(_env("NUDGE_CLAUDE_TIMEOUT_SECONDS") or 8)), 12.0),
+            claude_attempts=min(max(1, _int_env("NUDGE_CLAUDE_ATTEMPTS", 1)), 3),
+            debug_claude=_bool_env("NUDGE_DEBUG_CLAUDE", False),
+            nudge_cooldown_minutes=_int_env("NUDGE_COOLDOWN_MINUTES", 360, lo=0),
+            nudge_max_per_day=_int_env("NUDGE_MAX_PER_DAY", 2, lo=0),
+            nudge_max_per_week=_int_env("NUDGE_MAX_PER_WEEK", 5, lo=0),
             baseline_policy_enabled=baseline_policy_enabled,
             policy_mode=policy_mode,
-            rl_model_dir=_env("NUDGE_RL_MODEL_DIR"),
-            rl_model_path=_env("NUDGE_RL_MODEL_PATH"),
-            rl_active_version=_env("NUDGE_RL_ACTIVE_VERSION"),
-            twilio_from_addr=_env("TWILIO_FROM") or _env("TWILIO_FROM_ADDR"),
-            default_channel=_env("NUDGE_DEFAULT_CHANNEL", "whatsapp") or "whatsapp",
+            mfi_dataset_path=str(mfi_dataset_path) if mfi_dataset_path else None,
+            mfi_autoload=_bool_env("NUDGE_MFI_AUTOLOAD", True),
             admin_token=_env("NUDGE_ADMIN_TOKEN"),
             anon_salt=_env("NUDGE_ANON_SALT"),
-            verbose_replies=bool(verbose_replies),
-            rl_rollout_pct=int(rl_rollout_pct),
-            support_contact=_env("NUDGE_SUPPORT_CONTACT"),
-            default_language=str(default_language),
-            mfi_dataset_path=str(mfi_dataset_path) if mfi_dataset_path is not None else None,
-            mfi_autoload=bool(mfi_autoload),
-            debug_claude=bool(debug_claude),
-            claude_timeout_seconds=float(claude_timeout_seconds),
-            claude_attempts=int(claude_attempts),
+            verbose_replies=_bool_env("NUDGE_VERBOSE_REPLIES", False),
         )

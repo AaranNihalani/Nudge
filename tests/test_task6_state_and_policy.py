@@ -9,7 +9,7 @@ from pathlib import Path
 from nudge_webhook.bot import InboundMessage, process_twilio_inbound
 from nudge_webhook.config import Config
 from nudge_webhook.db import connect, init_and_migrate
-from nudge_webhook.policy_baseline import decide_baseline
+from nudge_webhook.policy import decide_policy
 from nudge_webhook.state import compute_user_state
 
 
@@ -121,7 +121,7 @@ class TestTask6StateAndBaselinePolicy(unittest.TestCase):
                 conn.commit()
 
                 state = compute_user_state(db_path, user_id=user_id, now=now)
-                decision = decide_baseline(conn, state=state)
+                decision = decide_policy(conn, state=state, cfg=Config.from_env())
                 self.assertEqual(decision.action, "alert")
                 self.assertIn("~70", decision.content)
             finally:

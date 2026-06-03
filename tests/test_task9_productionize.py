@@ -12,7 +12,7 @@ from nudge_webhook.config import Config
 from nudge_webhook.daily_runner import run_daily_decisions
 from nudge_webhook.db import connect, init_and_migrate
 from nudge_webhook.metrics_export import export_metrics_zip
-from nudge_webhook.policy_serving import decide_policy
+from nudge_webhook.policy import decide_policy
 from nudge_webhook.state import compute_user_state
 
 
@@ -74,25 +74,14 @@ class TestTask9Productionize(unittest.TestCase):
                 conn.close()
 
             cfg = Config(
-                port=5000,
-                railway_environment=None,
                 db_path=db_path,
-                twilio_account_sid=None,
-                twilio_auth_token=None,
                 twilio_validate_signature=False,
-                claude_api_key=None,
                 claude_model="test",
                 nudge_cooldown_minutes=0,
                 nudge_max_per_day=10,
                 nudge_max_per_week=50,
                 baseline_policy_enabled=False,
                 policy_mode="auto",
-                rl_model_dir=None,
-                rl_model_path=None,
-                rl_active_version=None,
-                twilio_from_addr=None,
-                default_channel="whatsapp",
-                admin_token=None,
                 anon_salt="salt",
             )
 
@@ -146,13 +135,8 @@ class TestTask9Productionize(unittest.TestCase):
                 conn.close()
 
             cfg = Config(
-                port=5000,
-                railway_environment=None,
                 db_path=db_path,
-                twilio_account_sid=None,
-                twilio_auth_token=None,
                 twilio_validate_signature=False,
-                claude_api_key=None,
                 claude_model="test",
                 nudge_cooldown_minutes=0,
                 nudge_max_per_day=10,

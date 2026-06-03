@@ -3,3 +3,4 @@ gunicorn>=22,<23
 twilio>=9,<10
 anthropic>=0.28,<1
 python-dotenv>=1,<2
+psycopg2-binary>=2.9,<3
