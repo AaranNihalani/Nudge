@@ -38,7 +38,7 @@ class Config:
 
     claude_api_key: str | None = None
     claude_model: str = "claude-sonnet-4-6"
-    claude_timeout_seconds: float = 10.0
+    claude_timeout_seconds: float = 30.0
     claude_attempts: int = 1
     debug_claude: bool = False
 
@@ -86,7 +86,7 @@ class Config:
             db_path=db_path,
             claude_api_key=_env("CLAUDE_API_KEY") or _env("ANTHROPIC_API_KEY"),
             claude_model=_env("CLAUDE_MODEL", "claude-sonnet-4-6") or "claude-sonnet-4-6",
-            claude_timeout_seconds=min(max(1.0, float(_env("NUDGE_CLAUDE_TIMEOUT_SECONDS") or 10)), 12.0),
+            claude_timeout_seconds=min(max(1.0, float(_env("NUDGE_CLAUDE_TIMEOUT_SECONDS") or 30)), 60.0),
             claude_attempts=min(max(1, _int_env("NUDGE_CLAUDE_ATTEMPTS", 1)), 3),
             debug_claude=_bool_env("NUDGE_DEBUG_CLAUDE", False),
             nudge_cooldown_minutes=_int_env("NUDGE_COOLDOWN_MINUTES", 360, lo=0),
