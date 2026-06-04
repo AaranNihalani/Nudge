@@ -32,7 +32,7 @@ def decide_policy(conn, *, state: UserState, cfg) -> PolicyDecision:
     if state.consent_status != "opted_in":
         return PolicyDecision(
             action="wait", nudge_type=None,
-            content="To get nudges, reply START to opt in. Reply STOP to opt out.",
+            content="If you want help with a loan, tell me your district and the amount/time/rate you were offered. Reply STOP to pause.",
             policy_name="baseline-threshold", policy_version="v1",
         )
 
@@ -48,7 +48,7 @@ def decide_policy(conn, *, state: UserState, cfg) -> PolicyDecision:
             action="wait", nudge_type=None,
             content=(
                 "If you're asking about a loan, send the amount, time (days/months), and the rate (APR or %/month) if you have it. "
-                "I can then calculate payments and suggest regulated options. Reply STOP to opt out."
+                "I can then calculate payments and suggest regulated options. Reply STOP to pause."
             ),
             policy_name="baseline-threshold", policy_version="v1",
         )
@@ -99,6 +99,6 @@ def decide_policy(conn, *, state: UserState, cfg) -> PolicyDecision:
 
     return PolicyDecision(
         action="wait", nudge_type=None,
-        content="If you want help with a loan, send the amount, time (days/months), and rate (APR or %/month). Reply STOP to opt out.",
+        content="If you want help with a loan, send the amount, time (days/months), and rate (APR or %/month). Reply STOP to pause.",
         policy_name="baseline-threshold", policy_version="v1",
     )

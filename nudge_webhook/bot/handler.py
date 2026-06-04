@@ -211,6 +211,14 @@ def process_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage, now: 
         inbound_raw_message_id = int(inbound_cursor.lastrowid)
 
         text = inbound.body.strip()
+        is_stop = text.strip().lower() == "stop"
+        if consent_status != "opted_in" and not is_stop:
+            clear_district_paging(conn, user_id=user_id)
+            conn.execute(
+                "UPDATE users SET consent_status = 'opted_in', consent_updated_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+                (user_id,),
+            )
+            consent_status = "opted_in"
 
         # ── Parse command signals ───────────────────────────────────────────
         district_cmd = extract_district_command(text)
@@ -277,7 +285,7 @@ def process_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage, now: 
                 "UPDATE users SET consent_status = 'opted_out', consent_updated_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
                 (user_id,),
             )
-            reply = "You're opted out. Reply START anytime to opt back in."
+            reply = "Got it — I’ll stop sending proactive nudges. If you want to continue later, just message me."
 
         elif is_keyword(text, keyword="start"):
             clear_district_paging(conn, user_id=user_id)
@@ -293,23 +301,23 @@ def process_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage, now: 
                 if not profile_step:
                     save_profile_step(conn, user_id=user_id, step="intro")
                     reply = (
-                        f"You're opted in. District: {district}.\n\n"
+                        f"Got it — district: {district}.\n\n"
                         + profile_intro_message()
                     )
                 else:
                     fallback = (
-                        f"You're opted in. District: {district}.\n\n"
-                        "Tell me about a loan or reply HELP."
+                        f"Welcome back — district: {district}.\n\n"
+                        "Tell me about a loan you're considering, or reply HELP."
                     )
                     reply = ch.humanize(cfg, fallback=fallback, purpose="welcome returning user") or fallback
             else:
                 sample = _districts_sample(conn)
                 sample_text = ", ".join(sample) if sample else ""
                 fallback = (
-                    "You're opted in. Nudge is on.\n\n"
-                    "To personalise suggestions, reply with your district name.\n"
+                    "Hi — I can help you compare regulated loan options and estimate repayments.\n\n"
+                    "To personalize suggestions, what district are you in?\n"
                     + (f"Examples: {sample_text}\n" if sample_text else "")
-                    + "You can also type DISTRICTS to browse.\n\nReply STOP anytime to opt out."
+                    + "You can also type DISTRICTS to browse.\n\nReply STOP anytime to pause."
                 )
                 reply = ch.humanize(cfg, fallback=fallback, purpose="welcome new user and help them set their district") or fallback
 
@@ -318,7 +326,7 @@ def process_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage, now: 
                 "Nudge help\n\n"
                 "What I do: If you're about to take a high-interest loan, I point you to cheaper regulated alternatives in your district.\n\n"
                 "Commands:\n"
-                "- START / STOP\n"
+                "- STOP\n"
                 "- DISTRICT <name>\n"
                 "- DISTRICTS (or DISTRICTS <prefix>)\n"
                 "- MORE\n"
@@ -480,7 +488,7 @@ def process_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage, now: 
                     reply = ch.humanize(cfg, fallback=fallback, purpose="confirm district and invite next step") or fallback
 
             elif consent_status != "opted_in":
-                reply = "To get nudges, reply START to opt in. Reply STOP to opt out."
+                reply = "Hi — what district are you in? You can reply with a district name, or type DISTRICTS to browse."
 
             elif not district:
                 clear_district_paging(conn, user_id=user_id)
@@ -509,13 +517,13 @@ def process_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage, now: 
                                 "I’m not sure what you meant.\n\n"
                                 f"If you meant to pick an option: {lender_option_prompt(len(lender_options))}\n"
                                 "If you meant a new loan: send the amount, time (days/months), and the rate (APR or %/month) if you have it.\n\n"
-                                "Reply STOP anytime to opt out."
+                                "Reply STOP anytime to pause."
                             )
                         else:
                             reply = (
                                 "I’m not sure what you meant. If you’re asking about a loan, send the amount, time (days/months), and the rate "
                                 "(APR or %/month) if you have it. Reply HELP for an example.\n\n"
-                                "Reply STOP anytime to opt out."
+                                "Reply STOP anytime to pause."
                             )
                     elif loan_policy_enabled:
                         # Use policy engine to decide what to send

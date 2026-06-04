@@ -60,26 +60,22 @@ class TestTask4ConsentAndCaps(unittest.TestCase):
             client = app.test_client()
 
             r1 = _chat(client, "+111", "hello")
-            self.assertIn("reply start", r1.lower())
+            self.assertIn("district", r1.lower())
 
             conn = connect(db_path)
             try:
                 row = conn.execute("SELECT consent_status, district FROM users WHERE phone_e164 = ?", ("web:+111",)).fetchone()
                 self.assertIsNotNone(row)
-                self.assertEqual(str(row["consent_status"]), "unknown")
+                self.assertEqual(str(row["consent_status"]), "opted_in")
                 self.assertIsNone(row["district"])
             finally:
                 conn.close()
 
-            r2 = _chat(client, "+111", "START")
-            self.assertIn("opted in", r2.lower())
-            self.assertIn("district", r2.lower())
+            r2 = _chat(client, "+111", "Kampala")
+            self.assertIn("district set to Kampala", r2)
 
-            r3 = _chat(client, "+111", "Kampala")
-            self.assertIn("district set to Kampala", r3)
-
-            r4 = _chat(client, "+111", "STOP")
-            self.assertIn("opted out", r4.lower())
+            r3 = _chat(client, "+111", "STOP")
+            self.assertIn("stop", r3.lower())
 
             conn = connect(db_path)
             try:
@@ -100,7 +96,6 @@ class TestTask4ConsentAndCaps(unittest.TestCase):
             app = create_app(_make_config(db_path, cooldown_minutes=60, max_day=10, max_week=10))
             client = app.test_client()
 
-            _chat(client, "+333", "START")
             _chat(client, "+333", "Kampala")
 
             first = _chat(client, "+333", "ping")
@@ -128,7 +123,6 @@ class TestTask4ConsentAndCaps(unittest.TestCase):
             app = create_app(_make_config(db_path, cooldown_minutes=0, max_day=1, max_week=10))
             client = app.test_client()
 
-            _chat(client, "+444", "START")
             _chat(client, "+444", "Kampala")
 
             first = _chat(client, "+444", "ping")
@@ -156,7 +150,6 @@ class TestTask4ConsentAndCaps(unittest.TestCase):
             app = create_app(_make_config(db_path, cooldown_minutes=0, max_day=10, max_week=10))
             client = app.test_client()
 
-            _chat(client, "+555", "START")
             _chat(client, "+555", "Kampala")
 
             options_msg = _chat(client, "+555", "ping")

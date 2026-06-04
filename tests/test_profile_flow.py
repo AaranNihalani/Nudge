@@ -48,8 +48,6 @@ class TestProfileFlow(unittest.TestCase):
                 data = r.get_json(silent=True) or {}
                 return r.status_code, str(data.get("reply") or "")
 
-            code, _ = chat("START")
-            self.assertEqual(code, 200)
             code, _ = chat("DISTRICT Chennai")
             self.assertEqual(code, 200)
 
@@ -82,7 +80,6 @@ class TestProfileFlow(unittest.TestCase):
                 data = r.get_json(silent=True) or {}
                 return r.status_code, str(data.get("reply") or "")
 
-            chat("START")
             chat("DISTRICT Chennai")
             chat("yes")
             chat("obc")
@@ -108,7 +105,6 @@ class TestProfileFlow(unittest.TestCase):
                 data = r.get_json(silent=True) or {}
                 return r.status_code, str(data.get("reply") or "")
 
-            chat("START")
             chat("DISTRICT Chennai")
             chat("yes")
             chat("obc")

@@ -121,8 +121,6 @@ class TestTask11ConversationFlows(unittest.TestCase):
             now = datetime(2026, 5, 16, 12, 0, 0, tzinfo=timezone.utc)
             from_e164 = "+15550001111"
 
-            process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "START"), now=now)
-
             first = process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "DISTRICTS"), now=now)
             self.assertIn("D000", first)
             self.assertIn("D029", first)
@@ -169,7 +167,6 @@ class TestTask11ConversationFlows(unittest.TestCase):
                 now = datetime(2026, 5, 16, 12, 0, 0, tzinfo=timezone.utc)
                 from_e164 = "+15550001112"
 
-                process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "START"), now=now)
                 process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "DISTRICT D"), now=now)
 
                 reply = process_inbound(
@@ -238,7 +235,6 @@ class TestTask11ConversationFlows(unittest.TestCase):
                 now = datetime(2026, 5, 16, 12, 0, 0, tzinfo=timezone.utc)
                 from_e164 = "+15550005555"
 
-                process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "START"), now=now)
                 process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "DISTRICT D"), now=now)
 
                 reply = process_inbound(
@@ -291,7 +287,6 @@ class TestTask11ConversationFlows(unittest.TestCase):
             now = datetime(2026, 5, 16, 12, 0, 0, tzinfo=timezone.utc)
             from_e164 = "+15550001113"
 
-            process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "START"), now=now)
             process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "DISTRICT D"), now=now)
             process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "hello"), now=now)
 
@@ -340,7 +335,6 @@ class TestTask11ConversationFlows(unittest.TestCase):
                 now = datetime(2026, 5, 16, 12, 0, 0, tzinfo=timezone.utc)
                 from_e164 = "+15550002222"
 
-                process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "START"), now=now)
                 process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "DISTRICT D"), now=now)
 
                 r1 = process_inbound(
@@ -449,7 +443,6 @@ class TestTask11ConversationFlows(unittest.TestCase):
                 now = datetime(2026, 5, 16, 12, 0, 0, tzinfo=timezone.utc)
                 from_e164 = "+15550002223"
 
-                process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "START"), now=now)
                 process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "DISTRICT D"), now=now)
 
                 reply = process_inbound(
@@ -504,7 +497,6 @@ class TestTask11ConversationFlows(unittest.TestCase):
                 now = datetime(2026, 5, 16, 12, 0, 0, tzinfo=timezone.utc)
                 from_e164 = "+15550003333"
 
-                process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "START"), now=now)
                 process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "DISTRICT D"), now=now)
 
                 process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "Need 5000 for 30 days at 5% monthly"), now=now)
@@ -568,7 +560,6 @@ class TestTask11ConversationFlows(unittest.TestCase):
                 now = datetime(2026, 5, 16, 12, 0, 0, tzinfo=timezone.utc)
                 from_e164 = "+15550004444"
 
-                process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "START"), now=now)
                 process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "DISTRICT D"), now=now)
                 reply = process_inbound(
                     cfg, db_path=db_path, inbound=_inbound(from_e164, "Need 5000 for 30 days at 5% monthly"), now=now
