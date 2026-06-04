@@ -3,14 +3,12 @@ from __future__ import annotations
 import json
 import tempfile
 import unittest
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 import nudge_webhook.bot as bot_module
 from nudge_webhook.app import create_app
 from nudge_webhook.config import Config
-from nudge_webhook.daily_runner import run_daily_decisions
 from nudge_webhook.db import connect, init_and_migrate
 from nudge_webhook.mfi import load_dataset_into_sqlite
 
@@ -141,27 +139,6 @@ class TestTask10E2ELocalFixtures(unittest.TestCase):
                 finally:
                     conn.close()
 
-                now = datetime.now(timezone.utc).replace(microsecond=0)
-                run = run_daily_decisions(_make_config(db_path), db_path=db_path, now=now)
-                self.assertFalse(run.skipped)
-
-                conn = connect(db_path)
-                try:
-                    queued = conn.execute(
-                        """
-                        SELECT delivery_status, trigger
-                        FROM nudges
-                        WHERE user_id = ?
-                            AND trigger = 'daily'
-                        ORDER BY id DESC
-                        LIMIT 1
-                        """,
-                        (user_id,),
-                    ).fetchone()
-                    self.assertIsNotNone(queued)
-                    self.assertEqual(str(queued["delivery_status"]), "queued")
-                finally:
-                    conn.close()
         finally:
             bot_module.call_json_with_retries = original_call_json
 

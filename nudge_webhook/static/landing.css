@@ -1,18 +1,19 @@
 /* ── Design tokens (shared with chat.css) ──────────────────────────────── */
 :root {
-  --bg0: #07070a;
-  --bg1: #0d0e14;
-  --bg2: #111219;
+  --bg0: #060b0f;
+  --bg1: #0a1018;
+  --bg2: #0e1520;
   --card: rgba(255,255,255,.05);
   --card-hover: rgba(255,255,255,.08);
   --stroke: rgba(255,255,255,.09);
-  --stroke2: rgba(255,255,255,.15);
+  --stroke2: rgba(255,255,255,.18);
   --txt: rgba(255,255,255,.92);
   --muted: rgba(255,255,255,.60);
   --muted2: rgba(255,255,255,.40);
-  --accent: #f6b26b;
-  --accent2: #8ad7ff;
-  --good: #63f2c8;
+  --accent: #2dd4bf;
+  --accent2: #60a5fa;
+  --good: #34d399;
+  --warn: #f87171;
   --radius: 16px;
   --radius2: 24px;
   --ff-display: 'Fraunces', Georgia, serif;
@@ -25,7 +26,7 @@
 html { scroll-behavior: smooth; }
 
 body {
-  background: linear-gradient(180deg, var(--bg0), var(--bg1));
+  background: linear-gradient(180deg, var(--bg0) 0%, var(--bg1) 60%, #0a1620 100%);
   color: var(--txt);
   font-family: var(--ff-body);
   font-size: 16px;
@@ -73,7 +74,7 @@ body {
 
 .btn-primary {
   background: var(--accent);
-  color: #0d0e14;
+  color: #060b0f;
 }
 
 .btn-outline {
@@ -81,7 +82,7 @@ body {
   color: var(--accent);
   border: 1.5px solid var(--accent);
 }
-.btn-outline:hover { background: rgba(246,178,107,.1); }
+.btn-outline:hover { background: rgba(45,212,191,.1); }
 
 .btn-large { padding: 16px 40px; font-size: 17px; border-radius: 20px; }
 
@@ -96,8 +97,8 @@ body {
   position: absolute;
   inset: -20% 0 0;
   background:
-    radial-gradient(900px 500px at 60% 20%, rgba(246,178,107,.18), transparent 65%),
-    radial-gradient(700px 400px at 10% 60%, rgba(138,215,255,.13), transparent 65%);
+    radial-gradient(900px 500px at 60% 20%, rgba(45,212,191,.15), transparent 65%),
+    radial-gradient(700px 400px at 10% 60%, rgba(96,165,250,.12), transparent 65%);
   pointer-events: none;
 }
 
@@ -255,8 +256,8 @@ body {
 .research-credit {
   margin: 28px 0 24px;
   padding: 16px 20px;
-  background: rgba(246,178,107,.07);
-  border: 1px solid rgba(246,178,107,.2);
+  background: rgba(45,212,191,.07);
+  border: 1px solid rgba(45,212,191,.2);
   border-radius: var(--radius);
 }
 
@@ -341,7 +342,7 @@ body {
   font-family: var(--ff-display);
   font-size: 48px;
   font-weight: 700;
-  color: rgba(246,178,107,.3);
+  color: rgba(45,212,191,.3);
   line-height: 1;
   margin-bottom: 16px;
 }
@@ -362,7 +363,7 @@ body {
 /* ── Try It ──────────────────────────────────────────────────────────────── */
 .try-section {
   background:
-    radial-gradient(800px 400px at 50% 100%, rgba(99,242,200,.08), transparent 65%),
+    radial-gradient(800px 400px at 50% 100%, rgba(45,212,191,.09), transparent 65%),
     transparent;
   text-align: center;
 }
@@ -432,10 +433,137 @@ body {
   line-height: 1.6;
 }
 
+/* ── Navigation ──────────────────────────────────────────────────────────── */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(6,11,15,.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--stroke);
+  padding: 14px 0;
+}
+
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.nav-brand {
+  font-family: var(--ff-display);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  letter-spacing: .01em;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.nav-link {
+  font-size: 13px;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color .15s;
+}
+.nav-link:hover { color: var(--txt); }
+
+.nav-cta {
+  padding: 8px 20px;
+  font-size: 13px;
+}
+
+/* ── Comparison table ────────────────────────────────────────────────────── */
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.compare-col {
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.compare-col.formal { border-color: rgba(45,212,191,.3); }
+.compare-col.informal { border-color: rgba(248,113,113,.3); }
+
+.compare-head {
+  padding: 16px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.compare-col.formal .compare-head { background: rgba(45,212,191,.1); color: var(--accent); }
+.compare-col.informal .compare-head { background: rgba(248,113,113,.1); color: var(--warn); }
+
+.compare-row {
+  padding: 12px 20px;
+  border-top: 1px solid var(--stroke);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.compare-key { font-size: 13px; color: var(--muted); }
+.compare-val { font-size: 14px; font-weight: 600; color: var(--txt); white-space: nowrap; }
+.compare-col.informal .compare-val { color: var(--warn); }
+.compare-col.formal .compare-val { color: var(--good); }
+
+/* ── Who this is for ─────────────────────────────────────────────────────── */
+.who-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.who-card {
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius);
+  padding: 24px 22px;
+  transition: background .18s, border-color .18s;
+}
+.who-card:hover { background: var(--card-hover); border-color: var(--stroke2); }
+
+.who-icon {
+  font-size: 22px;
+  margin-bottom: 12px;
+}
+
+.who-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--txt);
+  margin-bottom: 8px;
+}
+
+.who-desc {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
 /* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 780px) {
+  .nav-links { display: none; }
+  .compare-grid { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 600px) {
-  .hero { padding: 80px 0 64px; }
-  .section { padding: 64px 0; }
+  .hero { padding: 72px 0 56px; }
+  .section { padding: 56px 0; }
   .hero-actions { flex-direction: column; align-items: flex-start; }
-  .stat-grid, .findings-grid, .steps-grid { grid-template-columns: 1fr; }
+  .stat-grid, .findings-grid, .steps-grid, .who-grid { grid-template-columns: 1fr; }
 }

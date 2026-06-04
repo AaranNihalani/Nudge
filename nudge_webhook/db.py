@@ -72,6 +72,7 @@ class _Cursor:
 _COLLATE_NOCASE_RE = re.compile(r"\s*COLLATE\s+NOCASE\b", re.IGNORECASE)
 _BEGIN_RE = re.compile(r"^\s*BEGIN(\s+IMMEDIATE)?\s*;?\s*$", re.IGNORECASE)
 _PRAGMA_RE = re.compile(r"^\s*PRAGMA\b", re.IGNORECASE)
+_INSERT_OR_IGNORE_RE = re.compile(r"INSERT\s+OR\s+IGNORE\s+INTO\b", re.IGNORECASE)
 
 
 class Connection:
@@ -88,6 +89,10 @@ class Connection:
         s = sql.replace("?", "%s")
         s = s.replace("CURRENT_TIMESTAMP", _PG_NOW)
         s = _COLLATE_NOCASE_RE.sub("", s)
+        # SQLite INSERT OR IGNORE → PostgreSQL ON CONFLICT DO NOTHING
+        if _INSERT_OR_IGNORE_RE.search(s):
+            s = _INSERT_OR_IGNORE_RE.sub("INSERT INTO", s)
+            s = s.rstrip().rstrip(";").rstrip() + " ON CONFLICT DO NOTHING"
         return s
 
     def execute(self, sql: str, params: Any = None) -> _Cursor | _NullCursor:
@@ -107,9 +112,9 @@ class Connection:
             last_id: Any = None
 
             if is_insert:
-                cur.execute(adapted.rstrip(";") + " RETURNING id", params or ())
+                cur.execute(adapted.rstrip(";") + " RETURNING *", params or ())
                 row = cur.fetchone()
-                last_id = row["id"] if row else None
+                last_id = row.get("id") if row else None
             else:
                 cur.execute(adapted, params or ())
 

@@ -29,7 +29,6 @@ except Exception:
 
 from .bot import InboundMessage, process_twilio_inbound
 from .config import Config
-from .daily_runner import run_daily_decisions
 from .db import connect, init_and_migrate
 from .mfi import load_dataset_into_sqlite, register_mfi
 from .metrics_export import export_metrics_zip
@@ -200,21 +199,6 @@ def create_app(config: Config | None = None) -> Flask:
         return Response(str(twiml), mimetype="application/xml")
 
     # ── Admin endpoints ────────────────────────────────────────────────────
-
-    @app.post("/admin/run-daily")
-    def admin_run_daily() -> Response:
-        if not _admin_ok():
-            return Response("forbidden", status=403)
-        db_path = app.config["NUDGE_DB"].path
-        result = run_daily_decisions(cfg, db_path=db_path)
-        return jsonify({
-            "run_date": result.run_date,
-            "skipped": result.skipped,
-            "evaluated_users": result.evaluated_users,
-            "nudges_attempted": result.nudges_attempted,
-            "nudges_sent": result.nudges_sent,
-            "nudges_failed": result.nudges_failed,
-        })
 
     @app.get("/admin/export-metrics")
     def admin_export_metrics() -> Response:
