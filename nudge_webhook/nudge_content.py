@@ -135,13 +135,13 @@ def _selection_prompt(count: int) -> str:
 
 
 def _render_rows(rows: list[dict[str, Any]], *, amount_inr: float | None = None, tenure_days: int | None = None) -> str:
-    """Render a compact lender list — APR, monthly rate, and total repayment only."""
+    """Render a compact lender list with markdown formatting."""
     parts: list[str] = []
     for i, r in enumerate(rows, start=1):
         lender = str(r.get("lender") or "")
         rate = float(r.get("rate_apr") or 0.0)
         monthly = _apr_to_monthly_percent(rate)
-        line = f"{i}. {lender} — {rate:g}% APR (~{_format_percent(monthly)}%/month)"
+        line = f"{i}. **{lender}** — {rate:g}% APR (~{_format_percent(monthly)}%/month)"
         if amount_inr is not None and tenure_days is not None:
             breakdown = loan_cost_breakdown(float(amount_inr), int(tenure_days), rate)
             months = int(breakdown["months"])
@@ -295,7 +295,7 @@ def lender_detail_fallback(*, option: dict[str, Any], rank: int, district: str |
     tenure_days = option.get("tenure_days")
     option_count = int(option.get("option_count") or 0)
 
-    header = f"{lender} — {rate:g}% APR (~{_format_percent(monthly)}%/month) in {where}"
+    header = f"**{lender}** — {rate:g}% APR (~{_format_percent(monthly)}%/month) in {where}"
     if effective_date:
         header += f" (rate as of {effective_date})"
 
@@ -303,23 +303,23 @@ def lender_detail_fallback(*, option: dict[str, Any], rank: int, district: str |
         breakdown = loan_cost_breakdown(float(amount_inr), int(tenure_days), rate)
         months = int(breakdown["months"])
         cost_block = (
-            f"\nFor {_fmt(float(amount_inr))} over {months} month{'s' if months != 1 else ''}:\n"
-            f"• Monthly interest: ~{_fmt(float(breakdown['monthly_interest']))}\n"
-            f"• Total interest: ~{_fmt(float(breakdown['tenure_interest']))}\n"
-            f"• Total repayment: ~{_fmt(float(breakdown['total_repayment']))}\n"
-            f"• Estimated monthly payment: ~{_fmt(float(breakdown['monthly_payment']))}\n"
-            "\nThese numbers assume simple interest and no processing fees, insurance, or penalties."
+            f"\nFor {_fmt(float(amount_inr))} over {months} month{'s' if months != 1 else ''}:\n\n"
+            f"- Monthly interest: ~{_fmt(float(breakdown['monthly_interest']))}\n"
+            f"- Total interest over {months} month{'s' if months != 1 else ''}: ~{_fmt(float(breakdown['tenure_interest']))}\n"
+            f"- **Total repayment: ~{_fmt(float(breakdown['total_repayment']))}**\n"
+            f"- Estimated monthly payment: ~{_fmt(float(breakdown['monthly_payment']))}\n\n"
+            "*These numbers assume simple interest and no processing fees, insurance, or penalties.*"
         )
     else:
         cost_block = (
-            "\nSend the loan amount and tenure to see rupee totals — e.g. 5000 for 30 days."
+            "\n*Send the loan amount and tenure to see rupee totals — e.g. 5000 for 30 days.*"
         )
 
     contact = lender_contact_block(lender)
     contact_block = (
-        f"\nContacts:{contact}"
+        f"---\n\nContacts:{contact}"
         if contact
-        else "\nNo verified contact details on file. Search their name online or visit a local branch."
+        else "---\n\nNo verified contact details on file. Search their name online or visit a local branch."
     )
 
     if option_count <= 1:
@@ -331,7 +331,7 @@ def lender_detail_fallback(*, option: dict[str, Any], rank: int, district: str |
 
     return (
         f"{header}\n"
-        f"{cost_block}\n"
+        f"{cost_block}\n\n"
         f"{contact_block}\n\n"
         f"Before applying, ask them to confirm the exact EMI, all fees, and total repayment in writing.\n\n"
         f"Let me know when you've spoken to them.{other_opts}"

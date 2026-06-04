@@ -175,7 +175,7 @@ class TestTask11ConversationFlows(unittest.TestCase):
                 reply = process_inbound(
                     cfg, db_path=db_path, inbound=_inbound(from_e164, "Need 5 lakh for 30 days with moneylender"), now=now
                 )
-                self.assertIn("1. B", reply)
+                self.assertIn("**B**", reply)
                 self.assertIn("total over", reply)
                 self.assertIn("/month)", reply)
 
@@ -299,7 +299,7 @@ class TestTask11ConversationFlows(unittest.TestCase):
             self.assertIn("e.g. 5000 for 30 days", option_reply)
 
             refreshed = process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "5 lakh for 30 days"), now=now)
-            self.assertIn("B —", refreshed)
+            self.assertIn("**B**", refreshed)
             self.assertIn("₹7,500", refreshed)
             self.assertIn("₹507,397", refreshed)
 
@@ -348,9 +348,9 @@ class TestTask11ConversationFlows(unittest.TestCase):
                 )
                 self.assertIn("regulated options", r1.lower())
                 self.assertIn("reply 1, 2, or 3", r1.lower())
-                self.assertIn("1. B", r1)
-                self.assertIn("2. C", r1)
-                self.assertIn("3. A", r1)
+                self.assertIn("**B**", r1)
+                self.assertIn("**C**", r1)
+                self.assertIn("**A**", r1)
                 self.assertIn("total over", r1)
                 self.assertIn("/month)", r1)
                 self.assertIn("simple interest", r1.lower())
@@ -358,7 +358,7 @@ class TestTask11ConversationFlows(unittest.TestCase):
                 self.assertNotIn("save ~", r1.lower())
 
                 r2 = process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "2"), now=now)
-                self.assertIn("C —", r2)
+                self.assertIn("**C**", r2)
                 self.assertIn("APR", r2)
                 self.assertIn("20% APR", r2)
                 self.assertIn("₹8,333", r2)

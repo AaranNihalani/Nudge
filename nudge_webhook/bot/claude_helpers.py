@@ -10,6 +10,7 @@ from ..nudge_content import lender_detail_fallback
 from .loan import selected_lender_fallback_reply
 
 _NO_GREETING = "Do not start with a greeting word (Hey, Hi, Hello, Sure, Great, Of course, Absolutely, etc.)."
+_USE_MD = "Use markdown formatting: **bold** for lender names and key rupee figures, - for bullet lists, --- for section breaks. Do not use emojis."
 
 
 def humanize(cfg: Config, *, fallback: str, purpose: str) -> str | None:
@@ -17,7 +18,7 @@ def humanize(cfg: Config, *, fallback: str, purpose: str) -> str | None:
         "Rewrite the message below as a natural chatbot reply for an Indian consumer. "
         "Preserve every rupee amount, percentage, lender name, district name, numbered list item, and command exactly. "
         "Do not add facts, approvals, phone numbers, legal advice, or new commands. "
-        f"{_NO_GREETING} "
+        f"{_NO_GREETING} {_USE_MD} "
         f"Keep it concise and easy to act on.\n\nPurpose: {purpose}\nMessage:\n{fallback}"
     )
     reply = generate_reply(cfg, prompt)
@@ -40,7 +41,7 @@ def recommendation_message(
         "Rewrite the message below as a natural chatbot response for an Indian consumer. "
         "Preserve every numbered lender option, lender name, APR, monthly rate, rupee amount, repayment amount, interest amount, time period, and command exactly. "
         "Do not add approval claims, phone numbers, legal advice, or extra lenders. "
-        f"{_NO_GREETING} "
+        f"{_NO_GREETING} {_USE_MD} "
         "Keep it concise and easy to act on.\n\n"
         f"District: {district}\nLoan amount INR: {amount_inr}\nTenure days: {tenure_days}\nQuoted APR: {current_rate}\nFacts:\n{fallback}"
     )
@@ -55,7 +56,7 @@ def lender_detail(cfg: Config, *, option: dict[str, Any], rank: int, district: s
         "Rewrite this lender explanation as a clear chatbot message for an Indian consumer. "
         "Preserve the lender name, APR, per-month rate, every rupee amount, total repayment, monthly payment, fees warning, and the question asking for the user's opinion. "
         "Do not claim approval. Do not add phone numbers or legal/financial advice. "
-        f"{_NO_GREETING} "
+        f"{_NO_GREETING} {_USE_MD} "
         "Keep it concise.\n\n"
         f"Selected lender: {lender}\nFacts:\n{fallback}"
     )
@@ -78,7 +79,7 @@ def selected_lender_conversation(
         "do NOT repeat the loan figures again — just give the single most useful next step (contact the lender, ask for EMI in writing, etc.). "
         "If the user has a new question, answer it briefly using the lender facts. "
         "Do not claim approval. Do not invent fees, phone numbers, or branch details. "
-        f"{_NO_GREETING} "
+        f"{_NO_GREETING} {_USE_MD} "
         "Keep under 80 words.\n\n"
         f"User message: {user_text}\n"
         f"Option: {json.dumps(option, ensure_ascii=False)}"
@@ -92,7 +93,7 @@ def profile_assessment_message(cfg: Config, *, assessment: str) -> str | None:
         "Rewrite the credit access profile message below as a clear, direct message for an Indian consumer. "
         "Preserve every percentage figure, the research citation, the paper URL, and all factual statements exactly. "
         "Do not add percentages, statistics, or claims beyond what is written. "
-        f"{_NO_GREETING} "
+        f"{_NO_GREETING} {_USE_MD} "
         "Keep it under 150 words.\n\n"
         f"Profile message:\n{assessment}"
     )
