@@ -13,10 +13,7 @@ def format_ts(dt: datetime) -> str:
 
 
 def normalize_sender(from_addr: str) -> str:
-    raw = (from_addr or "").strip()
-    if raw.lower().startswith("whatsapp:"):
-        raw = raw.split(":", 1)[1]
-    return raw.strip()
+    return (from_addr or "").strip()
 
 
 def is_keyword(text: str, *, keyword: str) -> bool:

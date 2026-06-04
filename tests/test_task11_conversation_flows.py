@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 import nudge_webhook.bot as bot_module
-from nudge_webhook.bot import InboundMessage, process_twilio_inbound
+from nudge_webhook.bot import InboundMessage, process_inbound
 from nudge_webhook.config import Config
 from nudge_webhook.db import connect, init_and_migrate
 from nudge_webhook.nudge_content import lender_detail_fallback
@@ -24,9 +24,6 @@ def _make_cfg(
         port=5000,
         railway_environment=None,
         db_path=db_path,
-        twilio_account_sid=None,
-        twilio_auth_token=None,
-        twilio_validate_signature=False,
         claude_api_key=None,
         claude_model="test",
         nudge_cooldown_minutes=0,
@@ -40,11 +37,11 @@ def _make_cfg(
 
 def _inbound(from_e164: str, body: str) -> InboundMessage:
     return InboundMessage(
-        from_addr=f"whatsapp:{from_e164}",
-        to_addr="whatsapp:+222",
+        from_addr=from_e164,
+        to_addr=None,
         body=body,
-        twilio_message_sid=None,
-        payload={"From": f"whatsapp:{from_e164}", "Body": body},
+        message_sid=None,
+        payload={},
     )
 
 
@@ -124,15 +121,15 @@ class TestTask11ConversationFlows(unittest.TestCase):
             now = datetime(2026, 5, 16, 12, 0, 0, tzinfo=timezone.utc)
             from_e164 = "+15550001111"
 
-            process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "START"), now=now)
+            process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "START"), now=now)
 
-            first = process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "DISTRICTS"), now=now)
+            first = process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "DISTRICTS"), now=now)
             self.assertIn("D000", first)
             self.assertIn("D029", first)
             self.assertNotIn("D030", first)
             self.assertIn("reply more", first.lower())
 
-            second = process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "MORE"), now=now)
+            second = process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "MORE"), now=now)
             self.assertIn("D030", second)
 
     def test_policy_off_still_parses_loan_and_returns_costed_options(self) -> None:
@@ -172,10 +169,10 @@ class TestTask11ConversationFlows(unittest.TestCase):
                 now = datetime(2026, 5, 16, 12, 0, 0, tzinfo=timezone.utc)
                 from_e164 = "+15550001112"
 
-                process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "START"), now=now)
-                process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "DISTRICT D"), now=now)
+                process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "START"), now=now)
+                process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "DISTRICT D"), now=now)
 
-                reply = process_twilio_inbound(
+                reply = process_inbound(
                     cfg, db_path=db_path, inbound=_inbound(from_e164, "Need 5 lakh for 30 days with moneylender"), now=now
                 )
                 self.assertIn("1) B", reply)
@@ -241,10 +238,10 @@ class TestTask11ConversationFlows(unittest.TestCase):
                 now = datetime(2026, 5, 16, 12, 0, 0, tzinfo=timezone.utc)
                 from_e164 = "+15550005555"
 
-                process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "START"), now=now)
-                process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "DISTRICT D"), now=now)
+                process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "START"), now=now)
+                process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "DISTRICT D"), now=now)
 
-                reply = process_twilio_inbound(
+                reply = process_inbound(
                     cfg,
                     db_path=db_path,
                     inbound=_inbound(from_e164, "need 50 lakh for 10 years from moneylender with less than 50% apr"),
@@ -253,7 +250,7 @@ class TestTask11ConversationFlows(unittest.TestCase):
                 self.assertIn("top local regulated options", reply.lower())
                 self.assertIn("1) Midland Microfin Limited", reply)
 
-                opened = process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "ok, tell me about midland"), now=now)
+                opened = process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "ok, tell me about midland"), now=now)
                 self.assertIn("Option 1: Midland Microfin Limited", opened)
                 self.assertNotIn("intent=false", opened.lower())
 
@@ -294,14 +291,14 @@ class TestTask11ConversationFlows(unittest.TestCase):
             now = datetime(2026, 5, 16, 12, 0, 0, tzinfo=timezone.utc)
             from_e164 = "+15550001113"
 
-            process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "START"), now=now)
-            process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "DISTRICT D"), now=now)
-            process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "hello"), now=now)
+            process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "START"), now=now)
+            process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "DISTRICT D"), now=now)
+            process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "hello"), now=now)
 
-            option_reply = process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "1"), now=now)
+            option_reply = process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "1"), now=now)
             self.assertIn("Reply with something like: 5000 for 30 days.", option_reply)
 
-            refreshed = process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "5 lakh for 30 days"), now=now)
+            refreshed = process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "5 lakh for 30 days"), now=now)
             self.assertIn("Option 1: B", refreshed)
             self.assertIn("INR 90,000 interest over a year", refreshed)
             self.assertIn("total repayment is about INR 507,397 before fees", refreshed)
@@ -343,10 +340,10 @@ class TestTask11ConversationFlows(unittest.TestCase):
                 now = datetime(2026, 5, 16, 12, 0, 0, tzinfo=timezone.utc)
                 from_e164 = "+15550002222"
 
-                process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "START"), now=now)
-                process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "DISTRICT D"), now=now)
+                process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "START"), now=now)
+                process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "DISTRICT D"), now=now)
 
-                r1 = process_twilio_inbound(
+                r1 = process_inbound(
                     cfg, db_path=db_path, inbound=_inbound(from_e164, "Need 5 lakh for 30 days with moneylender"), now=now
                 )
                 self.assertIn("top local regulated options", r1.lower())
@@ -360,7 +357,7 @@ class TestTask11ConversationFlows(unittest.TestCase):
                 self.assertNotIn("quoted rate", r1.lower())
                 self.assertNotIn("save ~", r1.lower())
 
-                r2 = process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "2"), now=now)
+                r2 = process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "2"), now=now)
                 self.assertIn("Option 2: C", r2)
                 self.assertIn("Indicative rate", r2)
                 self.assertIn("20% APR works out to about INR 100,000 interest over a year", r2)
@@ -370,7 +367,7 @@ class TestTask11ConversationFlows(unittest.TestCase):
                 self.assertIn("per month", r2)
                 self.assertIn("I don’t have a verified phone/email", r2)
 
-                r3 = process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "That monthly payment is too high"), now=now)
+                r3 = process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "That monthly payment is too high"), now=now)
                 self.assertIn("too high", r3.lower())
                 self.assertIn("Reply 1, 2, or 3", r3)
 
@@ -452,10 +449,10 @@ class TestTask11ConversationFlows(unittest.TestCase):
                 now = datetime(2026, 5, 16, 12, 0, 0, tzinfo=timezone.utc)
                 from_e164 = "+15550002223"
 
-                process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "START"), now=now)
-                process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "DISTRICT D"), now=now)
+                process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "START"), now=now)
+                process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "DISTRICT D"), now=now)
 
-                reply = process_twilio_inbound(
+                reply = process_inbound(
                     cfg, db_path=db_path, inbound=_inbound(from_e164, "Need 5 lakh for 30 days with moneylender"), now=now
                 )
                 self.assertIn("1) Solo", reply)
@@ -463,7 +460,7 @@ class TestTask11ConversationFlows(unittest.TestCase):
                 self.assertNotIn("Reply 1, 2, or 3", reply)
                 self.assertNotIn("2)", reply)
 
-                invalid = process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "2"), now=now)
+                invalid = process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "2"), now=now)
                 self.assertIn("I found 1 option", invalid)
                 self.assertIn("Reply 1", invalid)
                 self.assertNotIn("1, 2, or 3", invalid)
@@ -507,11 +504,11 @@ class TestTask11ConversationFlows(unittest.TestCase):
                 now = datetime(2026, 5, 16, 12, 0, 0, tzinfo=timezone.utc)
                 from_e164 = "+15550003333"
 
-                process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "START"), now=now)
-                process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "DISTRICT D"), now=now)
+                process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "START"), now=now)
+                process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "DISTRICT D"), now=now)
 
-                process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "Need 5000 for 30 days at 5% monthly"), now=now)
-                reply = process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "CORRECT rate=2% monthly"), now=now)
+                process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "Need 5000 for 30 days at 5% monthly"), now=now)
+                reply = process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "CORRECT rate=2% monthly"), now=now)
                 self.assertIn("updated", reply.lower())
 
                 conn = connect(db_path)
@@ -571,9 +568,9 @@ class TestTask11ConversationFlows(unittest.TestCase):
                 now = datetime(2026, 5, 16, 12, 0, 0, tzinfo=timezone.utc)
                 from_e164 = "+15550004444"
 
-                process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "START"), now=now)
-                process_twilio_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "DISTRICT D"), now=now)
-                reply = process_twilio_inbound(
+                process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "START"), now=now)
+                process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "DISTRICT D"), now=now)
+                reply = process_inbound(
                     cfg, db_path=db_path, inbound=_inbound(from_e164, "Need 5000 for 30 days at 5% monthly"), now=now
                 )
                 self.assertNotIn("[status]", reply)

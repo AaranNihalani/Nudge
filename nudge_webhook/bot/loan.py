@@ -21,7 +21,7 @@ class InboundMessage:
     from_addr: str
     to_addr: str | None
     body: str
-    twilio_message_sid: str | None
+    message_sid: str | None
     payload: dict[str, Any]
 
 

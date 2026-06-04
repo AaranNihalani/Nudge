@@ -36,14 +36,9 @@ class Config:
     railway_environment: str | None = None
     db_path: str = "data/nudge.sqlite3"
 
-    twilio_account_sid: str | None = None
-    twilio_auth_token: str | None = None
-    twilio_validate_signature: bool = True
-    twilio_from_addr: str | None = None
-
     claude_api_key: str | None = None
     claude_model: str = "claude-sonnet-4-6"
-    claude_timeout_seconds: float = 8.0
+    claude_timeout_seconds: float = 5.0
     claude_attempts: int = 1
     debug_claude: bool = False
 
@@ -89,13 +84,9 @@ class Config:
             port=_int_env("PORT", 5000),
             railway_environment=_env("RAILWAY_ENVIRONMENT"),
             db_path=db_path,
-            twilio_account_sid=_env("TWILIO_ACCOUNT_SID"),
-            twilio_auth_token=_env("TWILIO_AUTH_TOKEN"),
-            twilio_validate_signature=_bool_env("TWILIO_VALIDATE_SIGNATURE", True),
-            twilio_from_addr=_env("TWILIO_FROM") or _env("TWILIO_FROM_ADDR"),
             claude_api_key=_env("CLAUDE_API_KEY") or _env("ANTHROPIC_API_KEY"),
             claude_model=_env("CLAUDE_MODEL", "claude-sonnet-4-6") or "claude-sonnet-4-6",
-            claude_timeout_seconds=min(max(1.0, float(_env("NUDGE_CLAUDE_TIMEOUT_SECONDS") or 8)), 12.0),
+            claude_timeout_seconds=min(max(1.0, float(_env("NUDGE_CLAUDE_TIMEOUT_SECONDS") or 5)), 12.0),
             claude_attempts=min(max(1, _int_env("NUDGE_CLAUDE_ATTEMPTS", 1)), 3),
             debug_claude=_bool_env("NUDGE_DEBUG_CLAUDE", False),
             nudge_cooldown_minutes=_int_env("NUDGE_COOLDOWN_MINUTES", 360, lo=0),

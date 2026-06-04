@@ -6,7 +6,7 @@ import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from nudge_webhook.bot import InboundMessage, process_twilio_inbound
+from nudge_webhook.bot import InboundMessage, process_inbound
 from nudge_webhook.config import Config
 from nudge_webhook.db import connect, init_and_migrate
 from nudge_webhook.policy import decide_policy
@@ -168,9 +168,6 @@ class TestTask6StateAndBaselinePolicy(unittest.TestCase):
                 port=5000,
                 railway_environment=None,
                 db_path=db_path,
-                twilio_account_sid=None,
-                twilio_auth_token=None,
-                twilio_validate_signature=False,
                 claude_api_key=None,
                 claude_model="test",
                 nudge_cooldown_minutes=0,
@@ -180,13 +177,13 @@ class TestTask6StateAndBaselinePolicy(unittest.TestCase):
             )
 
             inbound = InboundMessage(
-                from_addr="whatsapp:+555",
-                to_addr="whatsapp:+222",
+                from_addr="+555",
+                to_addr=None,
                 body="hello",
-                twilio_message_sid=None,
-                payload={"From": "whatsapp:+555", "Body": "hello"},
+                message_sid=None,
+                payload={},
             )
-            reply = process_twilio_inbound(cfg, db_path=db_path, inbound=inbound, now=now)
+            reply = process_inbound(cfg, db_path=db_path, inbound=inbound, now=now)
             self.assertIn("~70", reply)
 
 

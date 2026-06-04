@@ -74,7 +74,6 @@ class TestTask9Productionize(unittest.TestCase):
 
             cfg = Config(
                 db_path=db_path,
-                twilio_validate_signature=False,
                 claude_model="test",
                 nudge_cooldown_minutes=0,
                 nudge_max_per_day=10,

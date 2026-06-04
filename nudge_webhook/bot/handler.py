@@ -159,7 +159,7 @@ def _welcome_back_message(conn, *, user_id: int, district: str, cfg: Config) -> 
     return ch.humanize(cfg, fallback=fallback, purpose="welcome a returning user with a summary of their account") or fallback
 
 
-def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage, now: datetime | None = None) -> str:
+def process_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage, now: datetime | None = None) -> str:
     now_dt = now or now_utc()
     from_norm = normalize_sender(inbound.from_addr)
 
@@ -178,7 +178,7 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
     lender_options: list[dict[str, Any]] = []
 
     reply: str | None = None
-    policy_channel = "whatsapp" if inbound.from_addr.lower().startswith("whatsapp:") else "sms"
+    policy_channel = "web"
 
     conn = connect(db_path)
     try:
@@ -203,9 +203,9 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
 
         # ── Store inbound message ───────────────────────────────────────────
         inbound_cursor = conn.execute(
-            "INSERT INTO raw_messages(user_id, direction, channel, from_addr, to_addr, body, twilio_message_sid, payload_json) VALUES (?, 'inbound', ?, ?, ?, ?, ?, ?)",
-            (user_id, policy_channel, inbound.from_addr, inbound.to_addr, inbound.body,
-             inbound.twilio_message_sid, json.dumps(inbound.payload, ensure_ascii=False)),
+            "INSERT INTO raw_messages(user_id, direction, channel, from_addr, to_addr, body, twilio_message_sid, payload_json) VALUES (?, 'inbound', 'web', ?, ?, ?, ?, ?)",
+            (user_id, inbound.from_addr, inbound.to_addr, inbound.body,
+             inbound.message_sid, json.dumps(inbound.payload, ensure_ascii=False)),
         )
         inbound_raw_message_id = int(inbound_cursor.lastrowid)
 
@@ -413,7 +413,7 @@ def process_twilio_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage
                                    details={"from_lender": from_lender, "to_lender": to_lender})
                 conn.execute(
                     "INSERT INTO self_reported_switches(user_id, source_raw_message_id, from_lender, to_lender, notes) VALUES (?, ?, ?, ?, ?)",
-                    (user_id, inbound_raw_message_id, from_lender, str(to_lender), "whatsapp_command"),
+                    (user_id, inbound_raw_message_id, from_lender, str(to_lender), "web_command"),
                 )
                 save_selected_lender(conn, user_id=user_id, option=None, rank=None)
                 reply = f"Thanks, I've noted that you switched to {to_lender}."

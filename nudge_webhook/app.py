@@ -6,28 +6,7 @@ import os
 from flask import Flask, Response, jsonify, render_template, request
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-try:
-    from twilio.request_validator import RequestValidator
-    from twilio.twiml.messaging_response import MessagingResponse
-except Exception:
-    RequestValidator = None
-
-    class MessagingResponse:
-        def __init__(self) -> None:
-            self._messages: list[str] = []
-
-        def message(self, body: str) -> None:
-            self._messages.append(str(body))
-
-        def __str__(self) -> str:
-            msg = self._messages[-1] if self._messages else ""
-            escaped = (
-                msg.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-                   .replace('"', "&quot;").replace("'", "&apos;")
-            )
-            return f"<Response><Message>{escaped}</Message></Response>"
-
-from .bot import InboundMessage, process_twilio_inbound
+from .bot import InboundMessage, process_inbound
 from .config import Config
 from .db import connect, init_and_migrate
 from .mfi import load_dataset_into_sqlite, register_mfi
@@ -108,11 +87,11 @@ def create_app(config: Config | None = None) -> Flask:
             from_addr=f"web:{session_id}",
             to_addr="web",
             body=message,
-            twilio_message_sid=None,
+            message_sid=None,
             payload={"source": "web"},
         )
         db_path = app.config["NUDGE_DB"].path
-        reply_text = process_twilio_inbound(cfg, db_path=db_path, inbound=inbound)
+        reply_text = process_inbound(cfg, db_path=db_path, inbound=inbound)
 
         conn = connect(db_path)
         try:
@@ -174,29 +153,6 @@ def create_app(config: Config | None = None) -> Flask:
             }
 
         return jsonify({"reply": reply_text, "debug": debug})
-
-    # ── Twilio webhook ─────────────────────────────────────────────────────
-
-    @app.post("/twilio")
-    def twilio_webhook() -> Response:
-        if cfg.twilio_validate_signature and cfg.twilio_auth_token and RequestValidator is not None:
-            signature = request.headers.get("X-Twilio-Signature", "")
-            if not RequestValidator(cfg.twilio_auth_token).validate(request.url, request.form, signature):
-                return Response("invalid signature", status=403)
-
-        inbound = InboundMessage(
-            from_addr=(request.form.get("From") or "").strip(),
-            to_addr=(request.form.get("To") or "").strip() or None,
-            body=(request.form.get("Body") or "").strip(),
-            twilio_message_sid=(request.form.get("MessageSid") or "").strip() or None,
-            payload={str(k): str(v) for k, v in request.form.items()},
-        )
-        db_path = app.config["NUDGE_DB"].path
-        reply_text = process_twilio_inbound(cfg, db_path=db_path, inbound=inbound)
-
-        twiml = MessagingResponse()
-        twiml.message(reply_text)
-        return Response(str(twiml), mimetype="application/xml")
 
     # ── Admin endpoints ────────────────────────────────────────────────────
 

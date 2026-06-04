@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -36,9 +35,6 @@ def _make_config(db_path: str) -> Config:
         port=5000,
         railway_environment=None,
         db_path=db_path,
-        twilio_account_sid=None,
-        twilio_auth_token=None,
-        twilio_validate_signature=False,
         claude_api_key=None,
         claude_model="claude-3-5-sonnet-latest",
         nudge_cooldown_minutes=0,
@@ -49,16 +45,13 @@ def _make_config(db_path: str) -> Config:
     )
 
 
-def _load_twilio_fixture(name: str) -> dict[str, Any]:
-    repo_root = Path(__file__).resolve().parents[1]
-    path = repo_root / "tests" / "fixtures" / "twilio" / name
-    with open(path, encoding="utf-8") as f:
-        payload = json.load(f)
-    return {str(k): str(v) for k, v in payload.items()}
+def _chat(client, session_id: str, message: str) -> str:
+    r = client.post("/api/chat", json={"session_id": session_id, "message": message})
+    return r.get_json()["reply"]
 
 
 class TestTask10E2ELocalFixtures(unittest.TestCase):
-    def test_end_to_end_smoke_with_recorded_twilio_payloads(self) -> None:
+    def test_end_to_end_smoke(self) -> None:
         def stub_call_json_with_retries(cfg: Config, system_prompt: str, user_prompt: str) -> tuple[dict[str, Any], str] | None:
             _ = (cfg, system_prompt, user_prompt)
             return (
@@ -78,6 +71,7 @@ class TestTask10E2ELocalFixtures(unittest.TestCase):
 
         original_call_json = bot_module.call_json_with_retries
         bot_module.call_json_with_retries = stub_call_json_with_retries
+        session = "user-e2e-001"
         try:
             with tempfile.TemporaryDirectory() as td:
                 db_path = str(Path(td) / "test.sqlite3")
@@ -89,15 +83,15 @@ class TestTask10E2ELocalFixtures(unittest.TestCase):
                 app = create_app(_make_config(db_path))
                 client = app.test_client()
 
-                r0 = client.post("/twilio", data=_load_twilio_fixture("whatsapp_inbound_hello.json"))
-                self.assertIn("reply start", r0.data.decode("utf-8").lower())
+                r0 = _chat(client, session, "hello")
+                self.assertIn("reply start", r0.lower())
 
-                r1 = client.post("/twilio", data=_load_twilio_fixture("whatsapp_inbound_start.json"))
-                self.assertIn("opted in", r1.data.decode("utf-8").lower())
-                self.assertIn("district", r1.data.decode("utf-8").lower())
+                r1 = _chat(client, session, "START")
+                self.assertIn("opted in", r1.lower())
+                self.assertIn("district", r1.lower())
 
-                r2 = client.post("/twilio", data=_load_twilio_fixture("whatsapp_inbound_district.json"))
-                self.assertIn("district set", r2.data.decode("utf-8").lower())
+                r2 = _chat(client, session, "Kampala")
+                self.assertIn("district set", r2.lower())
 
                 alternatives = client.get("/mfi/alternatives?district=Kampala&current_rate=60&n=3")
                 payload = alternatives.get_json()
@@ -113,18 +107,15 @@ class TestTask10E2ELocalFixtures(unittest.TestCase):
                 self.assertIsInstance(top_results, list)
                 self.assertEqual([r["lender"] for r in top_results], ["Sunrise MFI", "Unity Credit", "GreenField Finance"])
 
-                r3 = client.post("/twilio", data=_load_twilio_fixture("whatsapp_inbound_borrow_message.json"))
-                body = r3.data.decode("utf-8")
-                self.assertIn("very costly", body.lower())
-                self.assertIn("Kampala", body)
+                r3 = _chat(client, session, "I need 5000 for 30 days, interest 5% monthly, from a local moneylender")
+                self.assertIn("very costly", r3.lower())
+                self.assertIn("Kampala", r3)
 
                 conn = connect(db_path)
                 try:
-                    user_id = int(conn.execute("SELECT id FROM users WHERE phone_e164 = ?", ("+15551230001",)).fetchone()["id"])
+                    user_id = int(conn.execute("SELECT id FROM users WHERE phone_e164 = ?", (f"web:{session}",)).fetchone()["id"])
                     event_count = int(
-                        conn.execute("SELECT COUNT(*) AS c FROM parsed_events WHERE user_id = ? AND event_type='borrow_intent'", (user_id,)).fetchone()[
-                            "c"
-                        ]
+                        conn.execute("SELECT COUNT(*) AS c FROM parsed_events WHERE user_id = ? AND event_type='borrow_intent'", (user_id,)).fetchone()["c"]
                     )
                     self.assertGreaterEqual(event_count, 1)
 
