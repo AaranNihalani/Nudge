@@ -54,8 +54,8 @@ def lender_detail(cfg: Config, *, option: dict[str, Any], rank: int, district: s
     fallback = lender_detail_fallback(option=option, rank=rank, district=district)
     prompt = (
         "Rewrite this lender explanation as a clear chatbot message for an Indian consumer. "
-        "Preserve the lender name, APR, per-month rate, every rupee amount, total repayment, monthly payment, fees warning, and the question asking for the user's opinion. "
-        "Do not claim approval. Do not add phone numbers or legal/financial advice. "
+        "Preserve the lender name, APR, per-month rate, every rupee amount, total repayment, monthly payment, fees warning, and any contact details already present (phone/email/website). "
+        "Do not claim approval. Do not invent phone numbers, email addresses, branch details, or legal/financial advice. "
         f"{_NO_GREETING} {_USE_MD} "
         "Keep it concise.\n\n"
         f"Selected lender: {lender}\nFacts:\n{fallback}"

@@ -1,111 +1,119 @@
 # Nudge
 
-AI-powered financial guidance for fairer borrowing in India.
+Nudge is an English-only, research-informed lending guidance assistant for India. It helps a user:
 
-Nudge is a WhatsApp and web chatbot that helps households understand their credit options, compare regulated MFI lenders, and avoid predatory informal loans. It is informed by peer-reviewed research using the 2019 All India Debt and Investment Survey (AIDIS).
+- Describe a loan they are considering (amount, time period, lender type, optional interest quote)
+- Understand “what you would actually pay” under a transparent, clearly stated set of assumptions
+- Compare against local regulated alternatives using a district-level microfinance (MFI) APR dataset
+- Get a research-backed “credit access profile” based on AIDIS 2019 (optional profile questions)
 
-**Research:** Nihalani, A. (2025). *Understanding Financial Inclusion: Patterns and Determinants of Formal Borrowing in India.* SSRN. https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6006354
+This repository is built as a Flask web service with a web chat UI, a structured parsing pipeline, a baseline policy, and optional Claude-powered message rewriting.
 
----
+## Research basis (AIDIS 2019)
 
-## Routes
+The profile module contains a conservative, citation-preserving assessment flow based on reported average marginal effects (AMEs) from AIDIS 2019 (as described in the module docstring):
 
-| Route | Description |
-|---|---|
-| `GET /` | Professional landing page |
-| `GET /chat` | Web chat UI (same logic as WhatsApp) |
-| `POST /api/chat` | Web chat API (JSON) |
-| `POST /twilio` | Twilio Messaging webhook (WhatsApp/SMS) |
-| `GET /health` | Health check + DB and MFI status |
-| `POST /admin/run-daily` | Trigger daily nudge runner (requires `X-Admin-Token`) |
-| `GET /admin/export-metrics` | Download anonymised metrics ZIP (requires `X-Admin-Token`) |
+- Nihalani, A. (2025). *Understanding Financial Inclusion: Patterns and Determinants of Formal Borrowing in India.* SSRN: https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6006354
 
----
+Important: the assessment reports per-factor effects only and does not aggregate them into a single score.
 
-## Codebase structure
+## Product behavior (what the bot will and won’t claim)
 
+- **Payment estimates**: uses APR-only *simple interest* for transparency and fast mental math. It does not model reducing-balance EMI schedules unless explicitly stated.
+- **Fees and add-ons**: estimates exclude processing fees, insurance, penalties, foreclosure charges, and lender-specific amortization rules.
+- **Contact details**: shows phone/email only when present in the local verified contact directory; it does not invent numbers.
+- **Safety**: does not claim approvals or eligibility; it recommends confirming the exact EMI/total repayment in writing with the lender.
+
+## API surface
+
+**Public routes**
+
+- `GET /` — landing page
+- `GET /chat` — web chat UI (calls the same state machine as the API)
+- `POST /api/chat` — web chat API
+- `GET /health` — health check + DB + dataset status
+
+**Data routes (MFI)**
+
+- `GET /mfi/districts`
+- `GET /mfi/rates?district=<name>`
+- `GET /mfi/alternatives?district=<name>&current_rate=<apr>&n=3`
+
+**Admin routes**
+
+- `GET /admin/export-metrics` — anonymised metrics bundle (requires `X-Admin-Token`)
+
+### `POST /api/chat` example
+
+```bash
+curl -sS http://localhost:5000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"session_id":"demo","message":"Need 5000 for 30 days with moneylender"}'
 ```
+
+## Codebase map
+
+```text
+app.py                      Vercel entrypoint (imports nudge_webhook.wsgi:app)
+vercel.json                 Vercel build config
+
 nudge_webhook/
-  app.py               Flask app factory and routes
-  config.py            Config dataclass (loaded from env vars)
-  db.py                DB layer — SQLite (local) or PostgreSQL (DATABASE_URL)
-  state.py             UserState computation from DB
-  policy.py            Nudge policy — decides when and what to send proactively
-  nudge_content.py     MFI rate lookup and lender message formatting
-  claude.py            Claude API integration
-  nlp.py               Borrow intent extraction
-  mfi.py               MFI dataset loading into SQLite/PostgreSQL
-  daily_runner.py      Daily proactive nudge runner
-  twilio_outbound.py   Outbound Twilio messaging
-  metrics_export.py    Anonymised metrics export
-  admin_cli.py         Admin CLI tool
+  app.py                    Flask app factory and HTTP routes
+  config.py                 Config (env-driven)
+  db.py                     SQLite schema + migrations + connection helpers
+  mfi.py                    MFI dataset loading + /mfi/* API
+  nlp.py                    JSON-schema borrow intent parsing (Claude or stubbed)
+  nudge_content.py          Payment math + message templates + lender contacts
+  lender_contacts.json      Verified lender phone/email/website directory
+  policy.py                 Baseline policy (alert/suggest/education/wait)
+  state.py                  UserState builder (DB → state features)
+  metrics_export.py         Anonymised metrics export bundle
+  claude.py                 Claude API wrapper (retries/timeouts)
+  wsgi.py                   WSGI entrypoint for Gunicorn
 
-  bot/                 Conversation handler (split into focused modules)
-    __init__.py        Exports: InboundMessage, process_twilio_inbound
-    handler.py         Main orchestration
-    helpers.py         Shared utilities (timestamps, normalization)
-    parsers.py         Text parsing (amounts, tenures, rates, commands)
-    session.py         Per-user session state management
-    loan.py            Loan payload logic and lender option selection
-    profile.py         Profile collection and AIDIS credit access assessment
-    claude_helpers.py  Claude message humanisation helpers
+  bot/
+    handler.py              Main conversation orchestrator
+    parsers.py              Text parsing utilities (amount/tenure/rate/commands)
+    loan.py                 Option selection + loan-related helpers
+    session.py              Per-user session storage (drafts, options)
+    profile.py              AIDIS-informed profile flow + assessment
+    claude_helpers.py       Claude rewrite helpers (safe, preserve facts)
+
+  static/                   Web chat assets
+  templates/                landing + chat UI templates
 ```
 
----
+## Configuration
 
-## Environment variables
+Create a `.env` file at the project root (optional locally). Key variables:
 
-### Required for production
+**Core**
 
-| Variable | Description |
-|---|---|
-| `DATABASE_URL` | PostgreSQL connection URI (e.g. from Supabase) |
-| `CLAUDE_API_KEY` | Anthropic API key |
-| `TWILIO_ACCOUNT_SID` | Twilio account SID |
-| `TWILIO_AUTH_TOKEN` | Twilio auth token |
-| `TWILIO_FROM` | Your WhatsApp-enabled Twilio number (`whatsapp:+1...`) |
-| `NUDGE_ADMIN_TOKEN` | Secret token for admin endpoints |
+- `PORT` (default `5000`)
+- `NUDGE_DB_PATH` (optional; default `./data/nudge.sqlite3`, or `/tmp/nudge.sqlite3` on Vercel)
+- `NUDGE_MFI_DATASET_PATH` (default `./datasets/mfi_rates.csv`)
+- `NUDGE_MFI_AUTOLOAD` (`true`/`false`, default `true`)
 
-### Recommended
+**Claude (recommended)**
 
-| Variable | Default | Description |
-|---|---|---|
-| `TWILIO_VALIDATE_SIGNATURE` | `true` | Validate Twilio webhook signatures |
-| `NUDGE_BASELINE_POLICY_ENABLED` | `false` | Enable proactive nudge policy |
-| `NUDGE_MFI_AUTOLOAD` | `true` | Auto-load MFI dataset on startup |
-| `NUDGE_MFI_DATASET_PATH` | `./datasets/mfi_rates.csv` | Path to MFI rates CSV |
-| `CLAUDE_MODEL` | `claude-sonnet-4-6` | Claude model to use |
+- `CLAUDE_API_KEY` (or `ANTHROPIC_API_KEY`)
+- `CLAUDE_MODEL` (default `claude-sonnet-4-6`)
+- `NUDGE_CLAUDE_TIMEOUT_SECONDS` (default `30`, clamped to `1..60`)
+- `NUDGE_CLAUDE_ATTEMPTS` (default `1`, clamped to `1..3`)
+- `NUDGE_DEBUG_CLAUDE` (`true`/`false`, default `false`)
 
-### Optional
+**Baseline policy**
 
-| Variable | Default | Description |
-|---|---|---|
-| `NUDGE_COOLDOWN_MINUTES` | `360` | Minimum minutes between nudges per user |
-| `NUDGE_MAX_PER_DAY` | `2` | Max nudges per user per day |
-| `NUDGE_MAX_PER_WEEK` | `5` | Max nudges per user per week |
-| `NUDGE_VERBOSE_REPLIES` | `false` | Include debug info in replies |
-| `NUDGE_DEBUG_CLAUDE` | `false` | Raise Claude errors instead of silently falling back |
+- `NUDGE_BASELINE_POLICY_ENABLED` (`true`/`false`, default `false`)
+- `NUDGE_POLICY_MODE` (`off|baseline|auto`; default `off` unless baseline is enabled)
+- `NUDGE_COOLDOWN_MINUTES`, `NUDGE_MAX_PER_DAY`, `NUDGE_MAX_PER_WEEK`
 
----
+**Admin / export**
 
-## Database
+- `NUDGE_ADMIN_TOKEN` (required for admin endpoints)
+- `NUDGE_ANON_SALT` (recommended; used to anonymise exports)
 
-The app auto-creates and migrates its schema on startup — no manual SQL needed.
-
-- **Local dev / no DATABASE_URL:** SQLite at `./data/nudge.sqlite3` (or `/tmp/nudge.sqlite3` on Vercel)
-- **Production:** PostgreSQL via `DATABASE_URL` (recommended: Supabase free tier)
-
-If `NUDGE_DB_PATH` points to a read-only location (e.g. Vercel serverless), the app falls back to `/tmp/nudge.sqlite3` automatically.
-
----
-
-## WhatsApp setup (production)
-
-See [TODO.md](TODO.md) for the full step-by-step checklist, including Twilio WhatsApp Business API setup, Meta business verification, and message template approval.
-
----
-
-## Local development
+## Running locally
 
 ```bash
 python -m venv .venv
@@ -114,67 +122,35 @@ pip install -r requirements.txt
 python -m nudge_webhook
 ```
 
-Add a `.env` file at the project root:
+Then open:
 
+- `http://localhost:5000/chat`
+
+## Deployment
+
+### Vercel (serverless Python)
+
+- Entrypoint: `app.py` (repo root)
+- Set environment variables in Vercel Project Settings.
+- The code directory is read-only on Vercel; SQLite must live under `/tmp/` (the app will fall back automatically when needed).
+
+SQLite on `/tmp/` is ephemeral on serverless platforms; do not rely on it for durable state across cold starts.
+
+### Render / Railway / any VM (Gunicorn)
+
+The repo includes a `Procfile`:
+
+```text
+web: gunicorn nudge_webhook.wsgi:app --bind 0.0.0.0:$PORT
 ```
-CLAUDE_API_KEY=sk-ant-...
-TWILIO_VALIDATE_SIGNATURE=false
-NUDGE_BASELINE_POLICY_ENABLED=true
-NUDGE_MFI_AUTOLOAD=true
-```
 
-Health check:
-
-```bash
-curl http://localhost:5000/health
-```
-
----
-
-## Tests
+## Testing
 
 ```bash
 source .venv/bin/activate
 python -m unittest discover -s tests -p "test_*.py"
 ```
 
----
+## Notes on Twilio / WhatsApp
 
-## Deployment
-
-### Vercel (serverless)
-
-This repo includes a top-level `app.py` entrypoint for Vercel's Python runtime. Set all environment variables in Vercel Project Settings → Environment Variables.
-
-### Render / Railway (Gunicorn)
-
-```
-web: gunicorn nudge_webhook.wsgi:app --bind 0.0.0.0:$PORT
-```
-
----
-
-## Admin endpoints
-
-Both require `X-Admin-Token: <NUDGE_ADMIN_TOKEN>` header.
-
-```bash
-# Trigger daily nudge decisions manually
-curl -X POST https://your-app/admin/run-daily \
-  -H "X-Admin-Token: your-token"
-
-# Download anonymised metrics ZIP
-curl https://your-app/admin/export-metrics \
-  -H "X-Admin-Token: your-token" \
-  -o metrics.zip
-```
-
----
-
-## Citation
-
-```
-Nihalani, A. (2025). Understanding Financial Inclusion: Patterns and Determinants
-of Formal Borrowing in India. SSRN.
-https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6006354
-```
+This codebase focuses on a web-first chat surface (`/chat`, `/api/chat`). The conversation core (`InboundMessage`, `process_inbound`) is written so it can be adapted to a Twilio webhook, but a `/twilio` endpoint and signature validation are not included in the current server.
