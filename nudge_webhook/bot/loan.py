@@ -164,10 +164,10 @@ def lender_option_prompt(count: int) -> str:
     if count <= 0:
         return "Send your loan amount and time first, and I'll show local options."
     if count == 1:
-        return "Reply 1 to open it."
+        return "Just send 1 to open it."
     if count == 2:
-        return "Reply 1 or 2 to open an option."
-    return "Reply 1, 2, or 3 to open an option."
+        return "Just send 1 or 2 to open an option."
+    return "Just send 1, 2, or 3 to open an option."
 
 
 def _option_number(text: str) -> int | None:
@@ -277,7 +277,7 @@ def selected_lender_fallback_reply(*, user_text: str, option: dict[str, Any], ra
     lender = str(option.get("lender") or "this lender")
     kind = selected_lender_feedback_kind(user_text)
     option_count = int(option.get("option_count") or 0)
-    compare = " You can also reply 1, 2, or 3 to compare another option." if option_count > 1 else ""
+    compare = " You can also send 1, 2, or 3 to compare another option." if option_count > 1 else ""
     cost_hint = selected_lender_cost_hint(option)
 
     if kind == "positive":

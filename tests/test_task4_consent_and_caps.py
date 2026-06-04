@@ -72,7 +72,8 @@ class TestTask4ConsentAndCaps(unittest.TestCase):
                 conn.close()
 
             r2 = _chat(client, "+111", "Kampala")
-            self.assertIn("district set to Kampala", r2)
+            self.assertIn("district", r2.lower())
+            self.assertIn("Kampala", r2)
 
             r3 = _chat(client, "+111", "STOP")
             self.assertIn("stop", r3.lower())

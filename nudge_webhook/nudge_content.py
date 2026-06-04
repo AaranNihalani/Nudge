@@ -128,10 +128,10 @@ def _selection_prompt(count: int) -> str:
     if count <= 0:
         return ""
     if count == 1:
-        return "Reply 1 to see full details."
+        return "Just send 1 to see full details."
     if count == 2:
-        return "Reply 1 or 2 to see full details."
-    return "Reply 1, 2, or 3 to see full details."
+        return "Just send 1 or 2 to see full details."
+    return "Just send 1, 2, or 3 to see full details."
 
 
 def _render_rows(rows: list[dict[str, Any]], *, amount_inr: float | None = None, tenure_days: int | None = None) -> str:

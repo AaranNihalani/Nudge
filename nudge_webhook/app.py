@@ -107,6 +107,7 @@ def create_app(config: Config | None = None) -> Flask:
             last_event = None
             draft_payload = None
             draft_model = None
+            session_state: dict | None = None
             if user_id is not None:
                 last_event = conn.execute(
                     """
@@ -128,6 +129,17 @@ def create_app(config: Config | None = None) -> Flask:
                         draft_model = str(session_row["borrow_model"]) if session_row["borrow_model"] else None
                     except Exception:
                         pass
+                session_state = None
+                session_row2 = conn.execute(
+                    """
+                    SELECT profile_step, lender_options_json, selected_lender_option_json,
+                           districts_offset
+                    FROM user_sessions WHERE user_id = ?
+                    """,
+                    (int(user_id),),
+                ).fetchone()
+                if session_row2 is not None:
+                    session_state = dict(session_row2)
         finally:
             conn.close()
 
@@ -152,7 +164,58 @@ def create_app(config: Config | None = None) -> Flask:
                 "source": "parsed",
             }
 
-        return jsonify({"reply": reply_text, "debug": debug})
+        actions: list[dict[str, str]] = []
+        try:
+            if district is None:
+                actions.append({"label": "Browse districts", "send": "show districts"})
+            if session_state and isinstance(session_state, dict):
+                step = str(session_state.get("profile_step") or "").strip().lower()
+                if step == "intro":
+                    actions.extend([
+                        {"label": "Yes", "send": "yes"},
+                        {"label": "Skip", "send": "skip"},
+                    ])
+                elif step == "caste":
+                    actions.extend([
+                        {"label": "OBC", "send": "obc"},
+                        {"label": "SC", "send": "sc"},
+                        {"label": "ST", "send": "st"},
+                        {"label": "Other", "send": "other"},
+                        {"label": "Don't know", "send": "don't know"},
+                    ])
+                elif step == "religion":
+                    actions.extend([
+                        {"label": "Hindu", "send": "hindu"},
+                        {"label": "Muslim", "send": "muslim"},
+                        {"label": "Christian", "send": "christian"},
+                        {"label": "Other", "send": "other"},
+                        {"label": "Don't know", "send": "don't know"},
+                    ])
+                elif step == "urban":
+                    actions.extend([
+                        {"label": "Urban", "send": "urban"},
+                        {"label": "Rural", "send": "rural"},
+                        {"label": "Don't know", "send": "don't know"},
+                    ])
+
+                opts = session_state.get("lender_options_json")
+                selected = session_state.get("selected_lender_option_json")
+                if opts and not selected:
+                    try:
+                        parsed = json.loads(str(opts))
+                        if isinstance(parsed, list):
+                            n = min(3, len(parsed))
+                            for i in range(n):
+                                actions.append({"label": str(i + 1), "send": str(i + 1)})
+                    except Exception:
+                        pass
+
+                if int(session_state.get("districts_offset") or 0) > 0:
+                    actions.append({"label": "More", "send": "more"})
+        except Exception:
+            actions = []
+
+        return jsonify({"reply": reply_text, "actions": actions, "debug": debug})
 
     # ── Admin endpoints ────────────────────────────────────────────────────
 

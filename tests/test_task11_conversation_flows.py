@@ -125,7 +125,7 @@ class TestTask11ConversationFlows(unittest.TestCase):
             self.assertIn("D000", first)
             self.assertIn("D029", first)
             self.assertNotIn("D030", first)
-            self.assertIn("reply more", first.lower())
+            self.assertIn("more", first.lower())
 
             second = process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "MORE"), now=now)
             self.assertIn("D030", second)
@@ -341,7 +341,7 @@ class TestTask11ConversationFlows(unittest.TestCase):
                     cfg, db_path=db_path, inbound=_inbound(from_e164, "Need 5 lakh for 30 days with moneylender"), now=now
                 )
                 self.assertIn("regulated options", r1.lower())
-                self.assertIn("reply 1, 2, or 3", r1.lower())
+                self.assertIn("send 1, 2, or 3", r1.lower())
                 self.assertIn("**B**", r1)
                 self.assertIn("**C**", r1)
                 self.assertIn("**A**", r1)
@@ -363,7 +363,7 @@ class TestTask11ConversationFlows(unittest.TestCase):
 
                 r3 = process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "That monthly payment is too high"), now=now)
                 self.assertIn("too high", r3.lower())
-                self.assertIn("Reply 1, 2, or 3", r3)
+                self.assertIn("send 1, 2, or 3", r3.lower())
 
                 conn = connect(db_path)
                 try:
@@ -449,14 +449,14 @@ class TestTask11ConversationFlows(unittest.TestCase):
                     cfg, db_path=db_path, inbound=_inbound(from_e164, "Need 5 lakh for 30 days with moneylender"), now=now
                 )
                 self.assertIn("Solo", reply)
-                self.assertIn("Reply 1 to see full details", reply)
-                self.assertNotIn("Reply 1, 2, or 3", reply)
+                self.assertIn("send 1", reply.lower())
+                self.assertNotIn("send 1, 2, or 3", reply.lower())
                 self.assertNotIn("2.", reply)
 
                 invalid = process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "2"), now=now)
                 self.assertIn("I found 1 option", invalid)
-                self.assertIn("Reply 1", invalid)
-                self.assertNotIn("1, 2, or 3", invalid)
+                self.assertIn("send 1", invalid.lower())
+                self.assertNotIn("send 1, 2, or 3", invalid.lower())
         finally:
             bot_module.call_json_with_retries = original_call_json
 

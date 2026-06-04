@@ -87,7 +87,8 @@ class TestTask10E2ELocalFixtures(unittest.TestCase):
                 self.assertIn("district", r0.lower())
 
                 r1 = _chat(client, session, "Kampala")
-                self.assertIn("district set", r1.lower())
+                self.assertIn("district", r1.lower())
+                self.assertIn("Kampala", r1)
 
                 alternatives = client.get("/mfi/alternatives?district=Kampala&current_rate=60&n=3")
                 payload = alternatives.get_json()

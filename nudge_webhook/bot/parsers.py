@@ -16,23 +16,41 @@ def extract_district_command(text: str) -> str | None:
                 continue
             remaining = strip_prefix(raw, prefix)
             return remaining or None
+    for prefix in (
+        "i'm in",
+        "im in",
+        "i am in",
+        "i live in",
+        "we are in",
+        "we're in",
+        "my district is",
+        "district is",
+        "in",
+    ):
+        if lower.startswith(prefix):
+            after = lower[len(prefix):]
+            if after and after[:1].isalpha():
+                continue
+            remaining = strip_prefix(raw, prefix)
+            return remaining or None
     return None
 
 
 def extract_districts_query(text: str) -> str | None:
     raw = text.strip()
     lower = raw.lower()
-    if not lower.startswith("districts"):
-        return None
-    after = lower[len("districts"):]
-    if after and after[:1].isalpha():
-        return None
-    return strip_prefix(raw, "districts")
+    for prefix in ("districts", "show districts", "list districts", "browse districts", "district list"):
+        if lower.startswith(prefix):
+            after = lower[len(prefix):]
+            if after and after[:1].isalpha():
+                continue
+            return strip_prefix(raw, prefix)
+    return None
 
 
 def is_more_command(text: str) -> bool:
     lower = text.strip().lower()
-    return lower in {"more", "districts/more"}
+    return lower in {"more", "more please", "next", "next please", "districts/more"}
 
 
 def parse_contacted(text: str) -> str | None:
@@ -98,7 +116,15 @@ def extract_correction(text: str) -> tuple[str, str] | None:
 
 
 def parse_update_profile_command(text: str) -> bool:
-    return text.strip().lower() in {"update profile", "updateprofile", "reset profile", "change profile"}
+    return text.strip().lower() in {
+        "update profile",
+        "update my profile",
+        "updateprofile",
+        "reset profile",
+        "reset my profile",
+        "change profile",
+        "change my profile",
+    }
 
 
 def parse_amount_inr(text: str) -> float | None:
