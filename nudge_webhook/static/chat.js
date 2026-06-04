@@ -23,6 +23,41 @@ function saveTranscript(items) {
 }
 let transcript = loadTranscript();
 
+// ── Markdown-lite renderer (safe) ──────────────────────────────────────────
+
+function escHtml(s) {
+  return String(s || "")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+function renderMarkdownLite(text) {
+  const raw = String(text || "").replace(/\r\n/g, "\n");
+  let s = escHtml(raw);
+
+  s = s.replace(/(^|\n)\s*---\s*(?=\n|$)/g, '$1<hr class="md-hr">');
+
+  s = s.replace(/`([^`\n]+)`/g, "<code>$1</code>");
+  s = s.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  s = s.replace(/\*([^*\n]+)\*/g, "<em>$1</em>");
+
+  s = s.replace(
+    /(https?:\/\/[^\s<"']+[^\s<"'.,;:!?])/g,
+    '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+  );
+
+  s = s
+    .split("\n")
+    .map((line) => {
+      const m = /^(\s*)-\s+(.+)$/.exec(line);
+      if (!m) return line;
+      return `${m[1]}• ${m[2]}`;
+    })
+    .join("\n");
+
+  return s.replace(/\n/g, "<br>");
+}
+
 // ── Render a single message ────────────────────────────────────────────────
 function renderMessage(m, append = false) {
   const wrap = document.createElement("div");
@@ -39,7 +74,7 @@ function renderMessage(m, append = false) {
   if (m.pending) {
     bubble.innerHTML = '<span class="typing-dots"><span></span><span></span><span></span></span>';
   } else {
-    bubble.textContent = m.text || "";
+    bubble.innerHTML = renderMarkdownLite(m.text || "");
   }
 
   wrap.appendChild(sender);
