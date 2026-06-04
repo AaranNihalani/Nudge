@@ -367,8 +367,7 @@ def process_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage, now: 
                 )
                 _example = "Example: \"Need ₹5,000 for 30 days at 5% monthly from a moneylender.\""
                 if assessment:
-                    natural = ch.profile_assessment_message(cfg, assessment=assessment)
-                    reply = (natural or assessment) + f"\n\nNow tell me about the loan you're considering.\n{_example}"
+                    reply = assessment + f"\n\nNow tell me about the loan you're considering.\n{_example}"
                 else:
                     reply = f"Thanks! Now tell me about the loan you're considering.\n{_example}"
             else:

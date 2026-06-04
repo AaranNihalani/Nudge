@@ -90,6 +90,7 @@ body {
   font-size: 14px;
   line-height: 1.6;
   word-break: break-word;
+  white-space: pre-wrap;
 }
 .msg.me .msg-bubble {
   background: rgba(45,212,191,.1);
