@@ -72,15 +72,16 @@ def selected_lender_conversation(
     fallback: str,
 ) -> str | None:
     prompt = (
-        "You are Nudge, a chatbot helping an Indian consumer decide whether a regulated credit option is right for them. "
-        "Respond to the user's latest message using the selected lender facts. Ask one clear follow-up or give one clear next step. "
-        "Do not claim approval. Do not invent phone numbers, eligibility, fees, or branch details. "
-        "Preserve any rupee amounts, APR percentages, and commands exactly. "
-        "If ready to proceed, tell them to reply CONTACTED <lender> after contacting them, or SWITCHED <lender> if they choose it. "
+        "You are Nudge, a chatbot helping an Indian consumer decide on a regulated lender. "
+        "Respond directly to the user's latest message. "
+        "If the user has already confirmed they're happy with the option or the numbers fit their budget, "
+        "do NOT repeat the loan figures again — just give the single most useful next step (contact the lender, ask for EMI in writing, etc.). "
+        "If the user has a new question, answer it briefly using the lender facts. "
+        "Do not claim approval. Do not invent fees, phone numbers, or branch details. "
         f"{_NO_GREETING} "
-        "Keep under 120 words.\n\n"
-        f"User message: {user_text}\nSelected option rank: {rank}\n"
-        f"Option JSON: {json.dumps(option, ensure_ascii=False)}\nFallback:\n{fallback}"
+        "Keep under 80 words.\n\n"
+        f"User message: {user_text}\n"
+        f"Option: {json.dumps(option, ensure_ascii=False)}"
     )
     reply = generate_reply(cfg, prompt)
     return reply.strip() or None if reply else None

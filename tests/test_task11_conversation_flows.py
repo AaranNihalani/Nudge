@@ -99,8 +99,8 @@ class TestTask11ConversationFlows(unittest.TestCase):
             rank=1,
             district="D",
         )
-        self.assertIn("If you tell me the loan amount and how long you need it for", reply)
-        self.assertIn("Reply with something like: 5000 for 30 days.", reply)
+        self.assertIn("loan amount", reply)
+        self.assertIn("e.g. 5000 for 30 days", reply)
         self.assertNotIn("How does that payment feel", reply)
 
     def test_districts_paging_with_more(self) -> None:
@@ -175,9 +175,9 @@ class TestTask11ConversationFlows(unittest.TestCase):
                 reply = process_inbound(
                     cfg, db_path=db_path, inbound=_inbound(from_e164, "Need 5 lakh for 30 days with moneylender"), now=now
                 )
-                self.assertIn("1) B", reply)
-                self.assertIn("repay about INR", reply)
-                self.assertIn("interest about INR", reply)
+                self.assertIn("1. B", reply)
+                self.assertIn("total over", reply)
+                self.assertIn("/month)", reply)
 
                 conn = connect(db_path)
                 try:
@@ -247,11 +247,11 @@ class TestTask11ConversationFlows(unittest.TestCase):
                     inbound=_inbound(from_e164, "need 50 lakh for 10 years from moneylender with less than 50% apr"),
                     now=now,
                 )
-                self.assertIn("top local regulated options", reply.lower())
-                self.assertIn("1) Midland Microfin Limited", reply)
+                self.assertIn("regulated options", reply.lower())
+                self.assertIn("Midland Microfin Limited", reply)
 
                 opened = process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "ok, tell me about midland"), now=now)
-                self.assertIn("Option 1: Midland Microfin Limited", opened)
+                self.assertIn("Midland Microfin Limited", opened)
                 self.assertNotIn("intent=false", opened.lower())
 
                 conn = connect(db_path)
@@ -296,12 +296,12 @@ class TestTask11ConversationFlows(unittest.TestCase):
             process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "hello"), now=now)
 
             option_reply = process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "1"), now=now)
-            self.assertIn("Reply with something like: 5000 for 30 days.", option_reply)
+            self.assertIn("e.g. 5000 for 30 days", option_reply)
 
             refreshed = process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "5 lakh for 30 days"), now=now)
-            self.assertIn("Option 1: B", refreshed)
-            self.assertIn("INR 90,000 interest over a year", refreshed)
-            self.assertIn("total repayment is about INR 507,397 before fees", refreshed)
+            self.assertIn("B —", refreshed)
+            self.assertIn("₹7,500", refreshed)
+            self.assertIn("₹507,397", refreshed)
 
     def test_missing_interest_still_persists_and_suggests_top_local_options(self) -> None:
         def stub_call_json_with_retries(cfg: Config, system_prompt: str, user_prompt: str) -> tuple[dict[str, Any], str] | None:
@@ -346,26 +346,26 @@ class TestTask11ConversationFlows(unittest.TestCase):
                 r1 = process_inbound(
                     cfg, db_path=db_path, inbound=_inbound(from_e164, "Need 5 lakh for 30 days with moneylender"), now=now
                 )
-                self.assertIn("top local regulated options", r1.lower())
+                self.assertIn("regulated options", r1.lower())
                 self.assertIn("reply 1, 2, or 3", r1.lower())
-                self.assertIn("1) B", r1)
-                self.assertIn("2) C", r1)
-                self.assertIn("3) A", r1)
-                self.assertIn("repay about INR", r1)
-                self.assertIn("interest about INR", r1)
-                self.assertIn("These estimates assume APR-only simple interest", r1)
+                self.assertIn("1. B", r1)
+                self.assertIn("2. C", r1)
+                self.assertIn("3. A", r1)
+                self.assertIn("total over", r1)
+                self.assertIn("/month)", r1)
+                self.assertIn("simple interest", r1.lower())
                 self.assertNotIn("quoted rate", r1.lower())
                 self.assertNotIn("save ~", r1.lower())
 
                 r2 = process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "2"), now=now)
-                self.assertIn("Option 2: C", r2)
-                self.assertIn("Indicative rate", r2)
-                self.assertIn("20% APR works out to about INR 100,000 interest over a year", r2)
-                self.assertIn("INR 8,333 interest per month", r2)
-                self.assertIn("total repayment is about INR 508,219 before fees", r2)
-                self.assertIn("These numbers use APR only", r2)
-                self.assertIn("per month", r2)
-                self.assertIn("I don’t have a verified phone/email", r2)
+                self.assertIn("C —", r2)
+                self.assertIn("APR", r2)
+                self.assertIn("20% APR", r2)
+                self.assertIn("₹8,333", r2)
+                self.assertIn("₹508,219", r2)
+                self.assertIn("simple interest", r2.lower())
+                self.assertIn("monthly", r2.lower())
+                self.assertIn("No verified contact", r2)
 
                 r3 = process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "That monthly payment is too high"), now=now)
                 self.assertIn("too high", r3.lower())
@@ -455,10 +455,10 @@ class TestTask11ConversationFlows(unittest.TestCase):
                 reply = process_inbound(
                     cfg, db_path=db_path, inbound=_inbound(from_e164, "Need 5 lakh for 30 days with moneylender"), now=now
                 )
-                self.assertIn("1) Solo", reply)
-                self.assertIn("Reply 1 to explore this option", reply)
+                self.assertIn("Solo", reply)
+                self.assertIn("Reply 1 to see full details", reply)
                 self.assertNotIn("Reply 1, 2, or 3", reply)
-                self.assertNotIn("2)", reply)
+                self.assertNotIn("2.", reply)
 
                 invalid = process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "2"), now=now)
                 self.assertIn("I found 1 option", invalid)

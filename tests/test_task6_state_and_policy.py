@@ -123,7 +123,7 @@ class TestTask6StateAndBaselinePolicy(unittest.TestCase):
                 state = compute_user_state(db_path, user_id=user_id, now=now)
                 decision = decide_policy(conn, state=state, cfg=Config.from_env())
                 self.assertEqual(decision.action, "alert")
-                self.assertIn("~70", decision.content)
+                self.assertIn("70% APR", decision.content)
             finally:
                 conn.close()
 
@@ -184,7 +184,7 @@ class TestTask6StateAndBaselinePolicy(unittest.TestCase):
                 payload={},
             )
             reply = process_inbound(cfg, db_path=db_path, inbound=inbound, now=now)
-            self.assertIn("~70", reply)
+            self.assertIn("70% APR", reply)
 
 
 if __name__ == "__main__":

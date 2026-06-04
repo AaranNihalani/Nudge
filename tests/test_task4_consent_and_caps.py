@@ -104,7 +104,7 @@ class TestTask4ConsentAndCaps(unittest.TestCase):
             _chat(client, "+333", "Kampala")
 
             first = _chat(client, "+333", "ping")
-            self.assertIn("In Kampala", first)
+            self.assertIn("in Kampala", first)
 
             second = _chat(client, "+333", "ping2")
             self.assertIn("low-frequency", second)
@@ -132,7 +132,7 @@ class TestTask4ConsentAndCaps(unittest.TestCase):
             _chat(client, "+444", "Kampala")
 
             first = _chat(client, "+444", "ping")
-            self.assertIn("In Kampala", first)
+            self.assertIn("in Kampala", first)
 
             second = _chat(client, "+444", "ping2")
             self.assertIn("low-frequency", second)

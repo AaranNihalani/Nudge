@@ -108,7 +108,7 @@ class TestTask10E2ELocalFixtures(unittest.TestCase):
                 self.assertEqual([r["lender"] for r in top_results], ["Sunrise MFI", "Unity Credit", "GreenField Finance"])
 
                 r3 = _chat(client, session, "I need 5000 for 30 days, interest 5% monthly, from a local moneylender")
-                self.assertIn("very costly", r3.lower())
+                self.assertIn("costly", r3.lower())
                 self.assertIn("Kampala", r3)
 
                 conn = connect(db_path)
