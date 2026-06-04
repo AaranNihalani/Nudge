@@ -107,7 +107,7 @@ class TestTask4ConsentAndCaps(unittest.TestCase):
             self.assertIn("in Kampala", first)
 
             second = _chat(client, "+333", "ping2")
-            self.assertIn("low-frequency", second)
+            self.assertIn("pick an option", second.lower())
 
             conn = connect(db_path)
             try:
@@ -135,7 +135,7 @@ class TestTask4ConsentAndCaps(unittest.TestCase):
             self.assertIn("in Kampala", first)
 
             second = _chat(client, "+444", "ping2")
-            self.assertIn("low-frequency", second)
+            self.assertIn("pick an option", second.lower())
 
             conn = connect(db_path)
             try:
@@ -144,6 +144,36 @@ class TestTask4ConsentAndCaps(unittest.TestCase):
                 self.assertEqual(c, 1)
             finally:
                 conn.close()
+
+    def test_option_selection_allows_trailing_punctuation(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            db_path = str(Path(td) / "test.sqlite3")
+            dataset_path = str(Path(td) / "mfi_rates_test.csv")
+            _write_test_dataset_csv(dataset_path)
+            init_and_migrate(db_path)
+            load_dataset_into_sqlite(db_path, dataset_path, replace=True)
+
+            app = create_app(_make_config(db_path, cooldown_minutes=0, max_day=10, max_week=10))
+            client = app.test_client()
+
+            _chat(client, "+555", "START")
+            _chat(client, "+555", "Kampala")
+
+            options_msg = _chat(client, "+555", "ping")
+            first_line = (options_msg.splitlines() or [""])[0]
+            self.assertIn("1.", options_msg)
+
+            m = None
+            for line in options_msg.splitlines():
+                if line.strip().startswith("1."):
+                    m = line
+                    break
+            self.assertIsNotNone(m)
+            first_lender = m.split("—", 1)[0].replace("1.", "", 1).strip()
+            self.assertTrue(first_lender)
+
+            detail = _chat(client, "+555", "1'")
+            self.assertIn(first_lender.lower(), detail.lower())
 
 
 if __name__ == "__main__":

@@ -47,8 +47,8 @@ def decide_policy(conn, *, state: UserState, cfg) -> PolicyDecision:
         return PolicyDecision(
             action="wait", nudge_type=None,
             content=(
-                "Thanks — I've got your message. If you're discussing a loan, share the rate and tenure "
-                "and I can suggest regulated options. Reply STOP to opt out."
+                "If you're asking about a loan, send the amount, time (days/months), and the rate (APR or %/month) if you have it. "
+                "I can then calculate payments and suggest regulated options. Reply STOP to opt out."
             ),
             policy_name="baseline-threshold", policy_version="v1",
         )
@@ -99,6 +99,6 @@ def decide_policy(conn, *, state: UserState, cfg) -> PolicyDecision:
 
     return PolicyDecision(
         action="wait", nudge_type=None,
-        content="Thanks — I've got your message. I'll keep messages low-frequency. Reply STOP to opt out.",
+        content="If you want help with a loan, send the amount, time (days/months), and rate (APR or %/month). Reply STOP to opt out.",
         policy_name="baseline-threshold", policy_version="v1",
     )

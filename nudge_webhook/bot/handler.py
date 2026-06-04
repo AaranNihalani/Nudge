@@ -349,7 +349,8 @@ def process_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage, now: 
         elif consent_status == "opted_in" and profile_step and profile_step not in {"done", "intro"} and not loan_after_commit:
             column, value = parse_profile_answer(profile_step, text)
             if value is INVALID_ANSWER:
-                reply = profile_question(profile_step) or "Please reply in the expected format."
+                q = profile_question(profile_step) or "Please reply in the expected format."
+                reply = "That last answer looks unusual. Please try again.\n\n" + q
             elif value is not None:
                 save_profile_field(conn, user_id=user_id, column=column, value=value)
             if reply is None:
@@ -503,8 +504,19 @@ def process_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage, now: 
                 # Has district, opted in — but no actionable command and not a loan message
                 if not loan_after_commit:
                     if not _nudge_limits_ok(conn, user_id=user_id, cfg=cfg, now=now_dt):
-                        reply = ("Thanks — I've got your message. I'll send the next update later to keep messages low-frequency. "
-                                 "Reply STOP anytime to opt out.")
+                        if lender_options:
+                            reply = (
+                                "I’m not sure what you meant.\n\n"
+                                f"If you meant to pick an option: {lender_option_prompt(len(lender_options))}\n"
+                                "If you meant a new loan: send the amount, time (days/months), and the rate (APR or %/month) if you have it.\n\n"
+                                "Reply STOP anytime to opt out."
+                            )
+                        else:
+                            reply = (
+                                "I’m not sure what you meant. If you’re asking about a loan, send the amount, time (days/months), and the rate "
+                                "(APR or %/month) if you have it. Reply HELP for an example.\n\n"
+                                "Reply STOP anytime to opt out."
+                            )
                     elif loan_policy_enabled:
                         # Use policy engine to decide what to send
                         state = compute_user_state(db_path, user_id=user_id, now=now_dt)

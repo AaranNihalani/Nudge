@@ -172,7 +172,13 @@ def lender_option_prompt(count: int) -> str:
 
 def _option_number(text: str) -> int | None:
     lower = (text or "").strip().lower()
-    m = re.fullmatch(r"(?:option|pick|choose|select|show|tell me about|explore)\s*#?\s*([1-9])", lower) or re.fullmatch(r"#?\s*([1-9])", lower)
+    m = (
+        re.fullmatch(
+            r"(?:option|pick|choose|select|show|tell me about|explore)\s*#?\s*([1-9])\s*[\)\]\.\,\!\'\"]?\s*",
+            lower,
+        )
+        or re.fullmatch(r"#?\s*([1-9])\s*[\)\]\.\,\!\'\"]?\s*", lower)
+    )
     return int(m.group(1)) if m else None
 
 
