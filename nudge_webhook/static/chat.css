@@ -236,6 +236,16 @@ body {
 .chip.primary { border-color: rgba(45,212,191,.35); color: var(--accent); }
 .chip.primary:hover { background: rgba(45,212,191,.1); }
 
+.msg-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.msg-actions .chip {
+  padding: 6px 12px;
+}
+
 /* ── Composer ────────────────────────────────────────────────────────────── */
 .composer {
   display: flex; gap: 10px; align-items: center;

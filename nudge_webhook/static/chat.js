@@ -77,6 +77,24 @@ function renderMessage(m, append = false) {
     bubble.innerHTML = renderMarkdownLite(m.text || "");
   }
 
+  if (!m.pending && Array.isArray(m.actions) && m.actions.length) {
+    const actions = document.createElement("div");
+    actions.className = "msg-actions";
+    actions.setAttribute("aria-label", "Quick replies");
+    m.actions.slice(0, 12).forEach((a) => {
+      const label = String(a?.label || "").trim();
+      const send = String(a?.send || "").trim();
+      if (!label || !send) return;
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "chip";
+      btn.textContent = label;
+      btn.addEventListener("click", () => sendMessage(send));
+      actions.appendChild(btn);
+    });
+    if (actions.childElementCount > 0) bubble.appendChild(actions);
+  }
+
   wrap.appendChild(sender);
   wrap.appendChild(bubble);
 
@@ -125,11 +143,11 @@ async function sendMessage(text) {
       body: JSON.stringify({ session_id: sessionId, message: trimmed }),
     });
 
-    const reply = res.ok
-      ? String((await res.json()).reply || "")
-      : `Error ${res.status}. Please try again.`;
+    const data = res.ok ? (await res.json()) : null;
+    const reply = res.ok ? String(data?.reply || "") : `Error ${res.status}. Please try again.`;
+    const actions = res.ok && Array.isArray(data?.actions) ? data.actions : [];
 
-    const botMsg = { role: "bot", text: reply, id: pendingId };
+    const botMsg = { role: "bot", text: reply, id: pendingId, actions };
     transcript.push(botMsg);
     saveTranscript(transcript);
 
@@ -176,7 +194,7 @@ rebuildThread();
 if (transcript.length === 0) {
   const welcome = {
     role: "bot",
-    text: "Hi, I'm Nudge.\n\nI help you find regulated lending alternatives to moneylenders in your area.\n\nSend **START** to begin. Once you've set your district, describe your loan in plain English — for example: *Need ₹5,000 for 30 days at 5% monthly from a moneylender.*",
+    text: "Hi — I’m Nudge.\n\nTell me your district (e.g., Chennai), then tell me the loan offer: amount + time + rate (APR or %/month) if you have it.\n\nExample: *Need ₹5,000 for 30 days at 5% monthly.*",
   };
   transcript.push(welcome);
   saveTranscript(transcript);
