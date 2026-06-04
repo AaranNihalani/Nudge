@@ -365,11 +365,12 @@ def process_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage, now: 
                     land_acres=float(updated_row["land_acres"]) if updated_row and updated_row["land_acres"] else None,
                     urban=int(updated_row["urban"]) if updated_row and updated_row["urban"] is not None else None,
                 )
+                _example = "Example: \"Need ₹5,000 for 30 days at 5% monthly from a moneylender.\""
                 if assessment:
                     natural = ch.profile_assessment_message(cfg, assessment=assessment)
-                    reply = (natural or assessment) + "\n\nNow tell me about the loan you're considering."
+                    reply = (natural or assessment) + f"\n\nNow tell me about the loan you're considering.\n{_example}"
                 else:
-                    reply = "Thanks! Now tell me about the loan you're considering or reply HELP."
+                    reply = f"Thanks! Now tell me about the loan you're considering.\n{_example}"
             else:
                 save_profile_step(conn, user_id=user_id, step=nxt)
                 reply = profile_question(nxt) or "Thanks. Tell me about your loan."

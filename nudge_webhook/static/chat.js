@@ -81,16 +81,17 @@ function rebuildThread() {
 }
 
 // ── Input state ────────────────────────────────────────────────────────────
+let isSending = false;
 function setSending(sending) {
-  elSend.disabled = !!sending;
-  elInput.disabled = !!sending;
-  if (!sending) setTimeout(() => { try { elInput.focus({ preventScroll: true }); } catch {} }, 0);
+  isSending = !!sending;
+  elSend.disabled = isSending;
+  // Never disable the input — disabling causes it to lose focus
 }
 
 // ── Send ───────────────────────────────────────────────────────────────────
 async function sendMessage(text) {
   const trimmed = (text || "").trim();
-  if (!trimmed) return;
+  if (!trimmed || isSending) return;
 
   // Add user message
   const userMsg = { role: "me", text: trimmed, id: `u${Date.now()}` };
@@ -161,7 +162,7 @@ rebuildThread();
 if (transcript.length === 0) {
   const welcome = {
     role: "bot",
-    text: "Hi, I'm Nudge.\n\nI help you compare loan options and find regulated alternatives to moneylenders in your area.\n\nSend **START** to begin, then tell me your district and the loan you're considering.",
+    text: "Hi, I'm Nudge.\n\nI help you compare loan options and find regulated alternatives to moneylenders in your area.\n\nSend **START** to begin. Once you've set your district, describe your loan in plain English — for example: *Need ₹5,000 for 30 days at 5% monthly from a moneylender.*",
   };
   transcript.push(welcome);
   saveTranscript(transcript);

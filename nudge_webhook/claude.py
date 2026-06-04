@@ -16,8 +16,8 @@ from .config import Config
 # AIDIS research context injected into Claude's system prompt
 # This ensures Claude gives contextually informed responses when discussing
 # loan situations with users.
-# Source: Nihalani, A. (2025). Understanding Financial Inclusion: Patterns and
-# Determinants of Formal Borrowing in India. SSRN 6006354.
+# Source: Nihalani, A. (2025/2026). Understanding Financial Inclusion: Patterns and
+# Determinants of Formal Borrowing in India. International Journal of High School Research. SSRN 6006354.
 # ---------------------------------------------------------------------------
 _AIDIS_CONTEXT = """
 Key facts from AIDIS 2019 (~480,000 nationally representative Indian loan records):

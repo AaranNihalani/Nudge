@@ -34,7 +34,7 @@ _MEAN_MPCE_INR = 13_571.0   # INR/month
 _MEAN_HH_SIZE = 5.5          # people
 
 _PAPER_URL = "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6006354"
-_CITATION = f"AIDIS 2019, ~480,000 loans, Logit with district fixed effects — Nihalani (2025): {_PAPER_URL}"
+_CITATION = f"Nihalani (2025/2026), IJHSR — {_PAPER_URL}"
 
 # Profile collection steps in order
 _PROFILE_STEPS = ["intro", "caste", "religion", "mpce", "household_size", "land", "urban", "done"]
@@ -46,9 +46,9 @@ _PROFILE_STEPS = ["intro", "caste", "religion", "mpce", "household_size", "land"
 
 def profile_intro_message() -> str:
     return (
-        "Before I show you options, I have 5 quick questions about your household. "
+        "Before I show you options, I have 6 quick questions about your household. "
         "This helps me give you more relevant guidance based on national research data.\n\n"
-        "Your answers are stored to personalise future messages — I won't ask again.\n\n"
+        "Your answers are saved — I won't ask again.\n\n"
         "Reply YES to continue, or SKIP to go straight to loan help."
     )
 
@@ -154,84 +154,140 @@ def build_aidis_assessment(
     urban: int | None,
 ) -> str | None:
     """
-    Returns a personalised credit access profile message using only the AME
-    directly from the paper for each characteristic the user provided.
-    No figures are summed or extrapolated.
+    Returns a personalised credit access profile using only the AMEs directly
+    from the paper. Each characteristic is reported separately with its direction
+    and magnitude. An overall directional summary is included.
+    No figures are summed or combined into a single score.
     """
-    lines: list[str] = []
+    factors: list[tuple[str, float, str]] = []  # (description, ame_value, direction)
 
     if caste is not None:
         if caste == "sc":
-            lines.append(
-                f"SC households are {abs(_AME['caste_sc']):.1f} percentage points less likely to access "
-                "formal credit than OBC households."
-            )
+            ame = _AME["caste_sc"]
+            factors.append((
+                f"Caste (SC vs OBC): −{abs(ame):.1f} pp — SC households are "
+                f"{abs(ame):.1f} percentage points less likely to access formal credit than OBC households.",
+                ame, "negative"
+            ))
         elif caste == "st":
-            lines.append(
-                f"ST households are {abs(_AME['caste_st']):.1f} percentage points less likely to access "
-                "formal credit than OBC households."
-            )
+            ame = _AME["caste_st"]
+            factors.append((
+                f"Caste (ST vs OBC): −{abs(ame):.1f} pp — ST households are "
+                f"{abs(ame):.1f} percentage points less likely to access formal credit than OBC households.",
+                ame, "negative"
+            ))
         elif caste == "others":
-            lines.append(
-                f"Households in the 'Others' caste category are {_AME['caste_others']:.1f} percentage "
-                "points more likely to access formal credit than OBC households."
-            )
+            ame = _AME["caste_others"]
+            factors.append((
+                f"Caste (Others vs OBC): +{ame:.1f} pp — households in the 'Others' caste category are "
+                f"{ame:.1f} percentage points more likely to access formal credit than OBC households.",
+                ame, "positive"
+            ))
         elif caste == "obc":
-            lines.append(
-                "OBC households are the reference group — among the two most likely caste categories "
-                "to access formal credit in the AIDIS data."
-            )
+            factors.append((
+                "Caste (OBC): neutral reference group — OBC is the mid-point in the AIDIS caste distribution for formal credit access.",
+                0.0, "neutral"
+            ))
 
     if religion is not None:
         if religion == "muslim":
-            lines.append(
-                f"Muslim households are {abs(_AME['religion_muslim']):.1f} percentage points less likely "
-                "to access formal credit than Hindu households."
-            )
+            ame = _AME["religion_muslim"]
+            factors.append((
+                f"Religion (Muslim vs Hindu): −{abs(ame):.1f} pp — the largest religion-linked gap in the study. "
+                f"Muslim households are {abs(ame):.1f} percentage points less likely to access formal credit than Hindu households.",
+                ame, "negative"
+            ))
         elif religion == "christian":
-            lines.append(
-                f"Christian households are {abs(_AME['religion_christian']):.1f} percentage points less "
-                "likely to access formal credit than Hindu households."
-            )
+            ame = _AME["religion_christian"]
+            factors.append((
+                f"Religion (Christian vs Hindu): −{abs(ame):.1f} pp — Christian households are "
+                f"{abs(ame):.1f} percentage points less likely to access formal credit than Hindu households.",
+                ame, "negative"
+            ))
         elif religion == "others":
-            lines.append(
-                f"Households in other religion categories are {_AME['religion_others']:.1f} percentage "
-                "points more likely to access formal credit than Hindu households."
-            )
+            ame = _AME["religion_others"]
+            factors.append((
+                f"Religion (Other vs Hindu): +{ame:.1f} pp — households in other religion categories are "
+                f"{ame:.1f} percentage points more likely to access formal credit than Hindu households.",
+                ame, "positive"
+            ))
+        elif religion == "hindu":
+            factors.append((
+                "Religion (Hindu): neutral reference group — Hindu is the baseline in the AIDIS religion analysis.",
+                0.0, "neutral"
+            ))
 
     if mpce_inr is not None:
         diff_thousands = (mpce_inr - _MEAN_MPCE_INR) / 1000.0
+        income_effect = diff_thousands * _AME["mpce_per_1000_inr"]
         direction = "above" if diff_thousands >= 0 else "below"
-        lines.append(
-            f"Your monthly spending per person (₹{int(mpce_inr):,}) is {direction} the AIDIS national "
-            f"average (₹{int(_MEAN_MPCE_INR):,}). Each ₹1,000 more per person per month is associated "
-            f"with +{_AME['mpce_per_1000_inr']:.2f} percentage points of formal credit likelihood."
-        )
+        sign = "+" if income_effect >= 0 else "−"
+        factors.append((
+            f"Monthly income (₹{int(mpce_inr):,}/person): {sign}{abs(income_effect):.1f} pp vs the national average "
+            f"(₹{int(_MEAN_MPCE_INR):,}/person). Each ₹1,000 {direction} average is linked to "
+            f"{'+'}{_AME['mpce_per_1000_inr']:.2f} pp of formal credit likelihood.",
+            income_effect, "positive" if income_effect >= 0 else "negative"
+        ))
 
     if urban is not None:
         if urban == 1:
-            lines.append(
-                f"Urban residents are {_AME['urban']:.1f} percentage points more likely to access "
-                "formal credit than rural residents."
-            )
+            ame = _AME["urban"]
+            factors.append((
+                f"Location (urban): +{ame:.1f} pp — urban residents are {ame:.1f} percentage points "
+                "more likely to access formal credit than rural residents.",
+                ame, "positive"
+            ))
         else:
-            lines.append(
-                f"Rural residents face a {_AME['urban']:.1f} percentage point lower likelihood of "
-                "formal credit access compared to urban residents."
-            )
+            ame = _AME["urban"]
+            factors.append((
+                f"Location (rural): −{ame:.1f} pp — rural residents are {ame:.1f} percentage points "
+                "less likely to access formal credit than urban residents.",
+                -ame, "negative"
+            ))
 
     if land_acres is not None and land_acres > 0:
         effect = land_acres * _AME["land_acres"]
-        lines.append(
-            f"Land ownership of {land_acres:g} acre(s) is associated with a "
-            f"+{effect:.1f} percentage point increase in formal credit likelihood "
-            f"({_AME['land_acres']:.2f} pp per acre)."
-        )
+        factors.append((
+            f"Land ({land_acres:g} acre{'s' if land_acres != 1 else ''}): +{effect:.1f} pp — "
+            f"each acre of land is associated with +{_AME['land_acres']:.2f} pp of formal credit likelihood.",
+            effect, "positive"
+        ))
 
-    if not lines:
+    if not factors:
         return None
 
-    header = f"Your credit access profile ({_CITATION}):\n\n"
-    body = "\n".join(f"• {l}" for l in lines)
-    footer = "\n\nThese are population-level averages, not a personal credit score. Source: Nihalani (2025)."
-    return header + body + footer
+    # Build per-factor bullet list
+    bullet_lines = "\n".join(f"• {desc}" for desc, _, _ in factors)
+
+    # Overall directional summary — qualitative only, no summing
+    positives = [d for _, v, d in factors if d == "positive"]
+    negatives = [d for _, v, d in factors if d == "negative"]
+    if positives and negatives:
+        summary = (
+            "Overall, your profile is mixed — some factors increase your likelihood of formal credit access, "
+            "others reduce it. These are independent estimates and cannot be combined into a single number."
+        )
+    elif positives:
+        summary = (
+            "Overall, the factors you've shared are associated with higher formal credit access than average. "
+            "These are independent estimates — they reflect population-level patterns, not a personal score."
+        )
+    elif negatives:
+        summary = (
+            "Overall, the factors you've shared are associated with lower formal credit access than average. "
+            "This makes finding regulated alternatives even more important — that's exactly what Nudge is here for."
+        )
+    else:
+        summary = (
+            "Your profile sits close to the national reference point for formal credit access."
+        )
+
+    return (
+        f"We've analysed your profile using research on ~480,000 Indian loans "
+        f"(Nihalani, 2025 — {_PAPER_URL}).\n\n"
+        f"Here's how each factor affects your likelihood of formal credit access "
+        f"(pp = percentage points, vs a reference group):\n\n"
+        f"{bullet_lines}\n\n"
+        f"{summary}\n\n"
+        f"These are population-level patterns, not a personal credit score."
+    )
