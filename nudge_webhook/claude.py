@@ -67,7 +67,7 @@ def generate_reply(cfg: Config, user_text: str, *, system: str | None = None) ->
             client = Anthropic(api_key=cfg.claude_api_key, timeout=timeout)
             kwargs: dict[str, Any] = {
                 "model": cfg.claude_model,
-                "max_tokens": 256,
+                "max_tokens": 512,
                 "messages": [{"role": "user", "content": user_text}],
             }
             if system:

@@ -68,7 +68,32 @@ class TestProfileFlow(unittest.TestCase):
             self.assertEqual(code, 200)
             self.assertIn("land", reply.lower())
 
+    def test_large_land_is_accepted_and_advances(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            db_path = str(Path(td) / "test.sqlite3")
+            init_and_migrate(db_path)
+            app = create_app(_make_cfg(db_path))
+            client = app.test_client()
+
+            session_id = "profile-flow-002"
+
+            def chat(msg: str) -> tuple[int, str]:
+                r = client.post("/api/chat", json={"session_id": session_id, "message": msg})
+                data = r.get_json(silent=True) or {}
+                return r.status_code, str(data.get("reply") or "")
+
+            chat("START")
+            chat("DISTRICT Chennai")
+            chat("yes")
+            chat("obc")
+            chat("hindu")
+            chat("15000")
+            chat("5")
+
+            code, reply = chat("500")
+            self.assertEqual(code, 200)
+            self.assertIn("urban", reply.lower())
+
 
 if __name__ == "__main__":
     unittest.main()
-

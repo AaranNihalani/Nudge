@@ -74,6 +74,9 @@ def is_skip(text: str) -> bool:
     return text.strip().lower() in {"skip", "s", "don't know", "dont know", "dk", "?", "idk", "no idea"}
 
 
+INVALID_ANSWER = object()
+
+
 def parse_profile_answer(step: str, text: str) -> tuple[str, Any]:
     """Parse the user's answer for a given profile step.
     Returns (column_name, value) where value=None means skip/unknown.
@@ -95,23 +98,32 @@ def parse_profile_answer(step: str, text: str) -> tuple[str, Any]:
     if step == "mpce":
         try:
             val = float(t.replace(",", "").replace("₹", "").replace("rs", "").strip())
-            return ("mpce_inr", val if val > 0 else None)
+            if not (100.0 <= val <= 300000.0):
+                return ("mpce_inr", INVALID_ANSWER)
+            return ("mpce_inr", val)
         except Exception:
-            return ("mpce_inr", None)
+            return ("mpce_inr", INVALID_ANSWER)
 
     if step == "household_size":
         try:
             val = int(float(t))
-            return ("household_size", val if 1 <= val <= 50 else None)
+            if not (1 <= val <= 50):
+                return ("household_size", INVALID_ANSWER)
+            return ("household_size", val)
         except Exception:
-            return ("household_size", None)
+            return ("household_size", INVALID_ANSWER)
 
     if step == "land":
         try:
-            val = float(t.replace(",", "").replace("acres", "").strip())
-            return ("land_acres", max(0.0, val))
+            raw = t.replace(",", "").replace("acres", "").replace("acre", "").strip()
+            val = float(raw)
+            if val < 0:
+                return ("land_acres", INVALID_ANSWER)
+            if val > 10000:
+                return ("land_acres", INVALID_ANSWER)
+            return ("land_acres", float(val))
         except Exception:
-            return ("land_acres", None)
+            return ("land_acres", INVALID_ANSWER)
 
     if step == "urban":
         if any(w in t for w in ("urban", "city", "town", "metro")):
@@ -220,12 +232,16 @@ def build_aidis_assessment(
     if mpce_inr is not None:
         diff_thousands = (mpce_inr - _MEAN_MPCE_INR) / 1000.0
         income_effect = diff_thousands * _AME["mpce_per_1000_inr"]
-        direction = "above" if diff_thousands >= 0 else "below"
         sign = "+" if income_effect >= 0 else "−"
+        per_1000 = _AME["mpce_per_1000_inr"]
+        slope_sentence = (
+            f"Each ₹1,000 above average is linked to +{per_1000:.2f} pp higher likelihood."
+            if diff_thousands >= 0
+            else f"Each ₹1,000 below average is linked to −{per_1000:.2f} pp lower likelihood."
+        )
         factors.append((
             f"Monthly income (₹{int(mpce_inr):,}/person): {sign}{abs(income_effect):.1f} pp vs the national average "
-            f"(₹{int(_MEAN_MPCE_INR):,}/person). Each ₹1,000 {direction} average is linked to "
-            f"{'+'}{_AME['mpce_per_1000_inr']:.2f} pp of formal credit likelihood.",
+            f"(₹{int(_MEAN_MPCE_INR):,}/person). {slope_sentence}",
             income_effect, "positive" if income_effect >= 0 else "negative"
         ))
 
@@ -246,12 +262,20 @@ def build_aidis_assessment(
             ))
 
     if land_acres is not None and land_acres > 0:
-        effect = land_acres * _AME["land_acres"]
-        factors.append((
-            f"Land ({land_acres:g} acre{'s' if land_acres != 1 else ''}): +{effect:.1f} pp — "
-            f"each acre of land is associated with +{_AME['land_acres']:.2f} pp of formal credit likelihood.",
-            effect, "positive"
-        ))
+        if land_acres > 20:
+            factors.append((
+                f"Land ({land_acres:g} acre{'s' if land_acres != 1 else ''}): positive direction — "
+                "very large increase — land ownership is strongly associated with higher formal credit access, "
+                "but it isn’t statistically valid to convert very large landholdings into a single pp number here.",
+                0.0, "positive"
+            ))
+        else:
+            effect = land_acres * _AME["land_acres"]
+            factors.append((
+                f"Land ({land_acres:g} acre{'s' if land_acres != 1 else ''}): +{effect:.1f} pp — "
+                f"each acre of land is associated with +{_AME['land_acres']:.2f} pp of formal credit likelihood.",
+                effect, "positive"
+            ))
 
     if not factors:
         return None

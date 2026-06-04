@@ -44,6 +44,7 @@ from .parsers import (
 )
 from .profile import (
     build_aidis_assessment,
+    INVALID_ANSWER,
     is_skip,
     mark_profile_complete,
     next_step,
@@ -347,32 +348,35 @@ def process_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage, now: 
         # ── Profile active collection (caste / religion / mpce / etc.) ─────────
         elif consent_status == "opted_in" and profile_step and profile_step not in {"done", "intro"} and not loan_after_commit:
             column, value = parse_profile_answer(profile_step, text)
-            if value is not None:
+            if value is INVALID_ANSWER:
+                reply = profile_question(profile_step) or "Please reply in the expected format."
+            elif value is not None:
                 save_profile_field(conn, user_id=user_id, column=column, value=value)
-            nxt = next_step(profile_step)
-            if nxt == "done":
-                save_profile_step(conn, user_id=user_id, step="done")
-                mark_profile_complete(conn, user_id=user_id)
-                updated_row = conn.execute(
-                    "SELECT caste, religion, mpce_inr, household_size, land_acres, urban FROM users WHERE id = ?",
-                    (user_id,),
-                ).fetchone()
-                assessment = build_aidis_assessment(
-                    caste=updated_row["caste"] if updated_row else None,
-                    religion=updated_row["religion"] if updated_row else None,
-                    mpce_inr=float(updated_row["mpce_inr"]) if updated_row and updated_row["mpce_inr"] else None,
-                    household_size=int(updated_row["household_size"]) if updated_row and updated_row["household_size"] else None,
-                    land_acres=float(updated_row["land_acres"]) if updated_row and updated_row["land_acres"] else None,
-                    urban=int(updated_row["urban"]) if updated_row and updated_row["urban"] is not None else None,
-                )
-                _example = "Example: \"Need ₹5,000 for 30 days at 5% monthly from a moneylender.\""
-                if assessment:
-                    reply = assessment + f"\n\nNow tell me about the loan you're considering.\n{_example}"
+            if reply is None:
+                nxt = next_step(profile_step)
+                if nxt == "done":
+                    save_profile_step(conn, user_id=user_id, step="done")
+                    mark_profile_complete(conn, user_id=user_id)
+                    updated_row = conn.execute(
+                        "SELECT caste, religion, mpce_inr, household_size, land_acres, urban FROM users WHERE id = ?",
+                        (user_id,),
+                    ).fetchone()
+                    assessment = build_aidis_assessment(
+                        caste=updated_row["caste"] if updated_row else None,
+                        religion=updated_row["religion"] if updated_row else None,
+                        mpce_inr=float(updated_row["mpce_inr"]) if updated_row and updated_row["mpce_inr"] else None,
+                        household_size=int(updated_row["household_size"]) if updated_row and updated_row["household_size"] else None,
+                        land_acres=float(updated_row["land_acres"]) if updated_row and updated_row["land_acres"] else None,
+                        urban=int(updated_row["urban"]) if updated_row and updated_row["urban"] is not None else None,
+                    )
+                    _example = "Example: \"Need ₹5,000 for 30 days at 5% monthly from a moneylender.\""
+                    if assessment:
+                        reply = assessment + f"\n\nNow tell me about the loan you're considering.\n{_example}"
+                    else:
+                        reply = f"Thanks! Now tell me about the loan you're considering.\n{_example}"
                 else:
-                    reply = f"Thanks! Now tell me about the loan you're considering.\n{_example}"
-            else:
-                save_profile_step(conn, user_id=user_id, step=nxt)
-                reply = profile_question(nxt) or "Thanks. Tell me about your loan."
+                    save_profile_step(conn, user_id=user_id, step=nxt)
+                    reply = profile_question(nxt) or "Thanks. Tell me about your loan."
 
         elif option_selection is not None:
             rank, option = option_selection
