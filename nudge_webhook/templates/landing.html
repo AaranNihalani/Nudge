@@ -3,18 +3,18 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Nudge Microfinance — Financial Guidance for Indian Households</title>
-    <meta name="description" content="AI-powered financial guidance helping Indian households access regulated microfinance and avoid predatory informal lenders. Built on peer-reviewed research." />
+    <title>Nudge Microfinance</title>
+    <meta name="description" content="Financial guidance for Indian households seeking regulated microfinance alternatives. Built on peer-reviewed research covering 480,000 loans." />
 
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
 
     <meta property="og:title" content="Nudge Microfinance" />
-    <meta property="og:description" content="AI-powered financial guidance connecting Indian borrowers with regulated microfinance alternatives. Built on peer-reviewed research covering 480,000 loans." />
+    <meta property="og:description" content="Financial guidance connecting Indian borrowers with regulated microfinance alternatives. Built on peer-reviewed research covering 480,000 loans." />
     <meta property="og:image" content="/static/og-image.svg" />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Nudge Microfinance" />
-    <meta name="twitter:description" content="AI-powered financial guidance for Indian households, built on peer-reviewed research." />
+    <meta name="twitter:description" content="Financial guidance for Indian households, built on peer-reviewed research." />
     <meta name="twitter:image" content="/static/og-image.svg" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -36,7 +36,7 @@
       </div>
     </nav>
 
-    <!-- ── Hero ─────────────────────────────────────────────────────────── -->
+    <!-- Hero -->
     <section class="hero">
       <div class="hero-inner">
         <div>
@@ -44,8 +44,8 @@
           <h1 class="hero-h1">Fairer credit for<br>India's households</h1>
           <p class="hero-sub">
             Half of India's loans are informal. Moneylenders charge nearly double the rate of
-            regulated lenders, yet millions of households have no easy way to compare alternatives
-            before they borrow. Nudge changes that.
+            regulated lenders, yet most borrowers have no straightforward way to compare
+            alternatives before committing. Nudge provides that comparison.
           </p>
           <div class="hero-actions">
             <a href="/chat" class="btn-primary">Try the chatbot →</a>
@@ -74,19 +74,18 @@
       </div>
     </section>
 
-    <!-- ── Research + Findings ───────────────────────────────────────────── -->
+    <!-- Research + Findings -->
     <section class="section" id="research">
       <div class="wrap">
         <div class="two-col">
 
-          <!-- Left: findings table -->
           <div id="findings">
             <div class="section-label">Key Findings</div>
             <h2 class="section-title">Who gets left out of formal credit</h2>
             <p class="section-sub">
-              Each figure below is an average marginal effect from logit regression with district
-              fixed effects — the change in probability of accessing formal credit for that group,
-              holding all else equal. Each estimate is independent; they are not additive.
+              Each figure is an average marginal effect from logit regression with district fixed
+              effects: the change in probability of accessing formal credit for that group, holding
+              all else equal. Estimates are independent and should not be summed.
             </p>
 
             <table class="findings-table">
@@ -94,67 +93,66 @@
                 <tr>
                   <th>Effect</th>
                   <th>Group</th>
-                  <th>What it means</th>
+                  <th>Notes</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td><span class="ft-ame neg">−10.7 pp</span></td>
+                  <td><span class="ft-ame neg">-10.7 pp</span></td>
                   <td class="ft-group">Muslim vs Hindu</td>
                   <td class="ft-note">The largest religion-linked gap in the data. Holds after controlling for income, location, and household size.</td>
                 </tr>
                 <tr>
-                  <td><span class="ft-ame neg">−6.2 pp</span></td>
+                  <td><span class="ft-ame neg">-6.2 pp</span></td>
                   <td class="ft-group">SC vs OBC</td>
-                  <td class="ft-note">Scheduled Caste households face a significant gap even after income and geography are controlled for.</td>
+                  <td class="ft-note">Scheduled Caste households, after controlling for income and geography.</td>
                 </tr>
                 <tr>
                   <td><span class="ft-ame">+6.2 pp</span></td>
                   <td class="ft-group">Upper caste vs OBC</td>
-                  <td class="ft-note">The gap runs in both directions — caste predicts credit access independently of income.</td>
+                  <td class="ft-note">The gap runs in both directions; caste predicts credit access independently of income.</td>
                 </tr>
                 <tr>
-                  <td><span class="ft-ame neg">−3.7 pp</span></td>
+                  <td><span class="ft-ame neg">-3.7 pp</span></td>
                   <td class="ft-group">ST vs OBC</td>
-                  <td class="ft-note">Scheduled Tribe households, where geographic remoteness and social exclusion compound each other.</td>
+                  <td class="ft-note">Scheduled Tribe households. Geographic remoteness and social exclusion appear to compound.</td>
                 </tr>
                 <tr>
-                  <td><span class="ft-ame neg">−3.2 pp</span></td>
+                  <td><span class="ft-ame neg">-3.2 pp</span></td>
                   <td class="ft-group">Christian vs Hindu</td>
-                  <td class="ft-note">A smaller but statistically significant gap, likely reflecting regional concentration patterns.</td>
+                  <td class="ft-note">Smaller but statistically significant. Likely reflects regional concentration patterns.</td>
                 </tr>
                 <tr>
                   <td><span class="ft-ame">+2.5 pp</span></td>
                   <td class="ft-group">Per acre of land owned</td>
-                  <td class="ft-note">Land ownership functions as implicit collateral, which regulated lenders weigh more heavily than informal ones.</td>
+                  <td class="ft-note">Land is recognised as implicit collateral more readily by regulated lenders than informal ones.</td>
                 </tr>
                 <tr>
                   <td><span class="ft-ame">+2.3 pp</span></td>
                   <td class="ft-group">Urban vs rural</td>
-                  <td class="ft-note">Proximity to bank branches and MFI offices still matters, even after district-level controls.</td>
+                  <td class="ft-note">Proximity to bank branches and MFI offices remains significant after district-level controls.</td>
                 </tr>
                 <tr>
                   <td><span class="ft-ame">+1.1 pp</span></td>
                   <td class="ft-group">Per ₹1,000 monthly income</td>
-                  <td class="ft-note">Income is the strongest individual-level predictor — each extra ₹1,000 per month per person raises formal credit likelihood.</td>
+                  <td class="ft-note">The strongest individual-level predictor. Each additional ₹1,000 per person per month is associated with higher formal credit likelihood.</td>
                 </tr>
                 <tr>
-                  <td><span class="ft-ame neg">−0.6 pp</span></td>
+                  <td><span class="ft-ame neg">-0.6 pp</span></td>
                   <td class="ft-group">Per additional household member</td>
-                  <td class="ft-note">Larger households are marginally less likely to access formal credit, possibly reflecting income instability or lower per-capita collateral.</td>
+                  <td class="ft-note">Larger households are marginally less likely to access formal credit, possibly owing to lower per-capita collateral or income variability.</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
-          <!-- Right: research panel -->
           <div>
             <div class="section-label">The Research</div>
             <h2 class="section-title">Built on peer-reviewed findings</h2>
             <p class="section-sub">
-              Nudge is the applied counterpart to published research on India's credit market.
-              When you share your household profile, Nudge uses the paper's estimates to surface
-              alternatives that match your situation — not generic advice.
+              Nudge is the applied extension of published research on credit market inequality in India.
+              Household profile data is used to retrieve the relevant estimates from the paper
+              and present personalised, evidence-based comparisons.
             </p>
 
             <div class="research-panel">
@@ -164,20 +162,20 @@
                 <span class="rp-val">International Journal of High School Research, June 2026</span>
               </div>
               <div class="rp-row">
-                <span class="rp-key">Also on</span>
+                <span class="rp-key">Preprint</span>
                 <span class="rp-val">SSRN Working Paper 6006354</span>
               </div>
               <div class="rp-row">
                 <span class="rp-key">Data</span>
-                <span class="rp-val">AIDIS 2019 — 480,687 loans, all-India</span>
+                <span class="rp-val">AIDIS 2019, 480,687 loans, all-India</span>
               </div>
               <div class="rp-row">
                 <span class="rp-key">Coverage</span>
-                <span class="rp-val">5,940 villages · 3,995 urban blocks</span>
+                <span class="rp-val">5,940 villages, 3,995 urban blocks</span>
               </div>
               <div class="rp-row">
                 <span class="rp-key">Methods</span>
-                <span class="rp-val">OLS &amp; Logit regression, average marginal effects, district fixed effects</span>
+                <span class="rp-val">OLS and logit regression, average marginal effects, district fixed effects</span>
               </div>
               <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6006354"
                  target="_blank" rel="noopener" class="rp-link">
@@ -195,32 +193,32 @@
       </div>
     </section>
 
-    <!-- ── Cost comparison ───────────────────────────────────────────────── -->
+    <!-- Cost comparison -->
     <section class="section">
       <div class="wrap">
         <div class="section-label">The cost gap</div>
-        <h2 class="section-title" style="margin-bottom:24px;">What informal borrowing actually costs</h2>
+        <h2 class="section-title" style="margin-bottom:24px;">What informal borrowing costs</h2>
         <div class="compare-wrap">
           <div class="compare-col formal">
-            <div class="compare-head">Regulated — MFI or bank</div>
+            <div class="compare-head">Regulated lender (MFI or bank)</div>
             <div class="compare-row"><span class="ck">Mean interest rate</span><span class="cv">10.52%</span></div>
             <div class="compare-row"><span class="ck">Average loan size</span><span class="cv">₹2,25,774</span></div>
             <div class="compare-row"><span class="ck">Regulated by</span><span class="cv">RBI / NABARD</span></div>
-            <div class="compare-row"><span class="ck">Recourse if dispute</span><span class="cv">Legal framework</span></div>
+            <div class="compare-row"><span class="ck">Dispute recourse</span><span class="cv">Legal framework</span></div>
           </div>
           <div class="compare-col informal">
-            <div class="compare-head">Informal — moneylender</div>
+            <div class="compare-head">Informal lender (moneylender)</div>
             <div class="compare-row"><span class="ck">Mean interest rate</span><span class="cv">18.65%</span></div>
             <div class="compare-row"><span class="ck">Average loan size</span><span class="cv">₹73,756</span></div>
-            <div class="compare-row"><span class="ck">Regulated by</span><span class="cv">Nobody</span></div>
-            <div class="compare-row"><span class="ck">Recourse if dispute</span><span class="cv">None</span></div>
+            <div class="compare-row"><span class="ck">Regulated by</span><span class="cv">Unregulated</span></div>
+            <div class="compare-row"><span class="ck">Dispute recourse</span><span class="cv">None</span></div>
           </div>
         </div>
-        <p style="font-size:11px;color:var(--muted2);margin-top:10px;">Figures are sample means from the 2019 All India Debt and Investment Survey. District-level rates vary.</p>
+        <p style="font-size:11px;color:var(--muted2);margin-top:10px;">Sample means from the 2019 All India Debt and Investment Survey. District-level rates vary.</p>
       </div>
     </section>
 
-    <!-- ── How it works ──────────────────────────────────────────────────── -->
+    <!-- How it works -->
     <section class="section" id="how">
       <div class="wrap">
         <div class="section-label">How it works</div>
@@ -228,45 +226,45 @@
         <div class="steps">
           <div class="step">
             <div class="step-n">01</div>
-            <div class="step-title">Tell Nudge about your loan</div>
-            <div class="step-desc">Set your district, then describe the loan in plain English — amount, time, and lender type. Nudge also asks six quick questions about your household to personalise the guidance. You can skip any of them.</div>
+            <div class="step-title">Enter your loan details</div>
+            <div class="step-desc">Set your district, then describe the loan: amount, tenure, and lender type. Nudge asks six short questions about your household to personalise the output. Any question can be skipped.</div>
           </div>
           <div class="step">
             <div class="step-n">02</div>
-            <div class="step-title">See what it actually costs</div>
-            <div class="step-desc">Nudge computes the total interest, total repayment, and monthly payment in rupees for your loan — and compares it against regulated MFI rates available in your district, ranked by APR.</div>
+            <div class="step-title">Get a cost breakdown</div>
+            <div class="step-desc">Nudge calculates total interest, total repayment, and monthly payment for your loan, then compares these against regulated MFI rates in your district, ordered by APR.</div>
           </div>
           <div class="step">
             <div class="step-n">03</div>
-            <div class="step-title">Make an informed decision</div>
-            <div class="step-desc">Nudge shows you regulated alternatives with contact details. Your profile is remembered — next time you open the chat, you pick up where you left off. No sign-up required.</div>
+            <div class="step-title">Compare and choose</div>
+            <div class="step-desc">Regulated alternatives are listed with contact details. Your profile is saved, so returning users pick up where they left off. No account or sign-up is required.</div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ── CTA ───────────────────────────────────────────────────────────── -->
+    <!-- CTA -->
     <div class="wrap">
       <div class="cta-strip">
         <div>
           <div class="cta-text">Try Nudge</div>
-          <div class="cta-sub">No sign-up. Describe your loan, see what it costs, find better options.</div>
+          <div class="cta-sub">No sign-up required. Describe your loan and see what regulated alternatives are available in your district.</div>
         </div>
         <a href="/chat" class="btn-primary" style="font-size:15px;padding:12px 28px;">Open the chatbot →</a>
       </div>
     </div>
 
-    <!-- ── Footer ────────────────────────────────────────────────────────── -->
+    <!-- Footer -->
     <footer class="wrap footer">
       <div>
         Nihalani, A. (2025). <em>Understanding Financial Inclusion: Patterns and Determinants of
-        Formal Borrowing in India.</em> International Journal of High School Research (forthcoming, June 2026). SSRN 6006354. —
+        Formal Borrowing in India.</em> International Journal of High School Research (forthcoming, June 2026). SSRN 6006354.
         <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6006354" target="_blank" rel="noopener">papers.ssrn.com</a>
       </div>
       <div class="footer-row">
         <a href="mailto:aaran.nihalani@gmail.com">aaran.nihalani@gmail.com</a>
         <span>Eton College, Windsor</span>
-        <span>Nudge is informational only — not financial advice.</span>
+        <span>Informational only. Not financial or legal advice.</span>
       </div>
     </footer>
 
