@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
-from .nudge_content import alert_message, education_message, suggest_lender_message
+from .nudge_content import alert_message, education_message, loan_cost_breakdown, suggest_lender_message
 from .state import UserState
 
 
@@ -22,6 +22,10 @@ def _recent(now: datetime, ts: datetime | None, *, days: int) -> bool:
     if ts is None:
         return False
     return (now.astimezone(timezone.utc) - ts.astimezone(timezone.utc)) <= timedelta(days=days)
+
+def _fmt_inr(amount_inr: float) -> str:
+    amt = int(round(float(amount_inr)))
+    return f"₹{amt:,}"
 
 
 def decide_policy(conn, *, state: UserState, cfg) -> PolicyDecision:
@@ -89,6 +93,28 @@ def decide_policy(conn, *, state: UserState, cfg) -> PolicyDecision:
             parsed_event_id=state.borrow.last_intent_event_id,
         )
 
+    if (
+        implied_apr is not None
+        and state.borrow.amount_inr is not None
+        and state.borrow.tenure_days is not None
+        and implied_apr < 40.0
+    ):
+        b = loan_cost_breakdown(float(state.borrow.amount_inr), int(state.borrow.tenure_days), float(implied_apr))
+        months = int(b["months"]) if b.get("months") is not None else max(1, int((int(state.borrow.tenure_days) + 29) / 30))
+        total = float(b["total_repayment"]) if b.get("total_repayment") is not None else float(state.borrow.amount_inr)
+        monthly = float(b["monthly_payment"]) if b.get("monthly_payment") is not None else total / float(max(1, months))
+        interest = float(b["tenure_interest"]) if b.get("tenure_interest") is not None else max(0.0, total - float(state.borrow.amount_inr))
+        return PolicyDecision(
+            action="wait", nudge_type=None,
+            content=(
+                f"Got it. At {float(implied_apr):g}% APR on {_fmt_inr(float(state.borrow.amount_inr))} for {int(state.borrow.tenure_days)} days, "
+                f"you’d repay about {_fmt_inr(total)} total (about {_fmt_inr(monthly)}/month), assuming simple interest and no extra fees.\n\n"
+                f"That’s about {_fmt_inr(interest)} in interest over the whole period. If you want, I can still show a few regulated lenders in {district} to compare."
+            ),
+            policy_name="baseline-threshold", policy_version="v1",
+            parsed_event_id=state.borrow.last_intent_event_id,
+        )
+
     if stage == "borrowed" and state.days_since_borrow is not None and state.days_since_borrow <= 7.0:
         return PolicyDecision(
             action="education", nudge_type="education",
@@ -99,6 +125,6 @@ def decide_policy(conn, *, state: UserState, cfg) -> PolicyDecision:
 
     return PolicyDecision(
         action="wait", nudge_type=None,
-        content="If you want help with a loan, send the amount, time (days/months), and rate (APR or %/month). Say STOP to pause.",
+        content="Tell me what you want to do next: share another loan offer to compare, or ask for regulated options in your district. Say STOP to pause.",
         policy_name="baseline-threshold", policy_version="v1",
     )
