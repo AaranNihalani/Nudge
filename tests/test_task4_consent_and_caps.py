@@ -28,6 +28,20 @@ def _write_test_dataset_csv(path: str) -> None:
     )
 
 
+def _write_gurugram_dataset_csv(path: str) -> None:
+    Path(path).write_text(
+        "\n".join(
+            [
+                "district,lender,rate_apr,effective_date,source",
+                "Gurugram,Fusion Finance Limited,21.49,2025-01-01,test",
+                "Gurugram,Midland Microfin Limited,22.50,2025-01-01,test",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+
 def _make_config(db_path: str, *, cooldown_minutes: int = 360, max_day: int = 2, max_week: int = 5) -> Config:
     return Config(
         port=5000,
@@ -168,6 +182,42 @@ class TestTask4ConsentAndCaps(unittest.TestCase):
 
             detail = _chat(client, "+555", "1'")
             self.assertIn(first_lender.lower(), detail.lower())
+
+    def test_gurgaon_alias_matches_gurugram(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            db_path = str(Path(td) / "test.sqlite3")
+            dataset_path = str(Path(td) / "gurugram_rates_test.csv")
+            _write_gurugram_dataset_csv(dataset_path)
+            init_and_migrate(db_path)
+            load_dataset_into_sqlite(db_path, dataset_path, replace=True)
+
+            app = create_app(_make_config(db_path))
+            client = app.test_client()
+
+            reply = _chat(client, "+666", "Gurgaon district")
+            self.assertIn("Gurugram", reply)
+
+            conn = connect(db_path)
+            try:
+                row = conn.execute("SELECT district FROM users WHERE phone_e164 = ?", ("web:+666",)).fetchone()
+                self.assertEqual(str(row["district"]), "Gurugram")
+            finally:
+                conn.close()
+
+    def test_unknown_district_is_accepted_with_no_rate_data_note(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            db_path = str(Path(td) / "test.sqlite3")
+            dataset_path = str(Path(td) / "mfi_rates_test.csv")
+            _write_test_dataset_csv(dataset_path)
+            init_and_migrate(db_path)
+            load_dataset_into_sqlite(db_path, dataset_path, replace=True)
+
+            app = create_app(_make_config(db_path))
+            client = app.test_client()
+
+            reply = _chat(client, "+777", "Darbhanga")
+            self.assertIn("Darbhanga", reply)
+            self.assertIn("may not have regulated lender-rate data", reply)
 
 
 if __name__ == "__main__":

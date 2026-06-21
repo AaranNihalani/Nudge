@@ -198,6 +198,60 @@ class TestTask11ConversationFlows(unittest.TestCase):
         finally:
             bot_module.call_json_with_retries = original_call_json
 
+    def test_heuristic_fallback_parses_simple_loan_when_llm_unavailable(self) -> None:
+        def no_llm(cfg: Config, system_prompt: str, user_prompt: str) -> tuple[dict[str, Any], str] | None:
+            _ = (cfg, system_prompt, user_prompt)
+            return None
+
+        original_call_json = bot_module.call_json_with_retries
+        bot_module.call_json_with_retries = no_llm
+        try:
+            with tempfile.TemporaryDirectory() as td:
+                db_path = str(Path(td) / "test.sqlite3")
+                init_and_migrate(db_path)
+
+                conn = connect(db_path)
+                try:
+                    conn.execute("BEGIN IMMEDIATE")
+                    _seed_minimal_mfi(conn, district="D")
+                    conn.commit()
+                finally:
+                    conn.close()
+
+                cfg = _make_cfg(db_path, baseline_policy_enabled=False, policy_mode="off")
+                now = datetime(2026, 5, 16, 12, 0, 0, tzinfo=timezone.utc)
+                from_e164 = "+15550001199"
+
+                process_inbound(cfg, db_path=db_path, inbound=_inbound(from_e164, "DISTRICT D"), now=now)
+                reply = process_inbound(
+                    cfg, db_path=db_path, inbound=_inbound(from_e164, "need 5000 for 30 days at 10% from a microfinance institution"), now=now
+                )
+                self.assertIn("regulated options", reply.lower())
+                self.assertIn("₹5,074", reply)
+
+                conn = connect(db_path)
+                try:
+                    user_id = int(conn.execute("SELECT id FROM users WHERE phone_e164 = ?", (from_e164,)).fetchone()["id"])
+                    row = conn.execute(
+                        """
+                        SELECT amount_inr, tenure_days, interest_rate_apr, lender_type
+                        FROM parsed_events
+                        WHERE user_id = ? AND event_type='borrow_intent'
+                        ORDER BY id DESC
+                        LIMIT 1
+                        """,
+                        (user_id,),
+                    ).fetchone()
+                    self.assertIsNotNone(row)
+                    self.assertEqual(float(row["amount_inr"]), 5000.0)
+                    self.assertEqual(int(row["tenure_days"]), 30)
+                    self.assertEqual(float(row["interest_rate_apr"]), 10.0)
+                    self.assertEqual(str(row["lender_type"]), "mfi")
+                finally:
+                    conn.close()
+        finally:
+            bot_module.call_json_with_retries = original_call_json
+
     def test_lender_selection_by_partial_name_does_not_trigger_intent_false(self) -> None:
         def stub_call_json_with_retries(cfg: Config, system_prompt: str, user_prompt: str) -> tuple[dict[str, Any], str] | None:
             _ = (cfg, system_prompt, user_prompt)

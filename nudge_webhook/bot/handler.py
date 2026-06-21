@@ -1,7 +1,9 @@
 """Main inbound message handler — orchestrates the full conversation flow."""
 from __future__ import annotations
 
+import difflib
 import json
+import re
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -96,11 +98,86 @@ def _districts_query(conn, *, prefix: str | None, limit: int = 30, offset: int =
     return [str(r["name"]) for r in rows], total
 
 
+_DISTRICT_ALIASES = {
+    "gurgaon": "gurugram",
+    "bangalore": "bengaluru",
+    "bombay": "mumbai",
+    "calcutta": "kolkata",
+    "trivandrum": "thiruvananthapuram",
+}
+
+
+def _normalize_district_name(value: str) -> str:
+    raw = (value or "").strip().lower()
+    raw = raw.split(",", 1)[0]
+    raw = re.sub(r"\b(?:district|dist|city|state)\b", " ", raw)
+    raw = re.sub(r"[^a-z0-9\s]", " ", raw)
+    raw = " ".join(raw.split())
+    return _DISTRICT_ALIASES.get(raw, raw)
+
+
+def _district_rows(conn) -> list[str]:
+    return [str(r["name"]) for r in conn.execute("SELECT name FROM mfi_districts ORDER BY name ASC").fetchall()]
+
+
 def _canonical_district(conn, candidate: str) -> str | None:
+    cand_norm = _normalize_district_name(candidate)
+    if not cand_norm:
+        return None
+    names = _district_rows(conn)
+    exact = [name for name in names if _normalize_district_name(name) == cand_norm]
+    if exact:
+        return exact[0]
+    near = [
+        name for name in names
+        if cand_norm.startswith(_normalize_district_name(name))
+        or _normalize_district_name(name).startswith(cand_norm)
+    ]
+    if len(near) == 1:
+        return near[0]
+    return None
+
+
+def _suggest_districts(conn, candidate: str, *, limit: int = 3) -> list[str]:
+    cand_norm = _normalize_district_name(candidate)
+    if not cand_norm:
+        return []
+    names = _district_rows(conn)
+    by_norm = {_normalize_district_name(name): name for name in names}
+    matches = difflib.get_close_matches(cand_norm, list(by_norm.keys()), n=int(limit), cutoff=0.72)
+    return [by_norm[m] for m in matches if m in by_norm]
+
+
+def _looks_like_district_name(text: str) -> bool:
+    raw = (text or "").strip()
+    if not raw:
+        return False
+    if any(ch.isdigit() for ch in raw):
+        return False
+    if len(raw) > 60:
+        return False
+    low = raw.lower()
+    blocked = {
+        "help", "stop", "start", "yes", "no", "skip", "more", "option 1", "option 2", "option 3",
+        "show districts", "browse districts", "hello", "hi", "hey", "thanks", "thank you",
+    }
+    if low in blocked:
+        return False
+    return any(ch.isalpha() for ch in raw)
+
+
+def _has_lender_rates(conn, *, district: str) -> bool:
     row = conn.execute(
-        "SELECT name FROM mfi_districts WHERE lower(name) = lower(?) LIMIT 1", (candidate.strip(),)
+        """
+        SELECT 1
+        FROM mfi_rates r
+        JOIN mfi_districts d ON d.id = r.district_id
+        WHERE lower(d.name) = lower(?)
+        LIMIT 1
+        """,
+        (district,),
     ).fetchone()
-    return str(row["name"]) if row else None
+    return row is not None
 
 
 def _nudge_limits_ok(conn, *, user_id: int, cfg: Config, now: datetime) -> bool:
@@ -466,10 +543,13 @@ def process_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage, now: 
             if district_cmd is not None:
                 clear_district_paging(conn, user_id=user_id)
                 canonical = _canonical_district(conn, district_cmd)
-                if canonical is None and _has_mfi_districts(conn):
+                if canonical is None and _has_mfi_districts(conn) and not _looks_like_district_name(district_cmd):
                     sample = _districts_sample(conn)
+                    suggestions = _suggest_districts(conn, district_cmd)
+                    suggestion_line = f"Did you mean: {', '.join(suggestions)}?\n\n" if suggestions else ""
                     reply = (
                         "I couldn’t find that district in my list.\n\n"
+                        + suggestion_line
                         + ("Examples: " + ", ".join(sample) + "\n\n" if sample else "")
                         + "Try sending the district name again, or say “show districts”."
                     )
@@ -479,11 +559,14 @@ def process_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage, now: 
                     save_lender_options(conn, user_id=user_id, options=None)
                     save_selected_lender(conn, user_id=user_id, option=None, rank=None)
                     district = chosen
+                    has_rates = _has_lender_rates(conn, district=chosen) if _has_mfi_districts(conn) else False
                     if not profile_step:
                         save_profile_step(conn, user_id=user_id, step="intro")
                         fallback = f"Got it — district: {chosen}.\n\n" + profile_intro_message()
                     else:
                         fallback = f"Got it — district: {chosen}.\n\nNow tell me the loan offer (amount + time + rate if you have it)."
+                    if not has_rates:
+                        fallback += "\n\nI can still estimate the loan cost for you, but I may not have regulated lender-rate data for that district yet."
                     reply = ch.humanize(cfg, fallback=fallback, purpose="confirm district and invite next step") or fallback
 
             elif consent_status != "opted_in":
@@ -492,44 +575,38 @@ def process_inbound(cfg: Config, *, db_path: str, inbound: InboundMessage, now: 
             elif not district:
                 clear_district_paging(conn, user_id=user_id)
                 canonical = _canonical_district(conn, text)
-                if canonical is not None:
-                    chosen = canonical
+                if canonical is not None or _looks_like_district_name(text):
+                    chosen = canonical or text.strip()
                     conn.execute("UPDATE users SET district = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", (chosen, user_id))
                     save_lender_options(conn, user_id=user_id, options=None)
                     save_selected_lender(conn, user_id=user_id, option=None, rank=None)
                     district = chosen
                     save_profile_step(conn, user_id=user_id, step="intro")
                     fallback = f"Got it — district: {chosen}.\n\n" + profile_intro_message()
+                    if _has_mfi_districts(conn) and not _has_lender_rates(conn, district=chosen):
+                        fallback += "\n\nI can still estimate the loan cost for you, but I may not have regulated lender-rate data for that district yet."
                     reply = ch.humanize(cfg, fallback=fallback, purpose="confirm district and start profile") or fallback
-                elif not _has_mfi_districts(conn):
-                    raw = (text or "").strip()
-                    looks_like_place = bool(raw) and len(raw) <= 40 and raw.replace(" ", "").isalpha()
-                    if looks_like_place:
-                        chosen = raw
-                        conn.execute("UPDATE users SET district = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", (chosen, user_id))
-                        save_lender_options(conn, user_id=user_id, options=None)
-                        save_selected_lender(conn, user_id=user_id, option=None, rank=None)
-                        district = chosen
-                        save_profile_step(conn, user_id=user_id, step="intro")
-                        fallback = f"Got it — district: {chosen}.\n\n" + profile_intro_message()
-                        reply = ch.humanize(cfg, fallback=fallback, purpose="confirm district and start profile") or fallback
-                    else:
-                        reply = "Hi — what district are you in?"
-                else:
+                elif _has_mfi_districts(conn):
                     sample = _districts_sample(conn)
                     sample_text = ", ".join(sample) if sample else ""
+                    suggestions = _suggest_districts(conn, text)
+                    suggestion_line = f"Did you mean: {', '.join(suggestions)}?\n" if suggestions else ""
                     if looks_like_new_loan_message(text) or looks_like_loan_intent_message(text) or looks_like_loan_terms_fragment(text):
                         reply = (
                             "Hi — I can help with that. What district are you in?\n"
+                            + suggestion_line
                             + (f"Examples: {sample_text}\n" if sample_text else "")
                             + "If you’re not sure, say “show districts”."
                         )
                     else:
                         reply = (
                             "Hi — what district are you in?\n"
+                            + suggestion_line
                             + (f"Examples: {sample_text}\n" if sample_text else "")
                             + "You can also say “show districts”."
                         )
+                else:
+                    reply = "Hi — what district are you in?"
 
             else:
                 # Has district, opted in — but no actionable command and not a loan message

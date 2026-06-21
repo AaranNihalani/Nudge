@@ -194,7 +194,7 @@ rebuildThread();
 if (transcript.length === 0) {
   const welcome = {
     role: "bot",
-    text: "Hi — I’m Nudge.\n\nTell me your district (e.g., Chennai), then tell me the loan offer: amount + time + rate (APR or %/month) if you have it.\n\nExample: *Need ₹5,000 for 30 days at 5% monthly.*",
+    text: "Hi — I’m Nudge.\n\nStart with your district (for example, *Gurugram*), then tell me the loan offer: amount + time + rate (APR or %/month) if you have it.\n\nExample: *Need ₹5,000 for 30 days at 5% monthly.*",
   };
   transcript.push(welcome);
   saveTranscript(transcript);

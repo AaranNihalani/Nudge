@@ -161,20 +161,31 @@ def parse_tenure_days(text: str) -> int | None:
 
 def parse_interest_rate_apr(text: str) -> float | None:
     raw = (text or "").strip().lower()
-    m = re.search(r"(\d+(?:\.\d+)?)\s*%?", raw)
-    if not m:
-        return None
-    rate = float(m.group(1))
-    if rate <= 0:
-        return None
-    if any(w in raw for w in ("apr", "annual", "year", "yearly")):
-        return float(rate)
-    if any(w in raw for w in ("month", "monthly")):
-        return float(rate) * 12.0
-    if any(w in raw for w in ("week", "weekly")):
-        return float(rate) * 52.0
-    if any(w in raw for w in ("day", "daily")):
-        return float(rate) * 365.0
+    m = re.search(r"(\d+(?:\.\d+)?)\s*%?\s*(apr|annual|year|yearly|month|monthly|week|weekly|day|daily)\b", raw)
+    if m:
+        rate = float(m.group(1))
+        unit = str(m.group(2))
+        if rate <= 0:
+            return None
+        if unit in {"apr", "annual", "year", "yearly"}:
+            return float(rate)
+        if unit in {"month", "monthly"}:
+            return float(rate) * 12.0
+        if unit in {"week", "weekly"}:
+            return float(rate) * 52.0
+        if unit in {"day", "daily"}:
+            return float(rate) * 365.0
+
+    m = re.search(r"(?:interest|rate|apr|at)\s*(?:of\s*)?(\d+(?:\.\d+)?)\s*%", raw)
+    if m:
+        rate = float(m.group(1))
+        return float(rate) if rate > 0 else None
+
+    m = re.search(r"(\d+(?:\.\d+)?)\s*%", raw)
+    if m:
+        rate = float(m.group(1))
+        return float(rate) if rate > 0 else None
+
     return None
 
 

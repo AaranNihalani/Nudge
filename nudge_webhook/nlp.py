@@ -171,6 +171,62 @@ class BorrowIntentParseResult:
     model: str
 
 
+def _heuristic_borrow_payload(text: str) -> dict[str, Any]:
+    from .bot.parsers import (
+        infer_lender_type,
+        looks_like_loan_intent_message,
+        looks_like_loan_terms_fragment,
+        looks_like_new_loan_message,
+        parse_amount_inr,
+        parse_interest_rate_apr,
+        parse_tenure_days,
+    )
+
+    raw = (text or "").strip()
+    low = raw.lower()
+    intent = bool(
+        looks_like_new_loan_message(raw)
+        or looks_like_loan_intent_message(raw)
+        or looks_like_loan_terms_fragment(raw)
+    )
+    lender_type = infer_lender_type(raw) or "unknown"
+    amount_inr = parse_amount_inr(raw)
+    tenure_days = parse_tenure_days(raw)
+    interest_rate_apr = parse_interest_rate_apr(raw)
+
+    stage = "none"
+    if any(p in low for p in ("already borrowed", "i borrowed", "we borrowed", "have borrowed", "took a loan", "took loan")):
+        stage = "borrowed"
+    elif any(p in low for p in ("agreed", "accepted", "finalised", "finalized")):
+        stage = "agreed"
+    elif any(p in low for p in ("offered", "offer", "quote", "quoted")):
+        stage = "offered"
+    elif intent:
+        stage = "asking"
+
+    confidence = 0.2
+    if intent:
+        confidence = 0.55
+        if amount_inr is not None and tenure_days is not None:
+            confidence = 0.78
+        elif amount_inr is not None or tenure_days is not None or interest_rate_apr is not None:
+            confidence = 0.68
+        if lender_type != "unknown":
+            confidence = max(confidence, 0.7)
+
+    return validate_borrow_intent_payload({
+        "schema_version": 1,
+        "intent": intent,
+        "confidence": confidence,
+        "amount_inr": float(amount_inr) if amount_inr is not None else None,
+        "tenure_days": int(tenure_days) if tenure_days is not None else None,
+        "interest_rate_apr": float(interest_rate_apr) if interest_rate_apr is not None else None,
+        "lender_name": None,
+        "lender_type": lender_type,
+        "negotiation_stage": stage,
+    })
+
+
 def persist_borrow_intent_event(
     db_path: str,
     *,
@@ -254,7 +310,7 @@ def parse_borrow_intent_with_llm(
     user_prompt = f"Message:\n{text.strip()}\n\nJSON:"
     result = call_json(cfg, system_prompt, user_prompt)
     if result is None:
-        return None
+        return BorrowIntentParseResult(payload=_heuristic_borrow_payload(text), model="heuristic-fallback")
     payload_raw, model = result
     payload = validate_borrow_intent_payload(payload_raw)
     return BorrowIntentParseResult(payload=payload, model=model)

@@ -223,7 +223,10 @@ def suggest_lender_message(
         exclude_lender=exclude_lender, n=n,
     )
     if not rows:
-        return f"I don't have regulated lender rate data for {district} yet. Try a nearby district — reply DISTRICT <name>."
+        return (
+            f"I don’t have regulated lender-rate data for {district} yet.\n\n"
+            "I can still estimate what this loan would cost, and if you want local comparisons, send a nearby district."
+        )
 
     joined = _render_rows(rows, amount_inr=amount_inr, tenure_days=tenure_days)
     prompt = _selection_prompt(len(rows))
@@ -258,7 +261,7 @@ def alert_message(
     if not rows:
         return (
             f"At {quoted_apr:g}% APR (~{monthly_quoted}%/month), that rate is high. "
-            f"I don't have regulated lender data for {district} yet."
+            f"I don’t have regulated lender data for {district} yet."
         )
 
     joined = _render_rows(rows, amount_inr=amount_inr, tenure_days=tenure_days)

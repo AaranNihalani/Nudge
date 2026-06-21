@@ -1,12 +1,12 @@
 :root {
-  --bg:      #07090c;
-  --bg1:     #0c1017;
-  --stroke:  rgba(255,255,255,.08);
-  --stroke2: rgba(255,255,255,.14);
-  --txt:     rgba(255,255,255,.90);
-  --muted:   rgba(255,255,255,.52);
-  --muted2:  rgba(255,255,255,.30);
-  --accent:  #2dd4bf;
+  --bg:      #f7f3eb;
+  --bg1:     #fffdf9;
+  --stroke:  rgba(83, 60, 34, .12);
+  --stroke2: rgba(83, 60, 34, .18);
+  --txt:     #1f2937;
+  --muted:   #5f6b7a;
+  --muted2:  #8c97a6;
+  --accent:  #0f766e;
   --ff-serif: 'Fraunces', Georgia, serif;
   --ff-sans:  'IBM Plex Sans', system-ui, sans-serif;
   --ff-mono:  'IBM Plex Mono', 'Fira Mono', monospace;
@@ -33,7 +33,7 @@ body {
   padding: 0 24px;
   height: 52px;
   border-bottom: 1px solid var(--stroke);
-  background: rgba(7,9,12,.95);
+  background: rgba(255,253,249,.94);
   backdrop-filter: blur(10px);
 }
 .nav-left { display: flex; align-items: center; gap: 16px; }
@@ -51,7 +51,7 @@ body {
   cursor: pointer; padding: 6px 10px; border-radius: 6px;
   transition: color .15s, background .15s;
 }
-.nav-clear:hover { color: var(--txt); background: rgba(255,255,255,.06); }
+.nav-clear:hover { color: var(--txt); background: rgba(15,118,110,.08); }
 
 /* ── Chat area ───────────────────────────────────────────────────────────── */
 .chat-wrap {
@@ -92,8 +92,8 @@ body {
   word-break: break-word;
 }
 .msg.me .msg-bubble {
-  background: rgba(45,212,191,.1);
-  border: 1px solid rgba(45,212,191,.18);
+  background: rgba(15,118,110,.10);
+  border: 1px solid rgba(15,118,110,.18);
   border-bottom-right-radius: 4px;
   color: var(--txt);
 }
@@ -102,6 +102,7 @@ body {
   border: 1px solid var(--stroke);
   border-bottom-left-radius: 4px;
   color: var(--txt);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .04);
 }
 .msg.bot.pending .msg-bubble { color: var(--muted); }
 
@@ -197,7 +198,7 @@ body {
 .msg-bubble code {
   font-family: var(--ff-mono);
   font-size: 12.5px;
-  background: rgba(255,255,255,.07);
+  background: rgba(15, 23, 42, .05);
   border: 1px solid var(--stroke2);
   padding: 1px 5px;
   border-radius: 4px;
@@ -229,12 +230,12 @@ body {
   font-family: var(--ff-sans); font-size: 12px;
   padding: 6px 13px; border-radius: 999px;
   border: 1px solid var(--stroke2);
-  background: transparent; color: var(--muted);
+  background: var(--bg1); color: var(--muted);
   cursor: pointer; transition: color .15s, border-color .15s, background .15s;
 }
-.chip:hover { color: var(--txt); border-color: var(--accent); background: rgba(45,212,191,.06); }
+.chip:hover { color: var(--txt); border-color: var(--accent); background: rgba(15,118,110,.08); }
 .chip.primary { border-color: rgba(45,212,191,.35); color: var(--accent); }
-.chip.primary:hover { background: rgba(45,212,191,.1); }
+.chip.primary:hover { background: rgba(15,118,110,.12); }
 
 .msg-actions {
   display: flex;
@@ -263,10 +264,10 @@ body {
   outline: none; transition: border-color .15s;
 }
 .composer input::placeholder { color: var(--muted2); }
-.composer input:focus { border-color: rgba(45,212,191,.4); }
+.composer input:focus { border-color: rgba(15,118,110,.4); }
 .composer button {
   flex-shrink: 0;
-  background: var(--accent); color: #07090c;
+  background: var(--accent); color: #f8fafc;
   font-family: var(--ff-sans); font-size: 14px; font-weight: 600;
   padding: 10px 20px; border: none; border-radius: 10px;
   cursor: pointer; transition: opacity .15s;
