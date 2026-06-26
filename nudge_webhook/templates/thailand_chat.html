@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Nudge — Thailand</title>
+    <title>Nudge Thailand</title>
     <link rel="icon" href="/static/thailand_favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -64,7 +64,7 @@
     <nav class="nav">
       <div class="nav-left">
         <a href="/thailand" class="nav-back" title="Thailand home">←</a>
-        <a href="/thailand" class="nav-brand">Nudge — Thailand</a>
+        <a href="/thailand" class="nav-brand">Nudge Thailand</a>
       </div>
       <div style="display:flex;align-items:center;gap:10px;">
         <div class="nav-switcher">
@@ -102,7 +102,7 @@
       </form>
 
       <div class="disclaimer">
-        Informational only — not financial or legal advice.
+        Informational only. Not financial or legal advice.
         Rates sourced from BOT / FPO / published research. Verify with lender before applying.
         Fieldwork planned August 2026 with Duang Prateep Foundation, Klong Toey, Bangkok.
       </div>
@@ -145,7 +145,7 @@
         localStorage.setItem(SID_KEY, s);
         return s;
       }
-      const sid = getSid();
+      let sid = getSid();
 
       // ── Transcript ───────────────────────────────────────────────────────────
       function loadTx() {
@@ -161,9 +161,21 @@
       let lang = localStorage.getItem(LANG_KEY) || "en";
 
       const WELCOME = {
-        en: "สวัสดี! I'm **Nudge** — a tool for understanding loan costs in Thailand.\n\nStart by telling me your **province** (e.g. Bangkok, Chiang Mai, Khon Kaen), then describe the loan offer you've been given. I'll show you the total repayment in ฿ and compare it with regulated Pico Finance, Nano Finance, BAAC, and Village Fund alternatives.",
-        th: "สวัสดีครับ! ผมชื่อ **Nudge** — เครื่องมือช่วยประเมินต้นทุนเงินกู้ในประเทศไทย\n\nเริ่มต้นด้วยการบอก**จังหวัด**ของคุณ (เช่น กรุงเทพฯ เชียงใหม่ ขอนแก่น) จากนั้นเล่าให้ฟังว่าได้รับข้อเสนอเงินกู้อย่างไร ผมจะคำนวณยอดชำระรวมเป็น ฿ และเปรียบเทียบกับทางเลือกที่มีการควบคุม เช่น พิโกไฟแนนซ์ นาโนไฟแนนซ์ ธ.ก.ส. และกองทุนหมู่บ้านครับ",
+        en: "สวัสดี! I'm **Nudge**, a tool for understanding loan costs in Thailand.\n\nStart by telling me your **province** (e.g. Bangkok, Chiang Mai, Khon Kaen), then describe the loan offer you've been given. I'll show you the total repayment in ฿ and compare it with regulated Pico Finance, Nano Finance, BAAC, and Village Fund alternatives.",
+        th: "สวัสดีครับ! ผมชื่อ **Nudge** เครื่องมือช่วยประเมินต้นทุนเงินกู้ในประเทศไทย\n\nเริ่มต้นด้วยการบอก**จังหวัด**ของคุณ (เช่น กรุงเทพฯ เชียงใหม่ ขอนแก่น) จากนั้นเล่าให้ฟังว่าได้รับข้อเสนอเงินกู้อย่างไร ผมจะคำนวณยอดชำระรวมเป็น ฿ และเปรียบเทียบกับทางเลือกที่มีการควบคุม เช่น พิโกไฟแนนซ์ นาโนไฟแนนซ์ ธ.ก.ส. และกองทุนหมู่บ้านครับ",
       };
+
+      const PLACEHOLDERS = {
+        en: "Enter your province or describe a loan offer in ฿…",
+        th: "บอกจังหวัดของคุณ หรืออธิบายข้อเสนอสินเชื่อใน ฿…",
+      };
+
+      const INIT_CHIPS = [
+        { label: "Bangkok",      send: "I'm in Bangkok" },
+        { label: "Chiang Mai",   send: "I'm in Chiang Mai" },
+        { label: "Khon Kaen",    send: "I'm in Khon Kaen" },
+        { label: "Example loan", send: "Need ฿10,000 for 60 days at 15% monthly" },
+      ];
 
       function applyLang(l, reWelcome) {
         lang = l;
@@ -171,10 +183,16 @@
         document.querySelectorAll(".lang-btn").forEach(b => {
           b.classList.toggle("active", b.dataset.lang === l);
         });
-        // If no conversation yet, replace the welcome message
-        if (reWelcome && tx.length === 0) {
-          document.getElementById("thread").innerHTML = "";
+        input.placeholder = PLACEHOLDERS[l] || PLACEHOLDERS.en;
+        if (reWelcome) {
+          // Always start a fresh session when the language is toggled
+          tx = []; saveTx([]);
+          localStorage.removeItem(SID_KEY);
+          sid = getSid();
+          thread.innerHTML = "";
+          chips.innerHTML = "";
           addMsg("bot", WELCOME[lang] || WELCOME.en, false);
+          setChips(INIT_CHIPS);
         }
       }
 
@@ -265,7 +283,7 @@
           setChips(data.actions || []);
         } catch (err) {
           removeTyping();
-          addMsg("bot", "Sorry — something went wrong. Please try again.");
+          addMsg("bot", "Sorry, something went wrong. Please try again.");
           console.error(err);
         } finally {
           sending = false;
@@ -288,18 +306,13 @@
       });
 
       // ── Init ─────────────────────────────────────────────────────────────────
-      applyLang(lang, false);
+      applyLang(lang, false);  // sets button state + placeholder, no chat reset on load
 
       if (tx.length) {
         tx.forEach(m => addMsg(m.role, m.text, false));
       } else {
         addMsg("bot", WELCOME[lang] || WELCOME.en, false);
-        setChips([
-          { label: "Bangkok",      send: "I'm in Bangkok" },
-          { label: "Chiang Mai",   send: "I'm in Chiang Mai" },
-          { label: "Khon Kaen",    send: "I'm in Khon Kaen" },
-          { label: "Example loan", send: "Need ฿10,000 for 60 days at 15% monthly" },
-        ]);
+        setChips(INIT_CHIPS);
       }
     })();
     </script>

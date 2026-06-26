@@ -66,7 +66,7 @@ for prov in PROVINCES:
     # ── 2. BAAC Half-Half (subsidised, farmers only) ──────────────────────────
     ROWS.append({
         "district": prov,
-        "lender": "BAAC Half-Half Loan (ธ.ก.ส. กึ่งดอก) — registered farmers only",
+        "lender": "BAAC Half-Half Loan (ธ.ก.ส. กึ่งดอก, registered farmers only)",
         "rate_apr": 3.00,
         "effective_date": "2024-01-01",
         "source": (
@@ -92,7 +92,7 @@ for prov in PROVINCES:
     # ── 4. Thai Credit Bank — Nano (28%, up to ฿30k, no collateral/guarantor) ─
     ROWS.append({
         "district": prov,
-        "lender": "Thai Credit Bank — Nano Loan (ไทยเครดิต นาโน)",
+        "lender": "Thai Credit Bank: Nano Loan (ไทยเครดิต นาโน)",
         "rate_apr": 28.00,
         "effective_date": "2024-01-01",
         "source": (
@@ -106,7 +106,7 @@ for prov in PROVINCES:
     # ── 5. Thai Credit Bank — Micro Credit (28%, up to ฿200k) ───────────────
     ROWS.append({
         "district": prov,
-        "lender": "Thai Credit Bank — Micro Credit (ไทยเครดิต ไมโคร)",
+        "lender": "Thai Credit Bank: Micro Credit (ไทยเครดิต ไมโคร)",
         "rate_apr": 28.00,
         "effective_date": "2024-01-01",
         "source": (
@@ -119,7 +119,7 @@ for prov in PROVINCES:
     # ── 6. Good Money by GSB — Personal Loan (19–25% APR, up to ฿1M) ────────
     ROWS.append({
         "district": prov,
-        "lender": "Good Money by GSB — Personal Loan (เงินดีดี สินเชื่อส่วนบุคคล)",
+        "lender": "Good Money by GSB: Personal Loan (เงินดีดี สินเชื่อส่วนบุคคล)",
         "rate_apr": 22.00,
         "effective_date": "2024-01-01",
         "source": (
@@ -134,7 +134,7 @@ for prov in PROVINCES:
     # ── 7. Krungsri First Choice PayPlus (no income docs, up to ฿20k) ───────
     ROWS.append({
         "district": prov,
-        "lender": "Krungsri First Choice PayPlus — no income docs, up to ฿20,000",
+        "lender": "Krungsri First Choice PayPlus (no income docs, up to ฿20,000)",
         "rate_apr": 25.00,
         "effective_date": "2024-01-01",
         "source": (
@@ -150,7 +150,7 @@ for prov in PROVINCES:
     # ── 8. SCB UP — revolving, no income proof (฿1,000+) ────────────────────
     ROWS.append({
         "district": prov,
-        "lender": "SCB UP — revolving credit, no income proof (ธนาคารไทยพาณิชย์)",
+        "lender": "SCB UP: revolving credit, no income proof (ธนาคารไทยพาณิชย์)",
         "rate_apr": 25.00,
         "effective_date": "2024-01-01",
         "source": (
@@ -164,7 +164,7 @@ for prov in PROVINCES:
     # ── 9. Good Money by GSB — Nano (29–33% APR, targets informal workers) ──
     ROWS.append({
         "district": prov,
-        "lender": "Good Money by GSB — Nano Finance (เงินดีดี นาโน)",
+        "lender": "Good Money by GSB: Nano Finance (เงินดีดี นาโน)",
         "rate_apr": 29.00,
         "effective_date": "2024-01-01",
         "source": (
@@ -176,10 +176,10 @@ for prov in PROVINCES:
         ),
     })
 
-    # ── 10. Saksiam Leasing — Nano Finance ────────────────────────────────────
+    # ── 10. Saksiam Leasing: Nano Finance ────────────────────────────────────
     ROWS.append({
         "district": prov,
-        "lender": "Saksiam Leasing — Nano Finance (ศักดิ์สยาม ลิสซิ่ง)",
+        "lender": "Saksiam Leasing: Nano Finance (ศักดิ์สยาม ลิสซิ่ง)",
         "rate_apr": 30.00,
         "effective_date": "2024-01-01",
         "source": (
@@ -192,7 +192,7 @@ for prov in PROVINCES:
     # ── 11. Siam Digital Lending — Nano ───────────────────────────────────────
     ROWS.append({
         "district": prov,
-        "lender": "Siam Digital Lending — Nano Finance (สยามดิจิทัล)",
+        "lender": "Siam Digital Lending: Nano Finance (สยามดิจิทัล)",
         "rate_apr": 30.00,
         "effective_date": "2024-01-01",
         "source": (
@@ -205,7 +205,7 @@ for prov in PROVINCES:
     # ── 12. TIDLOR — Vehicle title loan (requires vehicle) ───────────────────
     ROWS.append({
         "district": prov,
-        "lender": "TIDLOR — Vehicle Title Loan (เงินติดล้อ) — requires vehicle",
+        "lender": "TIDLOR: Vehicle Title Loan (เงินติดล้อ, requires vehicle)",
         "rate_apr": 18.00,
         "effective_date": "2024-01-01",
         "source": (
@@ -220,7 +220,7 @@ for prov in PROVINCES:
     # ── 13. GSB People's Bank Loan (est. ~25% APR flat) ──────────────────────
     ROWS.append({
         "district": prov,
-        "lender": "GSB People's Bank Loan (ธนาคารออมสิน — สินเชื่อธนาคารประชาชน)",
+        "lender": "GSB People's Bank Loan (ธนาคารออมสิน, สินเชื่อธนาคารประชาชน)",
         "rate_apr": 25.00,
         "effective_date": "2024-01-01",
         "source": (
@@ -236,7 +236,7 @@ for prov in PROVINCES:
     # ── 14. GSB Welfare Card Loan (~12% APR est., welfare card holders) ──────
     ROWS.append({
         "district": prov,
-        "lender": "GSB Welfare Card Loan (ธนาคารออมสิน — บัตรสวัสดิการ)",
+        "lender": "GSB Welfare Card Loan (ธนาคารออมสิน, บัตรสวัสดิการ)",
         "rate_apr": 12.00,
         "effective_date": "2024-01-01",
         "source": (
@@ -249,7 +249,7 @@ for prov in PROVINCES:
     # ── 15. Rabbit Cash — Nano (digital, targets freelancers/online sellers) ─
     ROWS.append({
         "district": prov,
-        "lender": "Rabbit Cash — Nano Finance (digital, เงินกระต่าย)",
+        "lender": "Rabbit Cash: Nano Finance (digital, เงินกระต่าย)",
         "rate_apr": 33.00,
         "effective_date": "2024-01-01",
         "source": (
@@ -261,10 +261,10 @@ for prov in PROVINCES:
         ),
     })
 
-    # ── 16. AIRA & AIFUL — Nano Finance ──────────────────────────────────────
+    # ── 16. AIRA & AIFUL: Nano Finance ──────────────────────────────────────
     ROWS.append({
         "district": prov,
-        "lender": "AIRA & AIFUL — Nano Finance",
+        "lender": "AIRA & AIFUL: Nano Finance",
         "rate_apr": 33.00,
         "effective_date": "2024-01-01",
         "source": (
@@ -275,10 +275,10 @@ for prov in PROVINCES:
         ),
     })
 
-    # ── 17. Muangthai Capital — Nano Finance ─────────────────────────────────
+    # ── 17. Muangthai Capital: Nano Finance ─────────────────────────────────
     ROWS.append({
         "district": prov,
-        "lender": "Muangthai Capital — Nano Finance (เมืองไทย แคปปิตอล)",
+        "lender": "Muangthai Capital: Nano Finance (เมืองไทย แคปปิตอล)",
         "rate_apr": 28.00,
         "effective_date": "2024-01-01",
         "source": (
@@ -289,10 +289,10 @@ for prov in PROVINCES:
         ),
     })
 
-    # ── 18. Srisawad Corporation — Nano Finance ───────────────────────────────
+    # ── 18. Srisawad Corporation: Nano Finance ───────────────────────────────
     ROWS.append({
         "district": prov,
-        "lender": "Srisawad Corporation — Nano Finance (ศรีสวัสดิ์)",
+        "lender": "Srisawad Corporation: Nano Finance (ศรีสวัสดิ์)",
         "rate_apr": 33.00,
         "effective_date": "2024-01-01",
         "source": (
@@ -305,7 +305,7 @@ for prov in PROVINCES:
     # ── 19. Nano Finance — BOT cap (generic) ─────────────────────────────────
     ROWS.append({
         "district": prov,
-        "lender": "Nano Finance — BOT-licensed (any operator)",
+        "lender": "Nano Finance: BOT-licensed (any operator)",
         "rate_apr": 33.00,
         "effective_date": "2024-01-01",
         "source": (
@@ -320,7 +320,7 @@ for prov in PROVINCES:
     if prov not in PICO_EXCLUDED:
         ROWS.append({
             "district": prov,
-            "lender": "Pico Finance (FPO — พิโกไฟแนนซ์)",
+            "lender": "Pico Finance (FPO, พิโกไฟแนนซ์)",
             "rate_apr": 36.00,
             "effective_date": "2024-10-01",
             "source": (
@@ -333,7 +333,7 @@ for prov in PROVINCES:
         })
         ROWS.append({
             "district": prov,
-            "lender": "Pico Plus (FPO — พิโกพลัส)",
+            "lender": "Pico Plus (FPO, พิโกพลัส)",
             "rate_apr": 36.00,
             "effective_date": "2024-10-01",
             "source": (
@@ -348,7 +348,7 @@ for prov in PROVINCES:
     if prov in URBAN:
         ROWS.append({
             "district": prov,
-            "lender": "Krungthai Smart Money (กรุงไทย) — min income ฿30,000/month",
+            "lender": "Krungthai Smart Money (กรุงไทย, min income ฿30,000/month)",
             "rate_apr": 18.00,
             "effective_date": "2024-01-01",
             "source": (
@@ -364,7 +364,7 @@ for prov in PROVINCES:
     if prov in PUEANTAE_PROVINCES:
         ROWS.append({
             "district": prov,
-            "lender": "Pueantae Quick Money — Pico Finance (เพื่อนแท้ ควิกมันนี่)",
+            "lender": "Pueantae Quick Money: Pico Finance (เพื่อนแท้ ควิกมันนี่)",
             "rate_apr": 7.20,
             "effective_date": "2024-01-01",
             "source": (
@@ -379,7 +379,7 @@ for prov in PROVINCES:
     if prov in THAI_ACE_PROVINCES:
         ROWS.append({
             "district": prov,
-            "lender": "Thai Ace Capital — Nano Finance (ไทยเอซ แคปปิตอล)",
+            "lender": "Thai Ace Capital: Nano Finance (ไทยเอซ แคปปิตอล)",
             "rate_apr": 20.00,
             "effective_date": "2024-01-01",
             "source": (
@@ -393,7 +393,7 @@ for prov in PROVINCES:
     if prov in MACCABEE_PROVINCES:
         ROWS.append({
             "district": prov,
-            "lender": "Maccabee Group — Nano Finance (แมคคาเล กรุ๊พ)",
+            "lender": "Maccabee Group: Nano Finance (แมคคาเล กรุ๊พ)",
             "rate_apr": 33.00,
             "effective_date": "2024-01-01",
             "source": (
@@ -407,7 +407,7 @@ for prov in PROVINCES:
     if prov in SAHAPAIBUUL_PROVINCES:
         ROWS.append({
             "district": prov,
-            "lender": "Sahapaibuul 2558 — Nano Finance (สหไพบูลย์ 2558)",
+            "lender": "Sahapaibuul 2558: Nano Finance (สหไพบูลย์ 2558)",
             "rate_apr": 33.00,
             "effective_date": "2024-01-01",
             "source": (
@@ -421,7 +421,7 @@ for prov in PROVINCES:
     if prov in M_CAPITAL_PROVINCES:
         ROWS.append({
             "district": prov,
-            "lender": "M Capital Corporation — Nano Finance (เอ็ม แคปปิตอล)",
+            "lender": "M Capital Corporation: Nano Finance (เอ็ม แคปปิตอล)",
             "rate_apr": 33.00,
             "effective_date": "2024-01-01",
             "source": (
@@ -444,7 +444,7 @@ print(f"Written {len(ROWS)} rows to {out}")
 from collections import Counter
 by_type = Counter()
 for r in ROWS:
-    name = r["lender"].split("—")[0].strip().split("(")[0].strip()
+    name = r["lender"].split(":")[0].strip().split("(")[0].strip()
     by_type[name] += 1
 print(f"\n{'Lender':<60} {'Provinces':>10}")
 print("-" * 72)

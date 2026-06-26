@@ -215,11 +215,11 @@ _LENDER_NOTES: dict[str, str] = {
     "gsb welfare card": "state welfare card holders only; no guarantor needed; gsb.or.th",
     "gsb people": "government savings bank; limit ฿200,000; needs guarantor or property; rate estimated — verify at gsb.or.th",
     # ── GSB subsidiary — Good Money ───────────────────────────────────────────
-    "good money by gsb — nano": (
+    "good money by gsb: nano": (
         "GSB subsidiary; BOT Nano Finance; targets informal workers and low-income earners; "
         "no collateral; 30-min app approval; gsb.or.th/personal/good-money"
     ),
-    "good money by gsb — personal": (
+    "good money by gsb: personal": (
         "GSB subsidiary; personal loan up to ฿1,000,000; targets workers without standard income docs; "
         "gsb.or.th/personal/good-money"
     ),
@@ -235,11 +235,11 @@ _LENDER_NOTES: dict[str, str] = {
         "min ฿1,000 credit line; builds credit history for first-time borrowers; scb.co.th"
     ),
     # ── Thai Credit Bank — only commercial bank focused on nano/micro ─────────
-    "thai credit bank — nano": (
+    "thai credit bank: nano": (
         "Thailand's only commercial bank focused on nano lending; "
         "no collateral; no guarantor; up to ฿30,000; 6–12 months; 267 branches; thaicreditbank.com"
     ),
-    "thai credit bank — micro": (
+    "thai credit bank: micro": (
         "Thai Credit Bank micro credit; no collateral; no guarantor; "
         "up to ฿200,000; targets micro-SME, freelancers, online sellers; thaicreditbank.com"
     ),
