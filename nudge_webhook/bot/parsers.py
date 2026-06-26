@@ -161,7 +161,7 @@ def parse_tenure_days(text: str) -> int | None:
 
 def parse_interest_rate_apr(text: str) -> float | None:
     raw = (text or "").strip().lower()
-    m = re.search(r"(\d+(?:\.\d+)?)\s*%?\s*(apr|annual|year|yearly|month|monthly|week|weekly|day|daily)\b", raw)
+    m = re.search(r"(\d+(?:\.\d+)?)\s*%?\s*(?:per\s+|/\s*)?(apr|annual|year|yearly|month|monthly|week|weekly|day|daily)\b", raw)
     if m:
         rate = float(m.group(1))
         unit = str(m.group(2))

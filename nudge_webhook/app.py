@@ -7,6 +7,7 @@ from flask import Flask, Response, jsonify, render_template, request
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from .bot import InboundMessage, process_inbound
+from .bot.thailand_handler import init_thailand_db, process_thailand_inbound
 from .config import Config
 from .db import connect, init_and_migrate
 from .mfi import load_dataset_into_sqlite, register_mfi
@@ -35,6 +36,10 @@ def create_app(config: Config | None = None) -> Flask:
                 pass
     register_mfi(app)
 
+    # Initialise Thailand DB (separate SQLite for Thai province/lender data)
+    thailand_db_path = init_thailand_db()
+    app.config["THAILAND_DB"] = thailand_db_path
+
     def _admin_ok() -> bool:
         token = cfg.admin_token
         if not token:
@@ -51,6 +56,46 @@ def create_app(config: Config | None = None) -> Flask:
     @app.get("/chat")
     def web_chat() -> Response:
         return Response(render_template("index.html"), mimetype="text/html")
+
+    @app.get("/thailand")
+    def thailand_landing() -> Response:
+        return Response(render_template("thailand_landing.html"), mimetype="text/html")
+
+    @app.get("/thailand/chat")
+    def thailand_chat() -> Response:
+        return Response(render_template("thailand_chat.html"), mimetype="text/html")
+
+    @app.post("/api/thailand/chat")
+    def api_thailand_chat() -> Response:
+        payload = request.get_json(silent=True) or {}
+        session_id = str(payload.get("session_id") or "").strip()
+        message = str(payload.get("message") or "").strip()
+        lang = str(payload.get("lang") or "en").strip().lower()
+        if lang not in {"en", "th"}:
+            lang = "en"
+        if not session_id or not message:
+            return Response("missing session_id or message", status=400)
+
+        inbound = InboundMessage(
+            from_addr=f"web:{session_id}",
+            to_addr="web",
+            body=message,
+            message_sid=None,
+            payload={"source": "thailand_web"},
+        )
+        thailand_db = app.config["THAILAND_DB"]
+        reply_text = process_thailand_inbound(cfg, db_path=thailand_db, inbound=inbound, lang=lang)
+
+        actions: list[dict[str, str]] = []
+        # Province-level quick actions
+        actions.append({"label": "Bangkok", "send": "I'm in Bangkok"})
+        actions.append({"label": "Chiang Mai", "send": "I'm in Chiang Mai"})
+        actions.append({"label": "Example loan", "send": "Need ฿10,000 for 60 days at 15% monthly"})
+
+        return jsonify({"reply": reply_text, "actions": actions, "debug": {
+            "country": "thailand",
+            "claude_enabled": bool(cfg.claude_api_key),
+        }})
 
     @app.get("/health")
     def health() -> Response:

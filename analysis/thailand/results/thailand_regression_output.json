@@ -1,0 +1,213 @@
+{
+  "source": "own_analysis_Townsend_Thai_2017",
+  "dataset": "Townsend Thai Project Annual Resurvey 2017 (Rural: Chachoengsao, Lopburi, Sisaket, Buriram)",
+  "doi": "10.7910/DVN/UW4VKE",
+  "url": "https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/UW4VKE",
+  "n_households": 1200,
+  "survey_year": 2017,
+  "geography": "Rural Thailand (4 provinces: Chachoengsao, Lopburi [Central]; Sisaket, Buriram [Northeast])",
+  "notes": "This is a rural panel survey \u2014 loan prevalence is 1.2% outstanding at survey date, capturing current outstanding loans not cumulative credit history. Income reflects annual household income in THB. Lender classification from le3h: B/Q/G/N=formal, J/R=informal, S=semi-formal. Loan rates in le3f1 reflect annual % \u2014 consistent with BAAC/cooperative rates (~5-7%). Urban loan shark rates (18%+/month per PIER DP173) are NOT captured in this rural panel.",
+  "loan_level_stats": {
+    "formal": {
+      "n_loans": 14,
+      "avg_rate_annual_pct": 3.93,
+      "avg_amount_thb": 67857.0
+    },
+    "informal": {
+      "n_loans": 9,
+      "avg_rate_annual_pct": 4.0,
+      "avg_amount_thb": 48222.0
+    },
+    "semiformal": {
+      "n_loans": 3,
+      "avg_rate_annual_pct": 7.33,
+      "avg_amount_thb": 66667.0
+    }
+  },
+  "hh_prevalence": {
+    "formal_pct": 1.08,
+    "informal_pct": 0.67,
+    "any_pct": 1.17
+  },
+  "models": {
+    "has_any_loan": {
+      "n_obs": 1200,
+      "n_positive": 14,
+      "model": "OLS-LPM (HC3 SEs)",
+      "r_squared": 0.009,
+      "f_stat_pvalue": 0.3266,
+      "effects": [
+        {
+          "variable": "log_income",
+          "coefficient_pp": 0.274,
+          "p_value": 0.4822,
+          "significant_05": false,
+          "conf_low_pp": -0.491,
+          "conf_high_pp": 1.039
+        },
+        {
+          "variable": "hh_size",
+          "coefficient_pp": 0.306,
+          "p_value": 0.0254,
+          "significant_05": true,
+          "conf_low_pp": 0.038,
+          "conf_high_pp": 0.574
+        },
+        {
+          "variable": "land_rai",
+          "coefficient_pp": -0.004,
+          "p_value": 0.5377,
+          "significant_05": false,
+          "conf_low_pp": -0.016,
+          "conf_high_pp": 0.008
+        },
+        {
+          "variable": "urban",
+          "coefficient_pp": -0.563,
+          "p_value": 0.3184,
+          "significant_05": false,
+          "conf_low_pp": -1.668,
+          "conf_high_pp": 0.543
+        },
+        {
+          "variable": "farming",
+          "coefficient_pp": -0.266,
+          "p_value": 0.8311,
+          "significant_05": false,
+          "conf_low_pp": -2.713,
+          "conf_high_pp": 2.181
+        },
+        {
+          "variable": "region_northeast",
+          "coefficient_pp": -0.902,
+          "p_value": 0.0689,
+          "significant_05": false,
+          "conf_low_pp": -1.873,
+          "conf_high_pp": 0.07
+        }
+      ]
+    },
+    "has_formal_loan": {
+      "n_obs": 1200,
+      "n_positive": 13,
+      "model": "OLS-LPM (HC3 SEs)",
+      "r_squared": 0.0075,
+      "f_stat_pvalue": 0.4212,
+      "effects": [
+        {
+          "variable": "log_income",
+          "coefficient_pp": 0.354,
+          "p_value": 0.3535,
+          "significant_05": false,
+          "conf_low_pp": -0.394,
+          "conf_high_pp": 1.103
+        },
+        {
+          "variable": "hh_size",
+          "coefficient_pp": 0.263,
+          "p_value": 0.0432,
+          "significant_05": true,
+          "conf_low_pp": 0.008,
+          "conf_high_pp": 0.518
+        },
+        {
+          "variable": "land_rai",
+          "coefficient_pp": -0.004,
+          "p_value": 0.5355,
+          "significant_05": false,
+          "conf_low_pp": -0.016,
+          "conf_high_pp": 0.008
+        },
+        {
+          "variable": "urban",
+          "coefficient_pp": -0.468,
+          "p_value": 0.3996,
+          "significant_05": false,
+          "conf_low_pp": -1.556,
+          "conf_high_pp": 0.621
+        },
+        {
+          "variable": "farming",
+          "coefficient_pp": -0.308,
+          "p_value": 0.8052,
+          "significant_05": false,
+          "conf_low_pp": -2.758,
+          "conf_high_pp": 2.141
+        },
+        {
+          "variable": "region_northeast",
+          "coefficient_pp": -0.828,
+          "p_value": 0.0908,
+          "significant_05": false,
+          "conf_low_pp": -1.789,
+          "conf_high_pp": 0.132
+        }
+      ]
+    },
+    "has_informal_loan": {
+      "n_obs": 1200,
+      "n_positive": 8,
+      "model": "OLS-LPM (HC3 SEs)",
+      "r_squared": 0.0112,
+      "f_stat_pvalue": 0.238,
+      "effects": [
+        {
+          "variable": "log_income",
+          "coefficient_pp": -0.092,
+          "p_value": 0.6396,
+          "significant_05": false,
+          "conf_low_pp": -0.475,
+          "conf_high_pp": 0.292
+        },
+        {
+          "variable": "hh_size",
+          "coefficient_pp": 0.251,
+          "p_value": 0.027,
+          "significant_05": true,
+          "conf_low_pp": 0.029,
+          "conf_high_pp": 0.473
+        },
+        {
+          "variable": "land_rai",
+          "coefficient_pp": -0.004,
+          "p_value": 0.2535,
+          "significant_05": false,
+          "conf_low_pp": -0.011,
+          "conf_high_pp": 0.003
+        },
+        {
+          "variable": "urban",
+          "coefficient_pp": -0.126,
+          "p_value": 0.7459,
+          "significant_05": false,
+          "conf_low_pp": -0.889,
+          "conf_high_pp": 0.637
+        },
+        {
+          "variable": "farming",
+          "coefficient_pp": -1.089,
+          "p_value": 0.3577,
+          "significant_05": false,
+          "conf_low_pp": -3.41,
+          "conf_high_pp": 1.232
+        },
+        {
+          "variable": "region_northeast",
+          "coefficient_pp": -0.511,
+          "p_value": 0.0069,
+          "significant_05": true,
+          "conf_low_pp": -0.882,
+          "conf_high_pp": -0.141
+        }
+      ]
+    }
+  },
+  "variable_codebook": {
+    "log_income": "Log annual household income (in14)",
+    "hh_size": "Household members (cvr11)",
+    "land_rai": "Land owned in rai (la4); 1 rai = 0.4 acres",
+    "urban": "Urban/semi-urban location (cvr9: 1=urban, 3=rural)",
+    "farming": "Farming as primary occupation (oc3a: 3=farming)",
+    "region_northeast": "Northeast region vs Central (cvr8: 2=NE, 1=Central)"
+  }
+}

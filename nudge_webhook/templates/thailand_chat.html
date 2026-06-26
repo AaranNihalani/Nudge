@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nudge Microfinance — Thailand Chat</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/chat.css" />
+    <style>
+      :root {
+        --accent: #b45309;
+        --bg: #faf6ee;
+        --bg1: #fffcf5;
+      }
+      .nav-clear:hover { background: rgba(180,83,9,.08); }
+      .nav-switcher { display:flex; align-items:center; gap:6px; }
+      .switcher-pill {
+        font-size: 11px; font-weight: 600;
+        padding: 4px 10px; border-radius: 20px;
+        text-decoration: none; transition: opacity .15s;
+        letter-spacing: .03em;
+      }
+      .switcher-pill.active { background: #b45309; color: #fff; }
+      .switcher-pill.inactive {
+        background: transparent; color: var(--muted);
+        border: 1px solid rgba(120,80,20,.16);
+      }
+      .switcher-pill.inactive:hover { color: var(--txt); border-color: #b45309; }
+
+      /* Language toggle */
+      .lang-toggle {
+        display: flex; align-items: center; gap: 0;
+        border: 1px solid rgba(120,80,20,.20);
+        border-radius: 20px; overflow: hidden;
+        margin-left: 4px;
+      }
+      .lang-btn {
+        font-size: 11px; font-weight: 600; letter-spacing: .03em;
+        padding: 4px 10px; border: none; cursor: pointer;
+        background: transparent; color: var(--muted);
+        transition: background .15s, color .15s;
+        line-height: 1;
+      }
+      .lang-btn.active { background: #b45309; color: #fff; }
+      .lang-btn:not(.active):hover { background: rgba(180,83,9,.07); color: var(--txt); }
+      .lang-divider { width:1px; background: rgba(120,80,20,.20); height: 16px; align-self: center; }
+    </style>
+  </head>
+  <body>
+
+    <nav class="nav">
+      <div class="nav-left">
+        <a href="/thailand" class="nav-back" title="Home">←</a>
+        <a href="/thailand" class="nav-brand">Nudge — Thailand</a>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="nav-switcher">
+          <a href="/chat" class="switcher-pill inactive">🇮🇳 India</a>
+          <a href="/thailand/chat" class="switcher-pill active">🇹🇭 Thailand</a>
+        </div>
+        <div class="lang-toggle" id="langToggle" title="Response language">
+          <button class="lang-btn active" id="btnEn" data-lang="en" type="button">EN</button>
+          <div class="lang-divider"></div>
+          <button class="lang-btn" id="btnTh" data-lang="th" type="button">ภาษาไทย</button>
+        </div>
+      </div>
+      <button class="nav-clear" id="btnClear" type="button">New chat</button>
+    </nav>
+
+    <div class="chat-wrap">
+      <div class="thread" id="thread" role="log" aria-live="polite"></div>
+
+      <div class="chips" id="chips" aria-label="Quick actions">
+        <button class="chip" data-send="help" type="button">How it works</button>
+        <button class="chip" data-send="show provinces" type="button">Browse provinces</button>
+        <button class="chip" data-send="I'm in Bangkok" type="button">Bangkok</button>
+        <button class="chip" data-send="Need ฿10,000 for 60 days at 15% monthly" type="button">Example loan</button>
+      </div>
+
+      <form class="composer" id="composer" autocomplete="off">
+        <input
+          id="input"
+          type="text"
+          placeholder="Enter your province (e.g., Bangkok), or describe a loan offer in ฿…"
+          maxlength="500"
+          autocomplete="off"
+        />
+        <button id="send" type="submit">Send</button>
+      </form>
+
+      <div class="disclaimer">
+        Informational only — not financial or legal advice.
+        Analysis based on Townsend Thai Project 2017 (Harvard Dataverse doi:10.7910/DVN/UW4VKE) and PIER DP173 (2022).
+        Regulated rates from BOT / FPO — verify with lender before applying.
+        Fieldwork planned August 2026 with Duang Prateep Foundation, Bangkok.
+      </div>
+    </div>
+
+    <script>
+    (function() {
+      const API_ENDPOINT   = "/api/thailand/chat";
+      const SESSION_KEY    = "nudge_thailand_session_id";
+      const TRANSCRIPT_KEY = "nudge_thailand_transcript";
+      const LANG_KEY       = "nudge_thailand_lang";
+
+      // ── Language toggle ──────────────────────────────────────────────────
+      let currentLang = localStorage.getItem(LANG_KEY) || "en";
+
+      function applyLang(lang) {
+        currentLang = lang;
+        localStorage.setItem(LANG_KEY, lang);
+        document.querySelectorAll(".lang-btn").forEach(btn => {
+          btn.classList.toggle("active", btn.dataset.lang === lang);
+        });
+      }
+      applyLang(currentLang);
+
+      document.getElementById("langToggle").addEventListener("click", e => {
+        const btn = e.target.closest(".lang-btn");
+        if (btn && btn.dataset.lang !== currentLang) applyLang(btn.dataset.lang);
+      });
+
+      function getSessionId() {
+        let sid = localStorage.getItem(SESSION_KEY);
+        if (sid && sid.length > 8) return sid;
+        sid = (globalThis.crypto?.randomUUID?.()) || `sid_${Math.random().toString(16).slice(2)}_${Date.now()}`;
+        localStorage.setItem(SESSION_KEY, sid);
+        return sid;
+      }
+      const sessionId = getSessionId();
+
+      function loadTranscript() {
+        try {
+          const raw = localStorage.getItem(TRANSCRIPT_KEY);
+          if (!raw) return [];
+          const p = JSON.parse(raw);
+          return Array.isArray(p) ? p.slice(-200) : [];
+        } catch { return []; }
+      }
+      function saveTranscript(items) {
+        try { localStorage.setItem(TRANSCRIPT_KEY, JSON.stringify(items.slice(-200))); } catch {}
+      }
+      let transcript = loadTranscript();
+
+      function escHtml(s) {
+        return String(s || "")
+          .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+      }
+
+      function renderMarkdownLite(text) {
+        const raw = String(text || "").replace(/\r\n/g, "\n");
+        let s = escHtml(raw);
+        s = s.replace(/(^|\n)\s*---\s*(?=\n|$)/g, '$1<hr class="md-hr">');
+        s = s.replace(/`([^`\n]+)`/g, "<code>$1</code>");
+        s = s.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+        s = s.replace(/\*([^*\n]+)\*/g, "<em>$1</em>");
+        s = s.replace(
+          /(https?:\/\/[^\s<"']+[^\s<"'.,;:!?])/g,
+          '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+        );
+        s = s.split("\n").map(line => {
+          const m = /^(\s*)-\s+(.+)$/.exec(line);
+          return m ? `${m[1]}• ${m[2]}` : line;
+        }).join("\n");
+        return s.replace(/\n/g, "<br>");
+      }
+
+      const thread = document.getElementById("thread");
+      const chips  = document.getElementById("chips");
+      const input  = document.getElementById("input");
+      const composer = document.getElementById("composer");
+
+      function addMessage(role, text) {
+        const div = document.createElement("div");
+        div.className = `msg ${role === "user" ? "me" : "bot"}`;
+        const bubble = document.createElement("div");
+        bubble.className = "bubble";
+        bubble.innerHTML = renderMarkdownLite(text);
+        div.appendChild(bubble);
+        thread.appendChild(div);
+        thread.scrollTop = thread.scrollHeight;
+        return div;
+      }
+
+      function setChips(actions) {
+        chips.innerHTML = "";
+        if (!Array.isArray(actions) || !actions.length) return;
+        actions.forEach(a => {
+          const btn = document.createElement("button");
+          btn.className = "chip";
+          btn.type = "button";
+          btn.textContent = a.label;
+          btn.dataset.send = a.send;
+          chips.appendChild(btn);
+        });
+      }
+
+      function showTyping() {
+        const div = document.createElement("div");
+        div.className = "msg bot";
+        div.id = "typing";
+        const bubble = document.createElement("div");
+        bubble.className = "bubble typing";
+        bubble.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
+        div.appendChild(bubble);
+        thread.appendChild(div);
+        thread.scrollTop = thread.scrollHeight;
+        return div;
+      }
+
+      function removeTyping() {
+        const el = document.getElementById("typing");
+        if (el) el.remove();
+      }
+
+      async function sendMessage(text) {
+        if (!text.trim()) return;
+        addMessage("user", text);
+        transcript.push({ role: "user", text });
+        saveTranscript(transcript);
+        input.value = "";
+        input.disabled = true;
+        const typingEl = showTyping();
+
+        try {
+          const res = await fetch(API_ENDPOINT, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ session_id: sessionId, message: text, lang: currentLang }),
+          });
+          removeTyping();
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          const reply = data.reply || "Sorry, something went wrong.";
+          addMessage("bot", reply);
+          transcript.push({ role: "bot", text: reply });
+          saveTranscript(transcript);
+          setChips(data.actions || []);
+        } catch (err) {
+          removeTyping();
+          addMessage("bot", "Sorry — something went wrong. Please try again.");
+          console.error(err);
+        } finally {
+          input.disabled = false;
+          input.focus();
+        }
+      }
+
+      composer.addEventListener("submit", e => {
+        e.preventDefault();
+        sendMessage(input.value.trim());
+      });
+
+      chips.addEventListener("click", e => {
+        const btn = e.target.closest("[data-send]");
+        if (btn) sendMessage(btn.dataset.send);
+      });
+
+      document.getElementById("btnClear").addEventListener("click", () => {
+        transcript = [];
+        saveTranscript([]);
+        localStorage.removeItem(SESSION_KEY);
+        thread.innerHTML = "";
+        setChips([]);
+        location.reload();
+      });
+
+      // Restore transcript
+      if (transcript.length) {
+        transcript.forEach(t => addMessage(t.role === "user" ? "user" : "bot", t.text));
+      } else {
+        // Welcome
+        addMessage("bot", "สวัสดีครับ! I'm Nudge — a tool for understanding loan costs in Thailand.\n\nStart by telling me your **province** (e.g. Bangkok, Chiang Mai, Khon Kaen), then describe the loan offer you've been given. I'll show you the total cost in ฿ and compare it with regulated Pico Finance and Nano Finance alternatives.");
+        setChips([
+          { label: "Bangkok", send: "I'm in Bangkok" },
+          { label: "Chiang Mai", send: "I'm in Chiang Mai" },
+          { label: "Khon Kaen", send: "I'm in Khon Kaen" },
+          { label: "Example loan", send: "Need ฿10,000 for 60 days at 15% monthly" },
+        ]);
+      }
+    })();
+    </script>
+  </body>
+</html>
