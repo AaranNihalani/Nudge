@@ -40,18 +40,20 @@ def init_thailand_db() -> str:
     db_path = _get_thailand_db_path()
     _TH_DB_INFO = init_and_migrate(db_path)
 
-    # Load lender tiers if the provinces table is empty
+    # Load lender tiers if missing or stale (< 70 provinces = old 15-province CSV)
     conn = connect(db_path)
     try:
-        row = conn.execute("SELECT 1 FROM mfi_districts LIMIT 1").fetchone()
+        row = conn.execute("SELECT COUNT(DISTINCT name) AS n FROM mfi_districts").fetchone()
+        n_provinces = int(row["n"]) if row else 0
     finally:
         conn.close()
 
-    if row is None:
+    if n_provinces < 70:
         dataset_path = os.path.join(os.getcwd(), "datasets", "thailand_lender_tiers.csv")
         if os.path.exists(dataset_path):
             try:
                 load_dataset_into_sqlite(db_path, dataset_path, replace=True)
+                print(f"[Thailand] Loaded lender tiers ({n_provinces} provinces → now 77)")
             except Exception as e:
                 print(f"[Thailand] Warning: could not load lender tiers: {e}")
 
@@ -205,21 +207,123 @@ def _render_tier_list(rows: list[dict], *, amount_thb: float | None, tenure_days
     return "\n".join(parts)
 
 
+_LENDER_NOTES: dict[str, str] = {
+    # ── Government / subsidised ───────────────────────────────────────────────
+    "village fund": "community revolving fund — ~79,610 funds nationally; for registered members; villagefund.or.th",
+    "baac half-half": "government-subsidised; registered farmers only; valid to April 2029",
+    "baac standard": "state agricultural bank; farmers and rural borrowers; baac.or.th",
+    "gsb welfare card": "state welfare card holders only; no guarantor needed; gsb.or.th",
+    "gsb people": "government savings bank; limit ฿200,000; needs guarantor or property; rate estimated — verify at gsb.or.th",
+    # ── GSB subsidiary — Good Money ───────────────────────────────────────────
+    "good money by gsb — nano": (
+        "GSB subsidiary; BOT Nano Finance; targets informal workers and low-income earners; "
+        "no collateral; 30-min app approval; gsb.or.th/personal/good-money"
+    ),
+    "good money by gsb — personal": (
+        "GSB subsidiary; personal loan up to ฿1,000,000; targets workers without standard income docs; "
+        "gsb.or.th/personal/good-money"
+    ),
+    "good money": "GSB subsidiary (เงินดีดี); targets low-income informal workers; app-based; gsb.or.th/personal/good-money",
+    # ── Commercial bank products with relaxed income requirements ─────────────
+    "krungthai": "requires min. ฿30,000/month income — excludes most informal-sector borrowers",
+    "krungsri first choice payplus": (
+        "NO income documents required; digital alternative data scoring; "
+        "limit ฿20,000; up to 5-month repayment; targets self-employed and freelancers"
+    ),
+    "scb up": (
+        "SCB revolving credit for people WITHOUT fixed income or proof of income; "
+        "min ฿1,000 credit line; builds credit history for first-time borrowers; scb.co.th"
+    ),
+    # ── Thai Credit Bank — only commercial bank focused on nano/micro ─────────
+    "thai credit bank — nano": (
+        "Thailand's only commercial bank focused on nano lending; "
+        "no collateral; no guarantor; up to ฿30,000; 6–12 months; 267 branches; thaicreditbank.com"
+    ),
+    "thai credit bank — micro": (
+        "Thai Credit Bank micro credit; no collateral; no guarantor; "
+        "up to ฿200,000; targets micro-SME, freelancers, online sellers; thaicreditbank.com"
+    ),
+    "thai credit bank": "Thailand's only commercial bank focused on nano/micro lending; no collateral; 267 branches; thaicreditbank.com",
+    # ── Vehicle title (accessible to freelancers if they own a vehicle) ────────
+    "tidlor": (
+        "vehicle title loan — must own a car, motorcycle, or truck; "
+        "accepts employees, self-employed, AND freelancers; 12–24% APR; tidlor.com/en/loan/car"
+    ),
+    # ── Nano Finance operators ────────────────────────────────────────────────
+    "siam digital": "BOT Nano Finance; digital application at siamdl.co.th; min income ฿12,000/month; no collateral",
+    "muangthai capital": "SET-listed BOT Nano Finance (MTC.BK); nationwide branches; no collateral; limit ฿100,000",
+    "srisawad": "SET-listed BOT Nano Finance (SAWAD.BK); large nationwide branch network; no collateral; limit ฿100,000",
+    "saksiam leasing": "BOT Nano Finance; 27.96–33% APR; nationwide branches (HQ Uttaradit); own business required; saksiam.com",
+    "aira & aiful": (
+        "BOT Nano Finance; 45 branches nationwide; requires guarantor (income ≥฿9,000/month); "
+        "age 20–60; own business; amoney.co.th"
+    ),
+    "rabbit cash": (
+        "digital BOT Nano Finance (BTS + AEON JV); 100% app-based; "
+        "specifically targets freelancers and online sellers without standard income docs"
+    ),
+    "maccabee group": "BOT Nano Finance (2015 original licensee); Bangkok + Khon Kaen + Roi Et",
+    "sahapaibuul": "BOT Nano Finance (2015 original licensee); Northeast provinces (Roi Et, Maha Sarakham, Kalasin, Khon Kaen)",
+    "thai ace capital": "BOT Nano Finance; ~15% interest + 5% fee (~20% APR all-in); Bangkok + Nakhon Ratchasima; tcapital.co.th",
+    "m capital": "BOT Nano Finance; 2.75%/month; requires guarantor; Bangkok metro; targets traders and merchants",
+    "nano finance": "BOT Nano Finance cap (33% APR all-in); ~55–70 licensed operators; find providers at app.bot.or.th/botlicensecheck",
+    # ── Pico Finance operators ────────────────────────────────────────────────
+    "pueantae quick money": (
+        "NAMED Pico Finance operator (เพื่อนแท้ ควิกมันนี่); licence ว00007/2565; "
+        "rate from 0.60%/month (7.2% APR) — far below the 36% cap; "
+        "branches: Bangkok (Don Mueang, Min Buri), Pathum Thani (Rangsit), Chon Buri, Rayong; "
+        "phone 02-114-8988; puean.co.th"
+    ),
+    "pico plus": "FPO-licensed; limit ฿100,000 (vs ฿50k standard Pico); find operator in your province at fpo.go.th",
+    "pico finance": (
+        "FPO-licensed (Fiscal Policy Office, Ministry of Finance); limit ฿50,000; max 36% APR all-in; "
+        "1,155 operators in 75 provinces (May 2025); province-restricted lending; "
+        "search your province at 1359.go.th/picodoc/pico_public"
+    ),
+}
+
+
+def _lender_note(name: str) -> str:
+    low = name.lower()
+    for key, note in _LENDER_NOTES.items():
+        if key in low:
+            return f" *({note})*"
+    return ""
+
+
+def _render_tier_list(rows: list[dict], *, amount_thb: float | None, tenure_days: int | None) -> str:
+    parts = []
+    for i, r in enumerate(rows, 1):
+        lender = str(r.get("lender") or "")
+        rate = float(r.get("rate_apr") or 0.0)
+        monthly = rate / 12.0
+        line = f"{i}. **{lender}** — {rate:g}% APR (~{_format_percent(monthly)}%/month){_lender_note(lender)}"
+        if amount_thb and tenure_days:
+            interest, total = _simple_interest(amount_thb, tenure_days, rate)
+            months = max(1, math.ceil(tenure_days / 30))
+            monthly_pay = total / months
+            line += f"\n   Repay **{_fmt_thb(total)}** total over {months} month{'s' if months != 1 else ''} ({_fmt_thb(monthly_pay)}/month)"
+        parts.append(line)
+    return "\n\n".join(parts)
+
+
 def _suggest_tier_message(conn, *, province: str, current_rate_apr: float | None = None,
                           amount_thb: float | None = None, tenure_days: int | None = None) -> str:
     rows = _recommend_tiers(conn, province=province, current_rate_apr=current_rate_apr)
     if not rows:
         return (
-            f"I don't have licensed lender data for {province} yet.\n\n"
-            "I can still estimate what this loan would cost. For Pico Finance operators in your province, "
-            "visit fpo.go.th and search for licensed providers."
+            f"No lender data found for {province}. Nationwide regulated options:\n\n"
+            "- **Pico Finance** — max 36% APR, ฿50k limit. Find local operators at fpo.go.th\n"
+            "- **Nano Finance** — max 33% APR, ฿100k limit. Find providers at app.bot.or.th/botlicensecheck\n"
+            "- **Village Fund** — ~6% APR, ฿10–20k. Find yours at villagefund.or.th\n"
+            "- **BAAC** — from 3% APR for registered farmers. baac.or.th"
         )
     joined = _render_tier_list(rows, amount_thb=amount_thb, tenure_days=tenure_days)
-    sel = "Send 1 to see more details." if len(rows) == 1 else f"Send 1, 2, or 3 to see more details."
-    ask = "" if (amount_thb and tenure_days) else "\nSend the loan amount and time to see Baht totals."
+    sel = "Send **1** for more detail." if len(rows) == 1 else "Send **1**, **2**, or **3** to see eligibility and next steps."
+    ask = "" if (amount_thb and tenure_days) else "\n\nSend the loan amount and time period to see the ฿ totals."
     return (
-        f"Regulated options in {province}:\n\n{joined}\n\n{sel}{ask}\n\n"
-        "Numbers assume simple interest and no extra fees."
+        f"Regulated options in **{province}** (cheapest first):\n\n{joined}\n\n{sel}{ask}\n\n"
+        "*Figures assume simple interest — actual fees may vary. Rates current as of data date.*"
     )
 
 
@@ -230,9 +334,19 @@ def _alert_tier_message(conn, *, province: str, quoted_apr: float,
 
     if not rows:
         return (
-            f"At {quoted_apr:g}% APR (~{monthly_quoted}%/month), that rate is very high compared to regulated options. "
-            f"I don't have specific licensed Pico lender data for {province} yet. "
-            "Visit fpo.go.th to find licensed Pico Finance operators in your province."
+            f"At {quoted_apr:g}% APR (~{monthly_quoted}%/month), that rate is very high.\n\n"
+            f"Regulated options to compare in {province}:\n\n"
+            "**Village Fund (กองทุนหมู่บ้าน)** — ~6% APR. Community revolving funds; ~79,610 funds nationwide. "
+            "Loans typically ฿10,000–20,000 for registered community members. Find yours at villagefund.or.th\n\n"
+            "**BAAC (ธ.ก.ส.)** — 6.625% APR (MRR). State agricultural bank. Farmers with a BAAC account "
+            "may qualify for subsidised rates as low as 3% under the Half-Half programme. baac.or.th\n\n"
+            "**Pico Finance (พิโกไฟแนนซ์)** — max 36% APR, limit ฿50,000. Licensed by the Fiscal Policy Office (FPO). "
+            "1,155 operators in 75 provinces. To find a licensed operator near you, visit fpo.go.th or search "
+            "\"พิโกไฟแนนซ์\" + your province name.\n\n"
+            "**Nano Finance (นาโนไฟแนนซ์)** — max 33% APR, limit ฿100,000. Licensed by the Bank of Thailand. "
+            "Named operators: Muangthai Capital (MTC), Srisawad Corporation (SAWAD), Siam Digital Lending (siamdl.co.th). "
+            "Find all licensed providers at app.bot.or.th/botlicensecheck\n\n"
+            "All regulated lenders must keep effective rates (interest + fees + insurance) within their statutory cap."
         )
 
     joined = _render_tier_list(rows, amount_thb=amount_thb, tenure_days=tenure_days)

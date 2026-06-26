@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Nudge Microfinance — Thailand Chat</title>
-    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
+    <title>Nudge — Thailand</title>
+    <link rel="icon" href="/static/thailand_favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -12,59 +12,69 @@
     <style>
       :root {
         --accent: #b45309;
-        --bg: #faf6ee;
+        --bg:  #faf6ee;
         --bg1: #fffcf5;
       }
+      /* bubble colours for Thailand amber theme */
+      .msg.me .msg-bubble {
+        background: rgba(180,83,9,.09);
+        border-color: rgba(180,83,9,.18);
+      }
+      .composer input:focus { border-color: rgba(180,83,9,.4); }
+      .composer button { background: var(--accent); }
+      .chip:hover  { border-color: var(--accent); background: rgba(180,83,9,.07); }
+      .chip.primary { border-color: rgba(180,83,9,.35); color: var(--accent); }
+
+      /* nav overrides */
+      .nav-back:hover { color: var(--txt); }
+      .nav-brand { color: var(--accent); }
       .nav-clear:hover { background: rgba(180,83,9,.08); }
+
+      /* Country switcher */
       .nav-switcher { display:flex; align-items:center; gap:6px; }
       .switcher-pill {
-        font-size: 11px; font-weight: 600;
-        padding: 4px 10px; border-radius: 20px;
-        text-decoration: none; transition: opacity .15s;
-        letter-spacing: .03em;
+        font-size:11px; font-weight:600; padding:4px 10px; border-radius:20px;
+        text-decoration:none; letter-spacing:.03em; transition:opacity .15s;
       }
-      .switcher-pill.active { background: #b45309; color: #fff; }
+      .switcher-pill.active { background:var(--accent); color:#fff; }
       .switcher-pill.inactive {
-        background: transparent; color: var(--muted);
-        border: 1px solid rgba(120,80,20,.16);
+        background:transparent; color:var(--muted);
+        border:1px solid rgba(120,80,20,.18);
       }
-      .switcher-pill.inactive:hover { color: var(--txt); border-color: #b45309; }
+      .switcher-pill.inactive:hover { color:var(--txt); border-color:var(--accent); }
 
       /* Language toggle */
       .lang-toggle {
-        display: flex; align-items: center; gap: 0;
-        border: 1px solid rgba(120,80,20,.20);
-        border-radius: 20px; overflow: hidden;
-        margin-left: 4px;
+        display:flex; align-items:center;
+        border:1px solid rgba(120,80,20,.22); border-radius:20px; overflow:hidden;
       }
       .lang-btn {
-        font-size: 11px; font-weight: 600; letter-spacing: .03em;
-        padding: 4px 10px; border: none; cursor: pointer;
-        background: transparent; color: var(--muted);
-        transition: background .15s, color .15s;
-        line-height: 1;
+        font-size:11px; font-weight:600; letter-spacing:.03em;
+        padding:4px 11px; border:none; cursor:pointer;
+        background:transparent; color:var(--muted);
+        transition:background .15s, color .15s; line-height:1.2;
       }
-      .lang-btn.active { background: #b45309; color: #fff; }
-      .lang-btn:not(.active):hover { background: rgba(180,83,9,.07); color: var(--txt); }
-      .lang-divider { width:1px; background: rgba(120,80,20,.20); height: 16px; align-self: center; }
+      .lang-btn.active { background:var(--accent); color:#fff; }
+      .lang-btn:not(.active):hover { background:rgba(180,83,9,.07); color:var(--txt); }
+      .lang-sep { width:1px; background:rgba(120,80,20,.22); height:16px; align-self:center; }
     </style>
   </head>
   <body>
 
     <nav class="nav">
       <div class="nav-left">
-        <a href="/thailand" class="nav-back" title="Home">←</a>
+        <a href="/thailand" class="nav-back" title="Thailand home">←</a>
         <a href="/thailand" class="nav-brand">Nudge — Thailand</a>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;">
+      <div style="display:flex;align-items:center;gap:10px;">
         <div class="nav-switcher">
-          <a href="/chat" class="switcher-pill inactive">🇮🇳 India</a>
+          <a href="/chat"          class="switcher-pill inactive">🇮🇳 India</a>
           <a href="/thailand/chat" class="switcher-pill active">🇹🇭 Thailand</a>
         </div>
         <div class="lang-toggle" id="langToggle" title="Response language">
-          <button class="lang-btn active" id="btnEn" data-lang="en" type="button">EN</button>
-          <div class="lang-divider"></div>
-          <button class="lang-btn" id="btnTh" data-lang="th" type="button">ภาษาไทย</button>
+          <button class="lang-btn active" data-lang="en" type="button">EN</button>
+          <div class="lang-sep"></div>
+          <button class="lang-btn"        data-lang="th" type="button">ภาษาไทย</button>
         </div>
       </div>
       <button class="nav-clear" id="btnClear" type="button">New chat</button>
@@ -74,7 +84,7 @@
       <div class="thread" id="thread" role="log" aria-live="polite"></div>
 
       <div class="chips" id="chips" aria-label="Quick actions">
-        <button class="chip" data-send="help" type="button">How it works</button>
+        <button class="chip" data-send="help"          type="button">How it works</button>
         <button class="chip" data-send="show provinces" type="button">Browse provinces</button>
         <button class="chip" data-send="I'm in Bangkok" type="button">Bangkok</button>
         <button class="chip" data-send="Need ฿10,000 for 60 days at 15% monthly" type="button">Example loan</button>
@@ -84,201 +94,210 @@
         <input
           id="input"
           type="text"
-          placeholder="Enter your province (e.g., Bangkok), or describe a loan offer in ฿…"
+          placeholder="Enter your province or describe a loan offer in ฿…"
           maxlength="500"
           autocomplete="off"
         />
-        <button id="send" type="submit">Send</button>
+        <button id="btnSend" type="submit">Send</button>
       </form>
 
       <div class="disclaimer">
         Informational only — not financial or legal advice.
-        Analysis based on Townsend Thai Project 2017 (Harvard Dataverse doi:10.7910/DVN/UW4VKE) and PIER DP173 (2022).
-        Regulated rates from BOT / FPO — verify with lender before applying.
-        Fieldwork planned August 2026 with Duang Prateep Foundation, Bangkok.
+        Rates sourced from BOT / FPO / published research. Verify with lender before applying.
+        Fieldwork planned August 2026 with Duang Prateep Foundation, Klong Toey, Bangkok.
       </div>
     </div>
 
     <script>
-    (function() {
-      const API_ENDPOINT   = "/api/thailand/chat";
-      const SESSION_KEY    = "nudge_thailand_session_id";
-      const TRANSCRIPT_KEY = "nudge_thailand_transcript";
-      const LANG_KEY       = "nudge_thailand_lang";
+    (function () {
+      const API      = "/api/thailand/chat";
+      const SID_KEY  = "nudge_thailand_sid";
+      const TX_KEY   = "nudge_thailand_tx";
+      const LANG_KEY = "nudge_thailand_lang";
 
-      // ── Language toggle ──────────────────────────────────────────────────
-      let currentLang = localStorage.getItem(LANG_KEY) || "en";
-
-      function applyLang(lang) {
-        currentLang = lang;
-        localStorage.setItem(LANG_KEY, lang);
-        document.querySelectorAll(".lang-btn").forEach(btn => {
-          btn.classList.toggle("active", btn.dataset.lang === lang);
-        });
+      // ── Helpers ─────────────────────────────────────────────────────────────
+      function esc(s) {
+        return String(s || "")
+          .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+          .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
       }
-      applyLang(currentLang);
+
+      function mdLite(text) {
+        let s = esc(String(text || "").replace(/\r\n/g,"\n"));
+        s = s.replace(/(^|\n)\s*---\s*(?=\n|$)/g,'$1<hr class="md-hr">');
+        s = s.replace(/`([^`\n]+)`/g,"<code>$1</code>");
+        s = s.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>");
+        s = s.replace(/\*([^*\n]+)\*/g,"<em>$1</em>");
+        s = s.replace(/(https?:\/\/[^\s<"']+[^\s<"'.,;:!?])/g,
+            '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+        s = s.split("\n").map(l => {
+          const m = /^(\s*)-\s+(.+)$/.exec(l);
+          return m ? `${m[1]}• ${m[2]}` : l;
+        }).join("\n");
+        return s.replace(/\n/g,"<br>");
+      }
+
+      // ── Session ──────────────────────────────────────────────────────────────
+      function getSid() {
+        let s = localStorage.getItem(SID_KEY);
+        if (s && s.length > 8) return s;
+        s = (globalThis.crypto?.randomUUID?.()) || `sid_${Math.random().toString(16).slice(2)}_${Date.now()}`;
+        localStorage.setItem(SID_KEY, s);
+        return s;
+      }
+      const sid = getSid();
+
+      // ── Transcript ───────────────────────────────────────────────────────────
+      function loadTx() {
+        try { const r = JSON.parse(localStorage.getItem(TX_KEY)); return Array.isArray(r) ? r.slice(-200) : []; }
+        catch { return []; }
+      }
+      function saveTx(tx) {
+        try { localStorage.setItem(TX_KEY, JSON.stringify(tx.slice(-200))); } catch {}
+      }
+      let tx = loadTx();
+
+      // ── Language ─────────────────────────────────────────────────────────────
+      let lang = localStorage.getItem(LANG_KEY) || "en";
+
+      const WELCOME = {
+        en: "สวัสดี! I'm **Nudge** — a tool for understanding loan costs in Thailand.\n\nStart by telling me your **province** (e.g. Bangkok, Chiang Mai, Khon Kaen), then describe the loan offer you've been given. I'll show you the total repayment in ฿ and compare it with regulated Pico Finance, Nano Finance, BAAC, and Village Fund alternatives.",
+        th: "สวัสดีครับ! ผมชื่อ **Nudge** — เครื่องมือช่วยประเมินต้นทุนเงินกู้ในประเทศไทย\n\nเริ่มต้นด้วยการบอก**จังหวัด**ของคุณ (เช่น กรุงเทพฯ เชียงใหม่ ขอนแก่น) จากนั้นเล่าให้ฟังว่าได้รับข้อเสนอเงินกู้อย่างไร ผมจะคำนวณยอดชำระรวมเป็น ฿ และเปรียบเทียบกับทางเลือกที่มีการควบคุม เช่น พิโกไฟแนนซ์ นาโนไฟแนนซ์ ธ.ก.ส. และกองทุนหมู่บ้านครับ",
+      };
+
+      function applyLang(l, reWelcome) {
+        lang = l;
+        localStorage.setItem(LANG_KEY, l);
+        document.querySelectorAll(".lang-btn").forEach(b => {
+          b.classList.toggle("active", b.dataset.lang === l);
+        });
+        // If no conversation yet, replace the welcome message
+        if (reWelcome && tx.length === 0) {
+          document.getElementById("thread").innerHTML = "";
+          addMsg("bot", WELCOME[lang] || WELCOME.en, false);
+        }
+      }
 
       document.getElementById("langToggle").addEventListener("click", e => {
-        const btn = e.target.closest(".lang-btn");
-        if (btn && btn.dataset.lang !== currentLang) applyLang(btn.dataset.lang);
+        const b = e.target.closest(".lang-btn");
+        if (b && b.dataset.lang !== lang) applyLang(b.dataset.lang, true);
       });
 
-      function getSessionId() {
-        let sid = localStorage.getItem(SESSION_KEY);
-        if (sid && sid.length > 8) return sid;
-        sid = (globalThis.crypto?.randomUUID?.()) || `sid_${Math.random().toString(16).slice(2)}_${Date.now()}`;
-        localStorage.setItem(SESSION_KEY, sid);
-        return sid;
-      }
-      const sessionId = getSessionId();
+      // ── DOM refs ─────────────────────────────────────────────────────────────
+      const thread  = document.getElementById("thread");
+      const chips   = document.getElementById("chips");
+      const input   = document.getElementById("input");
+      const composer= document.getElementById("composer");
+      const btnSend = document.getElementById("btnSend");
 
-      function loadTranscript() {
-        try {
-          const raw = localStorage.getItem(TRANSCRIPT_KEY);
-          if (!raw) return [];
-          const p = JSON.parse(raw);
-          return Array.isArray(p) ? p.slice(-200) : [];
-        } catch { return []; }
-      }
-      function saveTranscript(items) {
-        try { localStorage.setItem(TRANSCRIPT_KEY, JSON.stringify(items.slice(-200))); } catch {}
-      }
-      let transcript = loadTranscript();
-
-      function escHtml(s) {
-        return String(s || "")
-          .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-      }
-
-      function renderMarkdownLite(text) {
-        const raw = String(text || "").replace(/\r\n/g, "\n");
-        let s = escHtml(raw);
-        s = s.replace(/(^|\n)\s*---\s*(?=\n|$)/g, '$1<hr class="md-hr">');
-        s = s.replace(/`([^`\n]+)`/g, "<code>$1</code>");
-        s = s.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-        s = s.replace(/\*([^*\n]+)\*/g, "<em>$1</em>");
-        s = s.replace(
-          /(https?:\/\/[^\s<"']+[^\s<"'.,;:!?])/g,
-          '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
-        );
-        s = s.split("\n").map(line => {
-          const m = /^(\s*)-\s+(.+)$/.exec(line);
-          return m ? `${m[1]}• ${m[2]}` : line;
-        }).join("\n");
-        return s.replace(/\n/g, "<br>");
-      }
-
-      const thread = document.getElementById("thread");
-      const chips  = document.getElementById("chips");
-      const input  = document.getElementById("input");
-      const composer = document.getElementById("composer");
-
-      function addMessage(role, text) {
-        const div = document.createElement("div");
-        div.className = `msg ${role === "user" ? "me" : "bot"}`;
+      // ── Message rendering ────────────────────────────────────────────────────
+      function addMsg(role, text, save = true) {
+        const isMe = role === "user";
+        const wrap = document.createElement("div");
+        wrap.className = `msg ${isMe ? "me" : "bot"}`;
         const bubble = document.createElement("div");
-        bubble.className = "bubble";
-        bubble.innerHTML = renderMarkdownLite(text);
-        div.appendChild(bubble);
-        thread.appendChild(div);
+        bubble.className = "msg-bubble";
+        bubble.innerHTML = mdLite(text);
+        wrap.appendChild(bubble);
+        thread.appendChild(wrap);
         thread.scrollTop = thread.scrollHeight;
-        return div;
+        if (save) {
+          tx.push({ role, text });
+          saveTx(tx);
+        }
+        return wrap;
+      }
+
+      function showTyping() {
+        const wrap = document.createElement("div");
+        wrap.className = "msg bot pending";
+        wrap.id = "typing-wrap";
+        const bubble = document.createElement("div");
+        bubble.className = "msg-bubble";
+        const dots = document.createElement("div");
+        dots.className = "typing-dots";
+        dots.innerHTML = "<span></span><span></span><span></span>";
+        bubble.appendChild(dots);
+        wrap.appendChild(bubble);
+        thread.appendChild(wrap);
+        thread.scrollTop = thread.scrollHeight;
+        return wrap;
+      }
+
+      function removeTyping() {
+        document.getElementById("typing-wrap")?.remove();
       }
 
       function setChips(actions) {
         chips.innerHTML = "";
-        if (!Array.isArray(actions) || !actions.length) return;
-        actions.forEach(a => {
-          const btn = document.createElement("button");
-          btn.className = "chip";
-          btn.type = "button";
-          btn.textContent = a.label;
-          btn.dataset.send = a.send;
-          chips.appendChild(btn);
+        (actions || []).forEach(a => {
+          const b = document.createElement("button");
+          b.className = "chip";
+          b.type = "button";
+          b.textContent = a.label;
+          b.dataset.send = a.send;
+          chips.appendChild(b);
         });
       }
 
-      function showTyping() {
-        const div = document.createElement("div");
-        div.className = "msg bot";
-        div.id = "typing";
-        const bubble = document.createElement("div");
-        bubble.className = "bubble typing";
-        bubble.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
-        div.appendChild(bubble);
-        thread.appendChild(div);
-        thread.scrollTop = thread.scrollHeight;
-        return div;
-      }
+      // ── Send ─────────────────────────────────────────────────────────────────
+      let sending = false;
 
-      function removeTyping() {
-        const el = document.getElementById("typing");
-        if (el) el.remove();
-      }
-
-      async function sendMessage(text) {
-        if (!text.trim()) return;
-        addMessage("user", text);
-        transcript.push({ role: "user", text });
-        saveTranscript(transcript);
+      async function send(text) {
+        text = (text || "").trim();
+        if (!text || sending) return;
+        sending = true;
+        btnSend.disabled = true;
+        addMsg("user", text);
         input.value = "";
-        input.disabled = true;
-        const typingEl = showTyping();
+        const typing = showTyping();
 
         try {
-          const res = await fetch(API_ENDPOINT, {
+          const res = await fetch(API, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ session_id: sessionId, message: text, lang: currentLang }),
+            body: JSON.stringify({ session_id: sid, message: text, lang }),
           });
           removeTyping();
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const data = await res.json();
-          const reply = data.reply || "Sorry, something went wrong.";
-          addMessage("bot", reply);
-          transcript.push({ role: "bot", text: reply });
-          saveTranscript(transcript);
+          addMsg("bot", data.reply || "Sorry, something went wrong.");
           setChips(data.actions || []);
         } catch (err) {
           removeTyping();
-          addMessage("bot", "Sorry — something went wrong. Please try again.");
+          addMsg("bot", "Sorry — something went wrong. Please try again.");
           console.error(err);
         } finally {
-          input.disabled = false;
+          sending = false;
+          btnSend.disabled = false;
           input.focus();
         }
       }
 
-      composer.addEventListener("submit", e => {
-        e.preventDefault();
-        sendMessage(input.value.trim());
-      });
-
+      composer.addEventListener("submit", e => { e.preventDefault(); send(input.value); });
       chips.addEventListener("click", e => {
-        const btn = e.target.closest("[data-send]");
-        if (btn) sendMessage(btn.dataset.send);
+        const b = e.target.closest("[data-send]");
+        if (b) send(b.dataset.send);
       });
-
       document.getElementById("btnClear").addEventListener("click", () => {
-        transcript = [];
-        saveTranscript([]);
-        localStorage.removeItem(SESSION_KEY);
+        tx = []; saveTx([]);
+        localStorage.removeItem(SID_KEY);
         thread.innerHTML = "";
-        setChips([]);
-        location.reload();
+        chips.innerHTML = "";
+        applyLang(lang, true);
       });
 
-      // Restore transcript
-      if (transcript.length) {
-        transcript.forEach(t => addMessage(t.role === "user" ? "user" : "bot", t.text));
+      // ── Init ─────────────────────────────────────────────────────────────────
+      applyLang(lang, false);
+
+      if (tx.length) {
+        tx.forEach(m => addMsg(m.role, m.text, false));
       } else {
-        // Welcome
-        addMessage("bot", "สวัสดีครับ! I'm Nudge — a tool for understanding loan costs in Thailand.\n\nStart by telling me your **province** (e.g. Bangkok, Chiang Mai, Khon Kaen), then describe the loan offer you've been given. I'll show you the total cost in ฿ and compare it with regulated Pico Finance and Nano Finance alternatives.");
+        addMsg("bot", WELCOME[lang] || WELCOME.en, false);
         setChips([
-          { label: "Bangkok", send: "I'm in Bangkok" },
-          { label: "Chiang Mai", send: "I'm in Chiang Mai" },
-          { label: "Khon Kaen", send: "I'm in Khon Kaen" },
+          { label: "Bangkok",      send: "I'm in Bangkok" },
+          { label: "Chiang Mai",   send: "I'm in Chiang Mai" },
+          { label: "Khon Kaen",    send: "I'm in Khon Kaen" },
           { label: "Example loan", send: "Need ฿10,000 for 60 days at 15% monthly" },
         ]);
       }
